@@ -1,13 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // สั่งให้ Vercel ข้ามการตรวจไวยากรณ์ข้อความตอนรัน Build ครับ
-    ignoreDuringBuilds: true, 
+    // สั่งให้ข้ามการเช็ก ESLint ตอน Build บน Vercel
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    // สั่งให้ Vercel ข้ามการตรวจโครงสร้างตัวแปรตอนรัน Build ครับ
+    // สั่งให้ข้ามการเช็กประเภท TypeScript ตอน Build
     ignoreBuildErrors: true,
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
