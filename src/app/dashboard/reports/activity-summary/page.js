@@ -55,10 +55,28 @@ export default function ActivitySummaryPage() {
         try {
             const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
             const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
+            
+            // 1. ดึงรายชื่อนักเรียนในห้องที่เลือก
             const sSnap = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber")));
             const students = sSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(st => st.status !== "จำหน่าย"); 
-            const aSnap = await getDocs(query(collection(db, "attendance"), where("activityId", "==", selectedActivityId)));
+            
+            if (students.length === 0) {
+                toast.error("ไม่พบรายชื่อนักเรียนในห้องนี้");
+                setIsLoading(false);
+                return;
+            }
+
+            const studentIds = students.map(st => st.id);
+
+            // 2. ดึงข้อมูล attendance เฉพาะกิจกรรมนี้ และเฉพาะนักเรียนที่มีอยู่ในห้องนี้จริงๆ เพื่อให้ตัวเลขรวมตรงตามจริง
+            // หมายเหตุ: Firestore 'in' query รองรับสูงสุด 30 ไอดีต่อครั้ง หากห้องใหญ่กว่านี้อาจต้องแบ่ง chunk แต่โดยทั่วไปใช้งานได้ปกติครับ
+            const aSnap = await getDocs(query(
+                collection(db, "attendance"), 
+                where("activityId", "==", selectedActivityId),
+                where("studentId", "in", studentIds.slice(0, 30))
+            ));
             const attendance = aSnap.docs.map(doc => doc.data());
+
             const uniqueDates = [...new Set(attendance.map(r => r.date))];
             const totalSessions = uniqueDates.length;
             
@@ -80,7 +98,12 @@ export default function ActivitySummaryPage() {
                 advisorName: userProfile?.name || "..................................." 
             });
             toast.success("สร้างรายงานสำเร็จ");
-        } catch (e) { toast.error("เกิดข้อผิดพลาด"); } finally { setIsLoading(false); }
+        } catch (e) { 
+            console.error(e);
+            toast.error("เกิดข้อผิดพลาด"); 
+        } finally { 
+            setIsLoading(false); 
+        }
     };
 
     return (
@@ -108,7 +131,7 @@ export default function ActivitySummaryPage() {
                     <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="">-- เลือกห้องเรียน --</option>{classrooms.map(c => <option key={c} value={c}>{c}</option>)}</select>
                     
                     <div className="md:col-span-2 flex gap-4 pt-4 border-t border-gray-800">
-                        <button onClick={handleGenerateReport} className="flex-1 py-4 bg-indigo-600 rounded-xl font-bold transition-all duration-200 hover:scale-[1.02] hover:bg-indigo-500">สร้างรายงาน</button>
+                        <button onClick={handleGenerateReport} disabled={isLoading} className="flex-1 py-4 bg-indigo-600 rounded-xl font-bold transition-all duration-200 hover:scale-[1.02] hover:bg-indigo-500">{isLoading ? 'กำลังโหลด...' : 'สร้างรายงาน'}</button>
                         <button onClick={() => window.print()} disabled={!reportData} className={`flex-1 py-4 rounded-xl font-bold transition-all duration-200 ${!reportData ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:scale-[1.02] hover:bg-gray-200'}`}>พิมพ์รายงาน</button>
                     </div>
                 </div>
