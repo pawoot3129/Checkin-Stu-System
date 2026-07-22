@@ -46,16 +46,22 @@ export default function CheckAttendancePage() {
                     getDoc(doc(db, "system_settings", "main_config"))
                 ]);
                 
-                // ดึงห้องที่ครูท่านนี้ได้รับมอบหมายจากโปรไฟล์ผู้ใช้ (assignedClasses)
-                const assignedClassNames = !userSnap.empty ? userSnap.docs[0].data().assignedClasses || [] : [];
+                // ดึงรายชื่อห้องที่ครูรับผิดชอบจากโปรไฟล์
+                const userData = !userSnap.empty ? userSnap.docs[0].data() : {};
+                const assignedClasses = userData.assignedClasses || userData.classes || [];
+                const assignedClassesTrimmed = assignedClasses.map(c => String(c).trim());
 
-                // กรองเฉพาะห้องที่ตรงกับที่ครูรับผิดชอบ
+                // กรองเฉพาะห้องที่ตรงกับ assignedClasses ของครูท่านนี้ (เทียบได้ทั้ง ID และ ชื่อ className)
                 const classList = classSnap.docs
                     .map(d => ({
                         id: d.id,
                         name: d.data().className || d.id
                     }))
-                    .filter(c => assignedClassNames.includes(c.name) || assignedClassNames.includes(c.id));
+                    .filter(c => {
+                        if (assignedClassesTrimmed.length === 0) return false; // ถ้าไม่มีการกำหนดห้อง จะไม่แสดง
+                        return assignedClassesTrimmed.includes(c.id.trim()) || 
+                               assignedClassesTrimmed.includes(c.name.trim());
+                    });
 
                 setData({
                     name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
@@ -116,7 +122,7 @@ export default function CheckAttendancePage() {
         toast.success("ลบข้อมูลเช็คชื่อของวันนี้ทั้งหมดแล้ว");
     };
 
-    // กรองและเรียงลำดับนักเรียนตามเลขที่ (รองรับทุกชื่อฟิลด์เลขที่ และเรียงตามรหัส/ชื่อสำรอง)
+    // กรองและเรียงลำดับนักเรียนตามเลขที่
     const filteredStudents = data.students
         .filter(s => {
             if (!selectedClass) return false;
