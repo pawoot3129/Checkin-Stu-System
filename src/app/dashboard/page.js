@@ -36,9 +36,9 @@ export default function DashboardPage() {
     const menuItems = [
         { label: 'จัดการปีการศึกษา', path: '/dashboard/settings', icon: '📅', adminOnly: true },
         { label: 'กำหนดรายการกิจกรรม', path: '/dashboard/activities', icon: '📝', adminOnly: true },
+        { label: 'กำหนดเกณฑ์การประเมิน', path: '/dashboard/evaluation-config', icon: '⚙️', adminOnly: true },
         { label: 'จัดการผู้ใช้งาน', path: '/dashboard/teachers', icon: '👥', adminOnly: true },
         { label: 'จัดการห้องเรียน', path: '/dashboard/classrooms', icon: '🏫', adminOnly: true },
-        // เพิ่มเมนูเยี่ยมบ้านเข้าไปตรงนี้
         { label: 'บันทึกเยี่ยมบ้าน', path: '/dashboard/home-visit', icon: '🏠', adminOnly: false },
         { label: 'เช็คกิจกรรม', path: '/dashboard/advisor', icon: '✅', adminOnly: false },
         { label: 'จัดการข้อมูลนักเรียน', path: '/dashboard/students', icon: '🎓', adminOnly: false },
@@ -69,10 +69,8 @@ export default function DashboardPage() {
                 {menuItems
                     .filter(item => {
                         if (userProfile?.role === 'admin') {
-                            // แอดมินให้เห็นทุกอย่าง ยกเว้นเมนูเช็คกิจกรรมของครู
                             return item.path !== '/dashboard/advisor';
                         }
-                        // ครูเห็นเฉพาะที่ไม่ใช่ adminOnly
                         return !item.adminOnly;
                     })
                     .map((item) => (
