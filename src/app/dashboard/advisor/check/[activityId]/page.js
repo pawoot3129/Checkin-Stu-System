@@ -38,28 +38,34 @@ export default function CheckAttendancePage() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) { router.push('/login'); return; }
             try {
-                const [actSnap, userSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
+                // ค้นหาข้อมูลโปรไฟล์ผู้ใช้จากทั้งอีเมลและ uid เพื่อความชัวร์
+                let userData = {};
+                const userSnapByEmail = await getDocs(query(collection(db, "users"), where("email", "==", user.email)));
+                if (!userSnapByEmail.empty) {
+                    userData = userSnapByEmail.docs[0].data();
+                } else {
+                    const userSnapByUid = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+                    if (!userSnapByUid.empty) userData = userSnapByUid.docs[0].data();
+                }
+
+                const [actSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
-                    getDocs(query(collection(db, "users"), where("email", "==", user.email))),
                     getDocs(collection(db, "students")),
                     getDocs(collection(db, "classrooms")),
                     getDoc(doc(db, "system_settings", "main_config"))
                 ]);
                 
-                const userData = !userSnap.empty ? userSnap.docs[0].data() : {};
                 const assignedClasses = userData.assignedClasses || userData.classes || [];
                 const assignedClassesTrimmed = assignedClasses.map(c => String(c).trim().toLowerCase());
 
-                // ปรับปรุงการกรองให้ยืดหยุ่น รองรับทั้ง Admin และ ครูที่ปรึกษา
                 const classList = classSnap.docs
                     .map(d => ({
                         id: d.id,
                         name: d.data().className || d.id
                     }))
                     .filter(c => {
-                        // ถ้าเป็น admin ให้เห็นทุกห้อง หรือถ้าไม่มีการจำกัดห้อง
-                        if (userData.role === 'admin') return true;
-                        if (assignedClassesTrimmed.length === 0) return false;
+                        // ถ้าเป็นแอดมิน หรือไม่มีการจำกัดห้อง ให้แสดงทั้งหมดเพื่อให้กดเลือกได้
+                        if (userData.role === 'admin' || assignedClassesTrimmed.length === 0) return true;
                         
                         return assignedClassesTrimmed.includes(c.id.trim().toLowerCase()) || 
                                assignedClassesTrimmed.includes(c.name.trim().toLowerCase()) ||
