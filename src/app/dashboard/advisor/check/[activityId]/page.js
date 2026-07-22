@@ -38,16 +38,15 @@ export default function CheckAttendancePage() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) { router.push('/login'); return; }
             try {
-                // ดึงข้อมูลกิจกรรม, นักเรียน, ตั้งค่าระบบ และเพิ่มการดึงข้อมูลห้องเรียนทั้งหมดจาก collection "classrooms"
                 const [actSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
                     getDocs(collection(db, "students")),
-                    getDocs(collection(db, "classrooms")), // เปลี่ยนมาดึงห้องทั้งหมดจากตรงนี้
+                    getDocs(collection(db, "classrooms")),
                     getDoc(doc(db, "system_settings", "main_config"))
                 ]);
                 
-                // ดึงชื่อห้องจาก collection classrooms (สมมติว่าเก็บไว้ในฟิลด์ name หรือ id ของเอกสาร)
-                const classList = classSnap.docs.map(d => d.data().name || d.id);
+                // ดึงค่าจากฟิลด์ className ตามโครงสร้าง Firebase ของคุณ
+                const classList = classSnap.docs.map(d => d.data().className).filter(Boolean);
 
                 setData({
                     name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
