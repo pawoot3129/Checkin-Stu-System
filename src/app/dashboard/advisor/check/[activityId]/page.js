@@ -45,8 +45,11 @@ export default function CheckAttendancePage() {
                     getDoc(doc(db, "system_settings", "main_config"))
                 ]);
                 
-                // ดึงค่าจากฟิลด์ className ตามโครงสร้าง Firebase ของคุณ
-                const classList = classSnap.docs.map(d => d.data().className).filter(Boolean);
+                // เก็บทั้ง ID ของเอกสารห้อง และ ชื่อห้อง (className) เพื่อให้จับคู่กับนักเรียนได้ถูกต้อง
+                const classList = classSnap.docs.map(d => ({
+                    id: d.id,
+                    name: d.data().className || d.id
+                }));
 
                 setData({
                     name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
@@ -107,7 +110,11 @@ export default function CheckAttendancePage() {
         toast.success("ลบข้อมูลเช็คชื่อของวันนี้ทั้งหมดแล้ว");
     };
 
-    const filteredStudents = data.students.filter(s => s.classId?.trim() === selectedClass.trim());
+    // รองรับการกรองทั้งกรณีที่นักเรียนเก็บ classId เป็น Document ID หรือเก็บเป็นชื่อห้องโดยตรง
+    const filteredStudents = data.students.filter(s => {
+        if (!selectedClass) return false;
+        return s.classId?.trim() === selectedClass.trim() || s.classId?.trim() === data.classes.find(c => c.id === selectedClass)?.name?.trim();
+    });
 
     return (
         <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', padding: '24px' }}>
@@ -128,7 +135,7 @@ export default function CheckAttendancePage() {
                         <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ห้องเรียน</label>
                         <select onChange={(e) => setSelectedClass(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
                             <option value="">-- เลือก --</option>
-                            {data.classes.map(c => <option key={c} value={c}>{c}</option>)}
+                            {data.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     </div>
                     <div>
@@ -153,23 +160,27 @@ export default function CheckAttendancePage() {
                         </div>
 
                         <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', border: '1px solid #334155', overflow: 'hidden' }}>
-                            {filteredStudents.map((stu, index) => (
-                                <div key={stu.id} style={{ padding: '16px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '14px' }}>{index + 1}. {stu.name}</span>
-                                    <div style={{ display: 'flex', gap: '6px' }}>
-                                        {attendance[stu.id] ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <span style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '12px', ...statusConfig[attendance[stu.id]] }}>{attendance[stu.id]}</span>
-                                                <button onClick={() => handleAttendance(stu.id, null)} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', background: 'none', border: 'none' }}><FaEdit size={10} /> แก้ไข</button>
-                                            </div>
-                                        ) : (
-                                            Object.keys(statusConfig).map(s => (
-                                                <button key={s} onClick={() => handleAttendance(stu.id, s)} style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', backgroundColor: statusConfig[s].backgroundColor, border: 'none', color: 'white' }}>{s}</button>
-                                            ))
-                                        )}
+                            {filteredStudents.length > 0 ? (
+                                filteredStudents.map((stu, index) => (
+                                    <div key={stu.id} style={{ padding: '16px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>{index + 1}. {stu.name}</span>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            {attendance[stu.id] ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '12px', ...statusConfig[attendance[stu.id]] }}>{attendance[stu.id]}</span>
+                                                    <button onClick={() => handleAttendance(stu.id, null)} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', background: 'none', border: 'none' }}><FaEdit size={10} /> แก้ไข</button>
+                                                </div>
+                                            ) : (
+                                                Object.keys(statusConfig).map(s => (
+                                                    <button key={s} onClick={() => handleAttendance(stu.id, s)} style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', backgroundColor: statusConfig[s].backgroundColor, border: 'none', color: 'white' }}>{s}</button>
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>ไม่พบรายชื่อนักเรียนในห้องนี้</div>
+                            )}
                         </div>
                     </>
                 )}
