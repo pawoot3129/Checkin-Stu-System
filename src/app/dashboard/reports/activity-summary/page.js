@@ -66,35 +66,32 @@ export default function ActivitySummaryPage() {
                 return;
             }
 
-            const studentIds = students.map(st => st.id);
+            const studentIds = new Set(students.map(st => st.id));
 
-            // 2. ดึงข้อมูล attendance เฉพาะกิจกรรมนี้ และเฉพาะห้องเรียนที่เลือก (กรอง classId ด้วยเพื่อให้จำนวนวันตรงเฉพาะห้องนั้นๆ)
+            // 2. ดึงข้อมูล attendance ของกิจกรรมนี้ทั้งหมด
             const aSnap = await getDocs(query(
                 collection(db, "attendance"), 
-                where("activityId", "==", selectedActivityId),
-                where("classId", "==", selectedClass)
+                where("activityId", "==", selectedActivityId)
             ));
-            const attendance = aSnap.docs.map(doc => doc.data());
+            
+            // กรองเอาเฉพาะข้อมูลการเช็คชื่อของนักเรียนที่อยู่ในห้องนี้จริงๆ (ป้องกันปัญหานับวันเกินจากห้องอื่น)
+            const attendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIds.has(r.studentId));
 
             const uniqueDates = [...new Set(attendance.map(r => r.date))];
             const totalSessions = uniqueDates.length;
             
             const processed = students.map(st => {
                 const recs = attendance.filter(r => r.studentId === st.id);
-                // รองรับทุกชื่อสถานะที่อาจจะถูกบันทึกไว้ในระบบ
-                const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาเต็มวัน': 0, 'ขาด': 0 };
+                const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาทั้งวัน': 0, 'ขาด': 0 };
                 let penaltyScore = 0;
                 
                 recs.forEach(r => {
                     let stName = r.status;
-                    // แปลงชื่อสถานะให้แมตช์กับคีย์กลาง
-                    if (stName === 'ลาครึ่ง') stName = 'ลาครึ่งวัน';
-                    if (stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') stName = 'ลาทั้งวัน';
+                    if (stName === 'ลาครึ่ง' || stName === 'ลาครึ่งวัน') stName = 'ลาครึ่งวัน';
+                    else if (stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน' || stName === 'ลา') stName = 'ลาทั้งวัน';
 
                     if (stats[stName] !== undefined) {
                         stats[stName]++;
-                    } else if (stName === 'ลา') {
-                        stats['ลาทั้งวัน']++;
                     }
                     penaltyScore += (weights[stName] || weights[r.status] || 0);
                 });
