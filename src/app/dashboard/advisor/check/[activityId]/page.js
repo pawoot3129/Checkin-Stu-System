@@ -40,7 +40,7 @@ export default function CheckAttendancePage() {
             try {
                 const [actSnap, userSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
-                    getDocs(query(collection(db, "users"), where("uid", "==", user.uid))),
+                    getDocs(query(collection(db, "users"), where("email", "==", user.email))),
                     getDocs(collection(db, "students")),
                     getDocs(collection(db, "classrooms")),
                     getDoc(doc(db, "system_settings", "main_config"))
@@ -48,18 +48,22 @@ export default function CheckAttendancePage() {
                 
                 const userData = !userSnap.empty ? userSnap.docs[0].data() : {};
                 const assignedClasses = userData.assignedClasses || userData.classes || [];
-                const assignedClassesTrimmed = assignedClasses.map(c => String(c).trim());
+                const assignedClassesTrimmed = assignedClasses.map(c => String(c).trim().toLowerCase());
 
-                // กรองห้องที่ครูรับผิดชอบ พร้อมทั้งเรียงลำดับชื่อห้องตามตัวอักษร/ระดับชั้น
+                // ปรับปรุงการกรองให้ยืดหยุ่น รองรับทั้ง Admin และ ครูที่ปรึกษา
                 const classList = classSnap.docs
                     .map(d => ({
                         id: d.id,
                         name: d.data().className || d.id
                     }))
                     .filter(c => {
+                        // ถ้าเป็น admin ให้เห็นทุกห้อง หรือถ้าไม่มีการจำกัดห้อง
+                        if (userData.role === 'admin') return true;
                         if (assignedClassesTrimmed.length === 0) return false;
-                        return assignedClassesTrimmed.includes(c.id.trim()) || 
-                               assignedClassesTrimmed.includes(c.name.trim());
+                        
+                        return assignedClassesTrimmed.includes(c.id.trim().toLowerCase()) || 
+                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase()) ||
+                               assignedClassesTrimmed.some(ac => c.name.trim().toLowerCase().includes(ac) || ac.includes(c.name.trim().toLowerCase()));
                     })
                     .sort((a, b) => a.name.localeCompare(b.name, 'th'));
 
@@ -144,7 +148,7 @@ export default function CheckAttendancePage() {
                         <FaCalendarCheck size={24} color="#6366f1" />
                         <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{data.name}</h1>
                     </div>
-                    <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#1e293b', padding: '8px 16px', borderRadius: '8px', border: '1px solid #334155' }}>
+                    <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#1e293b', padding: '8px 16px', borderRadius: '8px', border: '1px solid #334155', cursor: 'pointer', color: 'white' }}>
                         <FaArrowLeft size={12} /> ย้อนกลับ
                     </button>
                 </div>
@@ -152,7 +156,7 @@ export default function CheckAttendancePage() {
                 <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ห้องเรียน</label>
-                        <select onChange={(e) => setSelectedClass(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
+                        <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
                             <option value="">-- เลือก --</option>
                             {data.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
@@ -189,11 +193,11 @@ export default function CheckAttendancePage() {
                                                 {attendance[stu.id] ? (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                         <span style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '12px', ...statusConfig[attendance[stu.id]] }}>{attendance[stu.id]}</span>
-                                                        <button onClick={() => handleAttendance(stu.id, null)} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', background: 'none', border: 'none' }}><FaEdit size={10} /> แก้ไข</button>
+                                                        <button onClick={() => handleAttendance(stu.id, null)} style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}><FaEdit size={10} /> แก้ไข</button>
                                                     </div>
                                                 ) : (
                                                     Object.keys(statusConfig).map(s => (
-                                                        <button key={s} onClick={() => handleAttendance(stu.id, s)} style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', backgroundColor: statusConfig[s].backgroundColor, border: 'none', color: 'white' }}>{s}</button>
+                                                        <button key={s} onClick={() => handleAttendance(stu.id, s)} style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', backgroundColor: statusConfig[s].backgroundColor, border: 'none', color: 'white', cursor: 'pointer' }}>{s}</button>
                                                     ))
                                                 )}
                                             </div>
