@@ -66,10 +66,13 @@ export default function ActivitySummaryPage() {
                 return;
             }
 
-            // 2. ดึงข้อมูล attendance ของกิจกรรมนี้ทั้งหมด เพื่อรองรับห้องที่มีนักเรียนมากกว่า 30 คน
+            const studentIds = students.map(st => st.id);
+
+            // 2. ดึงข้อมูล attendance เฉพาะกิจกรรมนี้ และเฉพาะห้องเรียนที่เลือก (กรอง classId ด้วยเพื่อให้จำนวนวันตรงเฉพาะห้องนั้นๆ)
             const aSnap = await getDocs(query(
                 collection(db, "attendance"), 
-                where("activityId", "==", selectedActivityId)
+                where("activityId", "==", selectedActivityId),
+                where("classId", "==", selectedClass)
             ));
             const attendance = aSnap.docs.map(doc => doc.data());
 
@@ -78,9 +81,24 @@ export default function ActivitySummaryPage() {
             
             const processed = students.map(st => {
                 const recs = attendance.filter(r => r.studentId === st.id);
-                const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาทั้งวัน': 0, 'ขาด': 0 };
+                // รองรับทุกชื่อสถานะที่อาจจะถูกบันทึกไว้ในระบบ
+                const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาเต็มวัน': 0, 'ขาด': 0 };
                 let penaltyScore = 0;
-                recs.forEach(r => { if (stats[r.status] !== undefined) stats[r.status]++; penaltyScore += (weights[r.status] || 0); });
+                
+                recs.forEach(r => {
+                    let stName = r.status;
+                    // แปลงชื่อสถานะให้แมตช์กับคีย์กลาง
+                    if (stName === 'ลาครึ่ง') stName = 'ลาครึ่งวัน';
+                    if (stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') stName = 'ลาทั้งวัน';
+
+                    if (stats[stName] !== undefined) {
+                        stats[stName]++;
+                    } else if (stName === 'ลา') {
+                        stats['ลาทั้งวัน']++;
+                    }
+                    penaltyScore += (weights[stName] || weights[r.status] || 0);
+                });
+
                 const percent = totalSessions > 0 ? ((totalSessions - penaltyScore) / totalSessions) * 100 : 0;
                 return { ...st, stats, totalRecs: recs.length, percent: Math.max(0, percent).toFixed(0), result: percent >= 80 ? 'ผ่าน' : 'ไม่ผ่าน' };
             });
