@@ -56,7 +56,7 @@ export default function ActivitySummaryPage() {
             const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
             const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
             
-            // 1. ดึงรายชื่อนักเรียนในห้องที่เลือก
+            // 1. ดึงรายชื่อนักเรียนในห้องที่เลือกทั้งหมด
             const sSnap = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber")));
             const students = sSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(st => st.status !== "จำหน่าย"); 
             
@@ -66,14 +66,10 @@ export default function ActivitySummaryPage() {
                 return;
             }
 
-            const studentIds = students.map(st => st.id);
-
-            // 2. ดึงข้อมูล attendance เฉพาะกิจกรรมนี้ และเฉพาะนักเรียนที่มีอยู่ในห้องนี้จริงๆ เพื่อให้ตัวเลขรวมตรงตามจริง
-            // หมายเหตุ: Firestore 'in' query รองรับสูงสุด 30 ไอดีต่อครั้ง หากห้องใหญ่กว่านี้อาจต้องแบ่ง chunk แต่โดยทั่วไปใช้งานได้ปกติครับ
+            // 2. ดึงข้อมูล attendance ของกิจกรรมนี้ทั้งหมด เพื่อรองรับห้องที่มีนักเรียนมากกว่า 30 คน
             const aSnap = await getDocs(query(
                 collection(db, "attendance"), 
-                where("activityId", "==", selectedActivityId),
-                where("studentId", "in", studentIds.slice(0, 30))
+                where("activityId", "==", selectedActivityId)
             ));
             const attendance = aSnap.docs.map(doc => doc.data());
 
