@@ -38,17 +38,24 @@ export default function CheckAttendancePage() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) { router.push('/login'); return; }
             try {
-                const [actSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
+                const [actSnap, userSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
+                    getDocs(query(collection(db, "users"), where("uid", "==", user.uid))),
                     getDocs(collection(db, "students")),
                     getDocs(collection(db, "classrooms")),
                     getDoc(doc(db, "system_settings", "main_config"))
                 ]);
                 
-                const classList = classSnap.docs.map(d => ({
-                    id: d.id,
-                    name: d.data().className || d.id
-                }));
+                // ดึงห้องที่ครูท่านนี้ได้รับมอบหมายจากโปรไฟล์ผู้ใช้ (assignedClasses)
+                const assignedClassNames = !userSnap.empty ? userSnap.docs[0].data().assignedClasses || [] : [];
+
+                // กรองเฉพาะห้องที่ตรงกับที่ครูรับผิดชอบ
+                const classList = classSnap.docs
+                    .map(d => ({
+                        id: d.id,
+                        name: d.data().className || d.id
+                    }))
+                    .filter(c => assignedClassNames.includes(c.name) || assignedClassNames.includes(c.id));
 
                 setData({
                     name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
@@ -109,7 +116,7 @@ export default function CheckAttendancePage() {
         toast.success("ลบข้อมูลเช็คชื่อของวันนี้ทั้งหมดแล้ว");
     };
 
-    // กรองและเรียงลำดับนักเรียนตามเลขที่ (studentNumber / number / no)
+    // กรองและเรียงลำดับนักเรียนตามเลขที่ (รองรับทุกชื่อฟิลด์เลขที่ และเรียงตามรหัส/ชื่อสำรอง)
     const filteredStudents = data.students
         .filter(s => {
             if (!selectedClass) return false;
@@ -117,9 +124,10 @@ export default function CheckAttendancePage() {
             return s.classId?.trim() === selectedClass.trim() || s.classId?.trim() === selectedObj?.name?.trim();
         })
         .sort((a, b) => {
-            const numA = Number(a.studentNumber || a.number || a.no || 0);
-            const numB = Number(b.studentNumber || b.number || b.no || 0);
-            return numA - numB;
+            const numA = Number(a.studentNumber || a.number || a.no || a.code || 0);
+            const numB = Number(b.studentNumber || b.number || b.no || b.code || 0);
+            if (numA !== numB) return numA - numB;
+            return (a.name || '').localeCompare(b.name || '', 'th');
         });
 
     return (
@@ -168,7 +176,7 @@ export default function CheckAttendancePage() {
                         <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', border: '1px solid #334155', overflow: 'hidden' }}>
                             {filteredStudents.length > 0 ? (
                                 filteredStudents.map((stu, index) => {
-                                    const studentNo = stu.studentNumber || stu.number || stu.no || (index + 1);
+                                    const studentNo = stu.studentNumber || stu.number || stu.no || stu.code || (index + 1);
                                     return (
                                         <div key={stu.id} style={{ padding: '16px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span style={{ fontSize: '14px' }}>เลขที่ {studentNo}. {stu.name}</span>
