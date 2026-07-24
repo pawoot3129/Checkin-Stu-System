@@ -303,17 +303,17 @@ export default function MonthlySummaryPage() {
                                 <th rowSpan="2" className="border border-black p-1" style={{ width: '40px' }}>ลำดับ</th>
                                 <th rowSpan="2" className="border border-black p-1 col-name" style={{ width: '180px', whiteSpace: 'nowrap' }}>ชื่อ - สกุล</th>
                                 <th colSpan={reportData.daysCount} className="border border-black p-1">วันที่</th>
-                                <th colSpan="5" className="border border-black p-1" style={{ width: '115px' }}>รวม</th>
+                                <th colSpan="5" className="border border-black p-1" style={{ width: '130px' }}>รวม</th>
                             </tr>
                             <tr className="bg-gray-100">
                                 {Array.from({ length: reportData.daysCount }, (_, i) => (
                                     <th key={i + 1} className="border border-black p-0.5" style={{ width: '22px' }}>{i + 1}</th>
                                 ))}
-                                <th className="border border-black p-0.5">มา</th>
-                                <th className="border border-black p-0.5">ข</th>
-                                <th className="border border-black p-0.5">ล</th>
-                                <th className="border border-black p-0.5">ล/ค</th>
-                                <th className="border border-black p-0.5">ส</th>
+                                <th className="border border-black p-0.5" style={{ width: '26px' }}>มา</th>
+                                <th className="border border-black p-0.5" style={{ width: '26px' }}>ข</th>
+                                <th className="border border-black p-0.5" style={{ width: '26px' }}>ล</th>
+                                <th className="border border-black p-0.5" style={{ width: '26px' }}>ล/ค</th>
+                                <th className="border border-black p-0.5" style={{ width: '26px' }}>ส</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -403,11 +403,11 @@ export default function MonthlySummaryPage() {
                                                 </td>
                                             );
                                         })}
-                                        <td className="border border-black p-0.5 text-green-700 font-bold">{s.countPresent > 0 ? s.countPresent : ''}</td>
-                                        <td className="border border-black p-0.5 text-red-600 font-bold">{s.countEx > 0 ? s.countEx : ''}</td>
-                                        <td className="border border-black p-0.5 text-red-600 font-bold">{s.countLeave > 0 ? s.countLeave : ''}</td>
-                                        <td className="border border-black p-0.5 text-orange-600 font-bold">{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
-                                        <td className="border border-black p-0.5 text-amber-600 font-bold">{s.countLate > 0 ? s.countLate : ''}</td>
+                                        <td className="border border-black p-0.5 text-green-700 font-bold" style={{ width: '26px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
+                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '26px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
+                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '26px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
+                                        <td className="border border-black p-0.5 text-orange-600 font-bold" style={{ width: '26px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
+                                        <td className="border border-black p-0.5 text-amber-600 font-bold" style={{ width: '26px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
                                     </tr>
                                 );
                             })}
