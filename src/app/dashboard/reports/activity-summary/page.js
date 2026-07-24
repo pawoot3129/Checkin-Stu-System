@@ -128,25 +128,28 @@ export default function ActivitySummaryPage() {
                     }
                 });
 
-                if (isStudentInternshipOrDual && totalSessions > 0) {
+                // คำนวณจำนวนวันที่เด็กมีประวัติเช็คชื่อจริง (มา + สาย + ลาครึ่ง + ลาเต็ม + ขาด)
+                const studentActualTotalDays = stats['มา'] + stats['สาย'] + stats['ลาครึ่งวัน'] + stats['ลาทั้งวัน'] + stats['ขาด'];
+
+                if (isStudentInternshipOrDual && studentActualTotalDays > 0) {
                     // ถ้าเป็นฝึกงาน/ทวิภาคี ให้ถือว่ามาปฏิบัติงานปกติ ไม่คิดคะแนนหัก
                     return {
                         ...st,
                         isInternshipOrDual: true,
-                        totalRecs: totalSessions,
+                        totalRecs: studentActualTotalDays,
                         percent: '100',
                         result: 'ผ่าน'
                     };
                 }
 
                 const totalAbsenceOrLate = penaltyScore;
-                const percent = totalSessions > 0 ? ((totalSessions - penaltyScore) / totalSessions) * 100 : 100;
+                const percent = studentActualTotalDays > 0 ? ((studentActualTotalDays - penaltyScore) / studentActualTotalDays) * 100 : 100;
                 
                 return { 
                     ...st, 
                     isInternshipOrDual: false,
                     stats, 
-                    totalRecs: totalSessions, 
+                    totalRecs: studentActualTotalDays, 
                     totalAbsenceOrLate, 
                     percent: Math.max(0, percent).toFixed(0), 
                     result: percent >= 80 ? 'ผ่าน' : 'ไม่ผ่าน' 
@@ -211,7 +214,7 @@ export default function ActivitySummaryPage() {
                         </div>
                     </div>
                     <div className="flex justify-between text-sm mb-4">
-                        <p><strong>ห้อง:</strong> {reportData.className} | <strong>ภาคเรียนที่ {selectedSemester} / {selectedYear}</strong> | <strong>รวม {reportData.totalSessions} ครั้ง</strong></p>
+                        <p><strong>ห้อง:</strong> {reportData.className} | <strong>ภาคเรียนที่ {selectedSemester} / {selectedYear}</strong> | <strong>รวมทั้งหมด {reportData.totalSessions} ครั้ง</strong></p>
                         <p><strong>วันที่ออกรายงาน:</strong> {reportData.printDate}</p>
                     </div>
                     <table className="w-full border-collapse border border-gray-400 text-center mb-6">
