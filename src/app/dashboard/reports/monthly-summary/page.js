@@ -309,11 +309,11 @@ export default function MonthlySummaryPage() {
                                 {Array.from({ length: reportData.daysCount }, (_, i) => (
                                     <th key={i + 1} className="border border-black p-0.5" style={{ width: '22px' }}>{i + 1}</th>
                                 ))}
-                                <th className="border border-black p-0.5" style={{ width: '23px' }}>มา</th>
-                                <th className="border border-black p-0.5" style={{ width: '23px' }}>ข</th>
-                                <th className="border border-black p-0.5" style={{ width: '23px' }}>ล</th>
-                                <th className="border border-black p-0.5" style={{ width: '23px' }}>ล/ค</th>
-                                <th className="border border-black p-0.5" style={{ width: '23px' }}>ส</th>
+                                <th className="border border-black p-0.5">มา</th>
+                                <th className="border border-black p-0.5">ข</th>
+                                <th className="border border-black p-0.5">ล</th>
+                                <th className="border border-black p-0.5">ล/ค</th>
+                                <th className="border border-black p-0.5">ส</th>
                             </tr>
                         </thead>
                         <tbody>
