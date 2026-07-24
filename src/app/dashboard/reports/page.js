@@ -18,6 +18,13 @@ const reportOptions = [
         gradient: "from-emerald-500 to-teal-600"
     },
     {
+        title: "รายงานสรุปประจำเดือน",
+        description: "สรุปผลสถิติการเข้าร่วมกิจกรรมและการมาเรียนรายเดือนของนักศึกษา",
+        path: "/dashboard/reports/monthly-summary",
+        status: "พร้อมใช้งาน",
+        gradient: "from-blue-600 to-purple-600"
+    },
+    {
         title: "รายงานสรุปปลายเทอม",
         description: "สรุปผลการการเข้าร่วมกิจกรรมทั้งหมดของนักเรียนแต่ละคนตลอดทั้งปีการศึกษา",
         path: "/dashboard/reports/semester-summary",

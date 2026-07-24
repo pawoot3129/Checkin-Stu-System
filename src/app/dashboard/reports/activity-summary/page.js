@@ -30,9 +30,22 @@ export default function ActivitySummaryPage() {
                 if (!userSnap.empty) {
                     const profile = userSnap.docs[0].data();
                     setUserProfile(profile);
-                    const classSnap = await getDocs(collection(db, "classrooms"));
-                    let classes = profile.role === 'admin' ? classSnap.docs.map(d => d.data().className) : (profile.assignedClasses || []);
-                    setClassrooms([...new Set(classes)].sort());
+
+                    const classSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
+                    const existingClassesMap = new Set(
+                        classSnap.docs.map(d => `${d.data().className} ${d.data().department || ''}`.trim())
+                    );
+
+                    let classes = [];
+                    if (profile.role === 'admin') {
+                        classes = Array.from(existingClassesMap);
+                    } else {
+                        const assigned = profile.assignedClasses || [];
+                        classes = assigned.filter(c => existingClassesMap.has(c));
+                    }
+
+                    classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                    setClassrooms([...new Set(classes)]);
                 }
                 const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (settingsSnap.exists()) {
@@ -56,7 +69,6 @@ export default function ActivitySummaryPage() {
             const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
             const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
             
-            // 1. ดึงรายชื่อนักเรียนในห้องที่เลือกทั้งหมด
             const sSnap = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber")));
             const students = sSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(st => st.status !== "จำหน่าย"); 
             
@@ -66,38 +78,79 @@ export default function ActivitySummaryPage() {
                 return;
             }
 
-            const studentIds = new Set(students.map(st => st.id));
+            const studentIdsSet = new Set(students.map(st => String(st.id).trim()));
 
-            // 2. ดึงข้อมูล attendance ของกิจกรรมนี้ทั้งหมด
             const aSnap = await getDocs(query(
                 collection(db, "attendance"), 
                 where("activityId", "==", selectedActivityId)
             ));
             
-            // กรองเอาเฉพาะข้อมูลการเช็คชื่อของนักเรียนที่อยู่ในห้องนี้จริงๆ (ป้องกันปัญหานับวันเกินจากห้องอื่น)
-            const attendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIds.has(r.studentId));
+            const attendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
 
             const uniqueDates = [...new Set(attendance.map(r => r.date))];
             const totalSessions = uniqueDates.length;
             
+            // ตรวจสอบว่าห้องนี้เป็นห้องทวิภาคี หรือเด็กส่วนใหญ่ถูกเช็คสถานะเป็น ฝึกงาน/ทวิภาคี ทั้งห้องหรือไม่
+            const classStatuses = attendance.map(r => r.status);
+            const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
+                (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
+
             const processed = students.map(st => {
-                const recs = attendance.filter(r => r.studentId === st.id);
+                const recs = attendance.filter(r => String(r.studentId).trim() === String(st.id).trim());
                 const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาทั้งวัน': 0, 'ขาด': 0 };
                 let penaltyScore = 0;
-                
-                recs.forEach(r => {
-                    let stName = r.status;
-                    if (stName === 'ลาครึ่ง' || stName === 'ลาครึ่งวัน') stName = 'ลาครึ่งวัน';
-                    else if (stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน' || stName === 'ลา') stName = 'ลาทั้งวัน';
+                let isStudentInternshipOrDual = isClassDualOrInternship;
 
-                    if (stats[stName] !== undefined) {
-                        stats[stName]++;
+                recs.forEach(r => {
+                    let stName = String(r.status || '').trim();
+                    if (stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                        isStudentInternshipOrDual = true;
                     }
-                    penaltyScore += (weights[stName] || weights[r.status] || 0);
+                    
+                    if (stName === 'มา' || stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                        stats['มา']++;
+                        penaltyScore += Number(weights['มา'] ?? 0);
+                    } else if (stName === 'สาย') {
+                        stats['สาย']++;
+                        penaltyScore += Number(weights['สาย'] ?? 1);
+                    } else if (stName.includes('ครึ่ง')) {
+                        stats['ลาครึ่งวัน']++;
+                        penaltyScore += Number(weights['ลาครึ่งวัน'] ?? 0.5);
+                    } else if (stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
+                        stats['ลาทั้งวัน']++;
+                        penaltyScore += Number(weights['ลาทั้งวัน'] ?? 0.5);
+                    } else if (stName === 'ขาด') {
+                        stats['ขาด']++;
+                        penaltyScore += Number(weights['ขาด'] ?? 1);
+                    } else {
+                        stats['ขาด']++;
+                        penaltyScore += Number(weights['ขาด'] ?? 1);
+                    }
                 });
 
-                const percent = totalSessions > 0 ? ((totalSessions - penaltyScore) / totalSessions) * 100 : 0;
-                return { ...st, stats, totalRecs: recs.length, percent: Math.max(0, percent).toFixed(0), result: percent >= 80 ? 'ผ่าน' : 'ไม่ผ่าน' };
+                if (isStudentInternshipOrDual && totalSessions > 0) {
+                    // ถ้าเป็นฝึกงาน/ทวิภาคี ให้ถือว่ามาปฏิบัติงานปกติ ไม่คิดคะแนนหัก
+                    return {
+                        ...st,
+                        isInternshipOrDual: true,
+                        totalRecs: totalSessions,
+                        percent: '100',
+                        result: 'ผ่าน'
+                    };
+                }
+
+                const totalAbsenceOrLate = penaltyScore;
+                const percent = totalSessions > 0 ? ((totalSessions - penaltyScore) / totalSessions) * 100 : 100;
+                
+                return { 
+                    ...st, 
+                    isInternshipOrDual: false,
+                    stats, 
+                    totalRecs: totalSessions, 
+                    totalAbsenceOrLate, 
+                    percent: Math.max(0, percent).toFixed(0), 
+                    result: percent >= 80 ? 'ผ่าน' : 'ไม่ผ่าน' 
+                };
             });
 
             setReportData({ 
@@ -164,31 +217,41 @@ export default function ActivitySummaryPage() {
                     <table className="w-full border-collapse border border-gray-400 text-center mb-6">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="border p-1">เลขที่</th>
-                                <th className="border p-1 text-left">ชื่อ-นามสกุล</th>
+                                <th className="border p-1 text-center">เลขที่</th>
+                                <th className="border p-1 text-center">ชื่อ - สกุล</th>
                                 <th className="border p-1">รวมวัน</th>
                                 <th className="border p-1">มา</th>
                                 <th className="border p-1">สาย</th>
                                 <th className="border p-1">ลาครึ่ง</th>
                                 <th className="border p-1">ลาเต็ม</th>
                                 <th className="border p-1">ขาด</th>
+                                <th className="border p-1" style={{ whiteSpace: 'pre-line', lineHeight: '1.2' }}>รวม<br/>ขาด/ลา/สาย</th>
                                 <th className="border p-1">ร้อยละ</th>
-                                <th className="border p-1">ผล</th>
+                                <th className="border p-1">ผลการประเมิน</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {reportData.students.map(s => (
+                            {reportData.students.map((s, index) => (
                                 <tr key={s.id}>
-                                    <td className="border p-1">{s.studentNumber}</td>
+                                    <td className="border p-1 text-center">{index + 1}</td>
                                     <td className="border p-1 text-left">{s.name}</td>
                                     <td className="border p-1 font-bold">{s.totalRecs}</td>
-                                    <td className="border p-1">{s.stats.มา}</td>
-                                    <td className="border p-1">{s.stats.สาย}</td>
-                                    <td className="border p-1">{s.stats.ลาครึ่งวัน}</td>
-                                    <td className="border p-1">{s.stats.ลาทั้งวัน}</td>
-                                    <td className="border p-1">{s.stats.ขาด}</td>
-                                    <td className="border p-1">{s.percent}%</td>
-                                    <td className="border p-1 font-bold">{s.result}</td>
+                                    {s.isInternshipOrDual ? (
+                                        <td colSpan="8" className="border p-1 font-semibold text-center bg-gray-50 text-indigo-700">
+                                            นักศึกษาระบบทวิภาคี / ออกฝึกประสบการณ์วิชาชีพ
+                                        </td>
+                                    ) : (
+                                        <>
+                                            <td className="border p-1">{s.stats.มา}</td>
+                                            <td className="border p-1">{s.stats.สาย}</td>
+                                            <td className="border p-1">{s.stats.ลาครึ่งวัน}</td>
+                                            <td className="border p-1">{s.stats.ลาทั้งวัน}</td>
+                                            <td className="border p-1">{s.stats.ขาด}</td>
+                                            <td className="border p-1 font-semibold text-red-600">{s.totalAbsenceOrLate}</td>
+                                            <td className="border p-1">{s.percent}%</td>
+                                            <td className="border p-1 font-bold">{s.result}</td>
+                                        </>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

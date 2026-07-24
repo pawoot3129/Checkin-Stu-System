@@ -42,15 +42,33 @@ function ManageStudentsPage({ userProfile }) {
 
     useEffect(() => {
         const fetchClasses = async () => {
-            let classes = userProfile.role === 'admin' 
-                ? (await getDocs(query(collection(db, "classrooms"), orderBy("className")))).docs.map(d => `${d.data().className} ${d.data().department || ''}`.trim())
-                : userProfile.assignedClasses || [];
-            
-            // เรียงลำดับชื่อห้องให้ถูกต้องตามหลักตัวเลข
-            classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-            
-            setClassrooms(classes);
-            if (classes.length > 0) setSelectedClass(classes[0]);
+            try {
+                const allClassroomsSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
+                const existingClassesMap = new Set(
+                    allClassroomsSnap.docs.map(d => `${d.data().className} ${d.data().department || ''}`.trim())
+                );
+
+                let classes = [];
+
+                if (userProfile.role === 'admin') {
+                    classes = Array.from(existingClassesMap);
+                } else {
+                    const assigned = userProfile.assignedClasses || [];
+                    classes = assigned.filter(c => existingClassesMap.has(c));
+                }
+                
+                classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                
+                setClassrooms(classes);
+                if (classes.length > 0) {
+                    setSelectedClass(classes[0]);
+                } else {
+                    setSelectedClass('');
+                }
+            } catch (error) {
+                console.error("Error fetching classes:", error);
+                toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลห้องเรียน");
+            }
         };
         fetchClasses();
     }, [userProfile]);
@@ -58,7 +76,10 @@ function ManageStudentsPage({ userProfile }) {
     useEffect(() => { fetchStudents(); }, [selectedClass]);
 
     const fetchStudents = async () => {
-        if (!selectedClass) return;
+        if (!selectedClass) {
+            setStudents([]);
+            return;
+        }
         const q = query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber"));
         const snap = await getDocs(q);
         setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -131,12 +152,12 @@ function ManageStudentsPage({ userProfile }) {
             <Toaster />
             <div className="max-w-4xl mx-auto">
                 <header className="flex justify-between items-center mb-8">
-    <h1 className="text-3xl font-bold flex items-center gap-3">
-        <span className="text-indigo-500">📋</span> 
-        จัดการรายชื่อนักเรียน
-    </h1>
-    <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
-</header>
+                    <h1 className="text-3xl font-bold flex items-center gap-3">
+                        <span className="text-indigo-500">📋</span> 
+                        จัดการรายชื่อนักเรียน
+                    </h1>
+                    <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
+                </header>
 
                 <div className="mb-8">
                     <label className="block text-sm font-medium text-gray-400 mb-2 ml-1">เลือกห้องเรียนที่ต้องการจัดการ</label>

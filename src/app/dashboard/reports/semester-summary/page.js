@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../../../lib/firebase';
-import { collection, getDocs, query, where, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function SemesterSummaryPage() {
@@ -42,37 +42,110 @@ export default function SemesterSummaryPage() {
         if (!selectedClass) return toast.error("กรุณาเลือกห้องเรียน");
         setIsLoading(true);
         try {
+            const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
+            const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
+
             const acts = await getDocs(query(collection(db, "activities"), where("academicYear", "==", selectedYear), where("semester", "==", selectedSemester)));
             const semesterActivities = acts.docs.map(d => ({ id: d.id, ...d.data() }));
-            const studs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
-            const studentList = studs.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.status !== "จำหน่าย").sort((a, b) => a.studentNumber - b.studentNumber);
 
+            const studs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
+            
+            // กรองสถานะจำหน่ายออกตั้งแต่ดึงข้อมูล
+            const studentList = studs.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(s => s.status !== "จำหน่าย")
+                .sort((a, b) => {
+                    const numA = Number(a.studentNumber || a.number || a.no || a.code || 0);
+                    const numB = Number(b.studentNumber || b.number || b.no || b.code || 0);
+                    if (numA !== numB) return numA - numB;
+                    return (a.name || '').localeCompare(b.name || '', 'th');
+                });
+
+            if (studentList.length === 0) {
+                toast.error("ไม่พบรายชื่อนักเรียนในห้องนี้");
+                setIsLoading(false);
+                return;
+            }
+
+            const studentIdsSet = new Set(studentList.map(st => String(st.id).trim()));
             const actIds = semesterActivities.map(a => a.id);
+            
             let allAtt = [];
             if (actIds.length > 0) {
                 const attSnap = await getDocs(query(collection(db, "attendance"), where("activityId", "in", actIds)));
-                allAtt = attSnap.docs.map(d => d.data());
+                allAtt = attSnap.docs.map(d => d.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
             }
 
             const processed = studentList.map(st => {
                 const results = {};
-                let passedCount = 0;
+                let hasIncomplete = false; 
+                let hasFailed = false;     
+                const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
+
                 semesterActivities.forEach(act => {
-                    const recs = allAtt.filter(r => r.studentId === st.id && r.activityId === act.id);
-                    const dates = [...new Set(allAtt.filter(r => r.activityId === act.id).map(r => r.date))];
-                    const attended = recs.filter(r => r.status === 'มา').length;
-                    const effectiveAttended = attended - recs.filter(r => r.status === 'สาย').length - (recs.filter(r => r.status === 'ลา').length / 2);
-                    const percent = dates.length > 0 ? (effectiveAttended / dates.length) * 100 : 0;
-                    const isPassed = percent >= (act.minPercent || 80);
+                    const actRecs = stRecsAll.filter(r => r.activityId === act.id);
+                    const uniqueDates = [...new Set(allAtt.filter(r => r.activityId === act.id).map(r => r.date))];
+                    const totalSessions = uniqueDates.length;
+
+                    if (totalSessions === 0) {
+                        results[act.id] = '-';
+                        hasIncomplete = true;
+                        return;
+                    }
+
+                    let penaltyScore = 0;
+                    actRecs.forEach(r => {
+                        let stName = String(r.status || '').trim();
+                        if (stName === 'มา') {
+                            penaltyScore += Number(weights['มา'] ?? 0);
+                        } else if (stName === 'สาย') {
+                            penaltyScore += Number(weights['สาย'] ?? 1);
+                        } else if (stName.includes('ครึ่ง')) {
+                            penaltyScore += Number(weights['ลาครึ่งวัน'] ?? 0.5);
+                        } else if (stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
+                            penaltyScore += Number(weights['ลาทั้งวัน'] ?? 0.5);
+                        } else if (stName === 'ขาด') {
+                            penaltyScore += Number(weights['ขาด'] ?? 1);
+                        } else {
+                            penaltyScore += Number(weights['ขาด'] ?? 1);
+                        }
+                    });
+
+                    const percent = ((totalSessions - penaltyScore) / totalSessions) * 100;
+                    const minP = act.minPercent || 80;
+                    const isPassed = percent >= minP;
+
                     results[act.id] = isPassed ? 'ผ' : 'มผ';
-                    if (isPassed) passedCount++;
+                    if (!isPassed) {
+                        hasFailed = true;
+                    }
                 });
-                return { ...st, results, overall: passedCount === semesterActivities.length ? 'ผ' : 'มผ' };
+
+                let overall = 'ผ';
+                if (semesterActivities.length === 0 || hasIncomplete || hasFailed) {
+                    overall = 'มผ';
+                }
+
+                return { 
+                    ...st, 
+                    results, 
+                    overall 
+                };
             });
 
-            setReportData({ students: processed, activities: semesterActivities, date: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }), advisor: userProfile.name });
+            setReportData({ 
+                students: processed, 
+                activities: semesterActivities, 
+                date: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }), 
+                advisor: userProfile?.name || "..................................." 
+            });
             toast.success("สร้างรายงานสำเร็จ");
-        } catch (e) { toast.error("เกิดข้อผิดพลาด"); } finally { setIsLoading(false); }
+        } catch (e) { 
+            console.error(e);
+            toast.error("เกิดข้อผิดพลาด"); 
+        } finally { 
+            setIsLoading(false); 
+        }
     };
 
     return (
@@ -106,7 +179,7 @@ export default function SemesterSummaryPage() {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <button onClick={generateReport} className="bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all hover:scale-[1.02]">สร้างรายงาน</button>
+                        <button onClick={generateReport} disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all hover:scale-[1.02]">{isLoading ? 'กำลังโหลด...' : 'สร้างรายงาน'}</button>
                         <button onClick={() => window.print()} disabled={!reportData} className={`py-4 rounded-xl font-bold transition-all ${reportData ? 'bg-white text-black hover:bg-gray-200 hover:scale-[1.02]' : 'bg-gray-800 text-gray-500'}`}>พิมพ์รายงาน</button>
                     </div>
                 </div>
@@ -126,8 +199,29 @@ export default function SemesterSummaryPage() {
                         <p>วันที่ออกรายงาน: {reportData.date}</p>
                     </div>
                     <table className="w-full border-collapse border border-black text-center text-sm mb-6" style={{ tableLayout: 'fixed' }}>
-                        <thead className="bg-gray-200"><tr><th className="p-2 border border-black" style={{ width: '40px' }}>เลขที่</th><th className="p-2 border border-black">ชื่อ-นามสกุล</th>{reportData.activities.map(a => <th key={a.id} className="p-2 border border-black">{a.activityName}</th>)}<th className="p-2 border border-black" style={{ width: '50px' }}>สรุป</th></tr></thead>
-                        <tbody>{reportData.students.map(s => <tr key={s.id}><td className="p-2 border border-black">{s.studentNumber}</td><td className="p-2 border border-black text-left">{s.name}</td>{reportData.activities.map(a => <td key={a.id} className="p-2 border border-black font-bold" style={{color: s.results[a.id] === 'มผ' ? 'red' : 'black'}}>{s.results[a.id]}</td>)}<td className="p-2 border border-black font-bold">{s.overall}</td></tr>)}</tbody>
+                        <thead className="bg-gray-200">
+                            <tr>
+                                <th className="p-2 border border-black" style={{ width: '40px' }}>เลขที่</th>
+                                <th className="p-2 border border-black">ชื่อ-นามสกุล</th>
+                                {reportData.activities.map(a => <th key={a.id} className="p-2 border border-black">{a.activityName}</th>)}
+                                <th className="p-2 border border-black" style={{ width: '50px' }}>สรุป</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {reportData.students.map((s, index) => (
+                                <tr key={s.id}>
+                                    {/* รันเลขที่ในตารางรายงานใหม่ต่อเนื่อง 1, 2, 3... */}
+                                    <td className="p-2 border border-black">{index + 1}</td>
+                                    <td className="p-2 border border-black text-left">{s.name}</td>
+                                    {reportData.activities.map(a => (
+                                        <td key={a.id} className="p-2 border border-black font-bold" style={{color: s.results[a.id] === 'มผ' ? 'red' : 'black'}}>
+                                            {s.results[a.id]}
+                                        </td>
+                                    ))}
+                                    <td className="p-2 border border-black font-bold" style={{color: s.overall === 'มผ' ? 'red' : 'black'}}>{s.overall}</td>
+                                </tr>
+                            ))}
+                        </tbody>
                     </table>
                     <div className="text-sm p-4 bg-gray-50 border rounded-lg mb-10">
                         <strong>หมายเหตุเกณฑ์ประเมิน:</strong>
@@ -136,9 +230,25 @@ export default function SemesterSummaryPage() {
                             <li><strong>สรุปผลรวม:</strong> นักศึกษาต้องผ่าน "ทุกกิจกรรม" จึงจะถือว่ามีผลการประเมินรวมเป็น "ผ่าน" (ผ)</li>
                         </ul>
                     </div>
-                    <div className="flex justify-between mt-12 px-10">
-                        <div className="text-center"><p>ลงชื่อ..................................ครูที่ปรึกษา</p><p className="mt-2">({reportData.advisor})</p></div>
-                        <div className="text-center"><p>ลงชื่อ..................................รองผู้อำนวยการฯ</p><p className="mt-2">(นายภวุฒิ มันเหมาะ)</p></div>
+                    <div className="flex flex-row justify-between items-end mt-16 px-4 text-center text-xs">
+                        <div className="flex-1 px-2">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">({reportData.advisor})</p>
+                            <p className="font-semibold">ครูที่ปรึกษา</p>
+                        </div>
+                        <div className="flex-1 px-2">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">(นายภวุฒิ มันเหมาะ)</p>
+                            <p className="font-semibold">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
+                        </div>
+                        <div className="flex-1 px-2 flex flex-col items-center">
+                            <div className="relative w-full flex justify-center items-center">
+                                <p>ลงชื่อ......................................................</p>
+                                <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="absolute -top-10 w-24 object-contain pointer-events-none" />
+                            </div>
+                            <p className="mt-1">(ดร.ประชากร บริบูรณ์)</p>
+                            <p className="font-semibold">ผู้อำนวยการ</p>
+                        </div>
                     </div>
                 </div>
             )}
