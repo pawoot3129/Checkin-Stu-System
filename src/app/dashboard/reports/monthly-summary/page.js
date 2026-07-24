@@ -324,7 +324,7 @@ export default function MonthlySummaryPage() {
                                 return (
                                     <tr key={s.id}>
                                         <td className="border border-black p-1">{index + 1}</td>
-                                        <td className="border border-black p-1 text-left col-name" style={{ whiteSpace: 'nowrap', overflow: 'visible', paddingLeft: '8px' }}>{s.name}</td>
+                                        <td className="border border-black p-1 text-left col-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px', paddingLeft: '8px' }}>{s.name}</td>
                                         {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(day => {
                                             const statusObj = s.dailyStatus[day];
                                             const isHoliday = !!reportData.holidayDaysMap[day];
@@ -344,7 +344,7 @@ export default function MonthlySummaryPage() {
                                                             key={day} 
                                                             rowSpan={totalStudents} 
                                                             className="border border-black p-0.5 font-medium align-middle relative bg-red-50"
-                                                            style={{ backgroundColor: '#fff5f5' }}
+                                                            style={{ backgroundColor: '#fff5f5', overflow: 'hidden' }}
                                                         >
                                                             <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '2px', backgroundColor: '#dc2626', transform: 'translateX(-50%)', zIndex: 1 }}></div>
                                                             <div style={{ 
@@ -360,10 +360,13 @@ export default function MonthlySummaryPage() {
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
                                                                 height: '100%',
+                                                                maxHeight: '100%',
                                                                 letterSpacing: '1px',
                                                                 backgroundColor: '#ffffff',
-                                                                padding: reportData.isFewStudents ? '2px 0' : '4px 0',
-                                                                maxHeight: reportData.isFewStudents ? '120px' : 'none'
+                                                                padding: '2px 0',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap'
                                                             }}>
                                                                 {holidayText}
                                                             </div>
