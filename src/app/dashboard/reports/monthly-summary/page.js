@@ -188,7 +188,7 @@ export default function MonthlySummaryPage() {
                 processedStudents.forEach(st => {
                     const val = st.dailyStatus[i];
                     if (val && val.type !== 'empty') {
-                        if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลา' || val.type === 'ลาครึ่งวัน' || val.type === 'ลาเต็ม' || val.type === 'ขาด') {
+                        if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลาครึ่งวัน' || val.type === 'ลาเต็ม' || val.type === 'ขาด') {
                             hasNormalCheck = true;
                         }
                         if (val.type === 'มา' || val.type === 'สาย') p++;
@@ -423,27 +423,42 @@ export default function MonthlySummaryPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {['จำนวนนักเรียน ทั้งหมด', 'จำนวนนักเรียนที่มา', 'จำนวนนักเรียนที่ขาด', 'จำนวนนักเรียนที่ลาเต็มวัน', 'จำนวนนักเรียนที่ลาครึ่งวัน', 'จำนวนนักเรียนที่สาย'].map((title, idx) => {
-                                const keyMap = [
-                                    reportData.summaryDailyTotal,
-                                    reportData.summaryDailyPresent,
-                                    reportData.summaryDailyAbsent,
-                                    reportData.summaryDailyLeave,
-                                    reportData.summaryDailyHalfLeave,
-                                    reportData.summaryDailyLate
-                                ];
-                                const currMap = keyMap[idx];
-                                const textColor = idx === 2 || idx === 3 ? 'text-red-600' : idx === 4 ? 'text-orange-600' : idx === 5 ? 'text-amber-600' : '';
-
-                                return (
-                                    <tr key={title} style={{ height: '25px' }}>
-                                        <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>{title}</td>
-                                        {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                            <td key={d} className={`border border-black p-0.5 ${textColor}`} style={{ height: '25px', width: '22px' }}>{currMap[d]}</td>
-                                        ))}
-                                    </tr>
-                                );
-                            })}
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียน ทั้งหมด</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyTotal[d]}</td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียนที่มา</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyPresent[d]}</td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียนที่ขาด</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5 text-red-600" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyAbsent[d]}</td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียนที่ลาเต็มวัน</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5 text-red-600" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyLeave[d]}</td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียนที่ลาครึ่งวัน</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5 text-orange-600" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyHalfLeave[d]}</td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ height: '25px', width: '185px' }}>จำนวนนักเรียนที่สาย</td>
+                                {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
+                                    <td key={d} className="border border-black p-0.5 text-amber-600" style={{ height: '25px', width: '22px' }}>{reportData.summaryDailyLate[d]}</td>
+                                ))}
+                            </tr>
                         </tbody>
                     </table>
 
