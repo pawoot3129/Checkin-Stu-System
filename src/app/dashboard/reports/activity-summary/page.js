@@ -47,15 +47,15 @@ export default function ActivitySummaryPage() {
                     classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
                     setClassrooms([...new Set(classes)]);
                 }
-                const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
-                if (settingsSnap.exists()) {
-                    const years = settingsSnap.data().academicYears || ['2569'];
-                    setAcademicYears(years);
-                    setSelectedYear(years[0]);
-                }
-                const actSnap = await getDocs(collection(db, "activities"));
-                setAllActivities(actSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             });
+            const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
+            if (settingsSnap.exists()) {
+                const years = settingsSnap.data().academicYears || ['2569'];
+                setAcademicYears(years);
+                setSelectedYear(years[0]);
+            }
+            const actSnap = await getDocs(collection(db, "activities"));
+            setAllActivities(actSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         init();
     }, [router]);
@@ -85,12 +85,14 @@ export default function ActivitySummaryPage() {
                 where("activityId", "==", selectedActivityId)
             ));
             
-            const attendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
+            const allAttendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
+
+            // กรองวันที่เป็น "วันหยุด" ออกจากการคำนวณทั้งหมด
+            const attendance = allAttendance.filter(r => String(r.status || '').trim() !== 'วันหยุด');
 
             const uniqueDates = [...new Set(attendance.map(r => r.date))];
             const totalSessions = uniqueDates.length;
             
-            // ตรวจสอบว่าห้องนี้เป็นห้องทวิภาคี หรือเด็กส่วนใหญ่ถูกเช็คสถานะเป็น ฝึกงาน/ทวิภาคี ทั้งห้องหรือไม่
             const classStatuses = attendance.map(r => r.status);
             const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
                 (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
@@ -128,11 +130,9 @@ export default function ActivitySummaryPage() {
                     }
                 });
 
-                // คำนวณจำนวนวันที่เด็กมีประวัติเช็คชื่อจริง (มา + สาย + ลาครึ่ง + ลาเต็ม + ขาด)
                 const studentActualTotalDays = stats['มา'] + stats['สาย'] + stats['ลาครึ่งวัน'] + stats['ลาทั้งวัน'] + stats['ขาด'];
 
                 if (isStudentInternshipOrDual && studentActualTotalDays > 0) {
-                    // ถ้าเป็นฝึกงาน/ทวิภาคี ให้ถือว่ามาปฏิบัติงานปกติ ไม่คิดคะแนนหัก
                     return {
                         ...st,
                         isInternshipOrDual: true,
