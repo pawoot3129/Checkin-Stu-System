@@ -147,6 +147,7 @@ export default function MonthlySummaryPage() {
                         } else if (stName === 'ลาครึ่งวัน') {
                             dailyStatus[i] = { type: 'ลาครึ่งวัน', text: 'ล', hasCheck: true };
                             countHalfLeave++;
+                            countPresent++; // นับรวมคนที่ลาครึ่งวันว่ามาเรียนด้วย
                         } else if (stName.includes('ครึ่ง') || stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
                             dailyStatus[i] = { type: 'ลาเต็ม', text: 'ล', hasCheck: false };
                             countLeave++;
@@ -191,7 +192,7 @@ export default function MonthlySummaryPage() {
                         if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลาครึ่งวัน' || val.type === 'ลาเต็ม' || val.type === 'ขาด') {
                             hasNormalCheck = true;
                         }
-                        if (val.type === 'มา' || val.type === 'สาย') p++;
+                        if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลาครึ่งวัน') p++;
                         if (val.type === 'ขาด') ab++;
                         if (val.type === 'ลาเต็ม') lv++;
                         if (val.type === 'ลาครึ่งวัน') hlv++;
