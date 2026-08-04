@@ -13,6 +13,7 @@ export default function ActivitySummaryPage() {
     const [allActivities, setAllActivities] = useState([]);
     const [classrooms, setClassrooms] = useState([]);
     const [academicYears, setAcademicYears] = useState(['2569']);
+    const [systemConfig, setSystemConfig] = useState({});
     
     const [selectedYear, setSelectedYear] = useState('2569');
     const [selectedSemester, setSelectedSemester] = useState('1');
@@ -50,15 +51,27 @@ export default function ActivitySummaryPage() {
             });
             const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
             if (settingsSnap.exists()) {
-                const years = settingsSnap.data().academicYears || ['2569'];
+                const data = settingsSnap.data();
+                setSystemConfig(data);
+                const years = data.academicYears || ['2569'];
                 setAcademicYears(years);
-                setSelectedYear(years[0]);
+                const currentY = years[0];
+                setSelectedYear(currentY);
+
+                const semestersForYear = data.semestersByYear?.[currentY] || ['1'];
+                setSelectedSemester(semestersForYear[0]);
             }
             const actSnap = await getDocs(collection(db, "activities"));
             setAllActivities(actSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         init();
     }, [router]);
+
+    const handleYearChange = (newYear) => {
+        setSelectedYear(newYear);
+        const semestersForYear = systemConfig.semestersByYear?.[newYear] || ['1'];
+        setSelectedSemester(semestersForYear[0]);
+    };
 
     useEffect(() => { setReportData(null); }, [selectedYear, selectedSemester, selectedActivityId, selectedClass]);
 
@@ -173,6 +186,8 @@ export default function ActivitySummaryPage() {
         }
     };
 
+    const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
+
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
@@ -192,8 +207,14 @@ export default function ActivitySummaryPage() {
                 </header>
                 
                 <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="1">ภาคเรียนที่ 1</option><option value="2">ภาคเรียนที่ 2</option></select>
-                    <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">{academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}</select>
+                    <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
+                        {availableSemesters.map(sem => (
+                            <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>
+                        ))}
+                    </select>
+                    <select value={selectedYear} onChange={e => handleYearChange(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
+                        {academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
+                    </select>
                     <select value={selectedActivityId} onChange={e => setSelectedActivityId(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="">-- เลือกกิจกรรม --</option>{allActivities.filter(a => String(a.academicYear) === String(selectedYear) && String(a.semester) === String(selectedSemester)).map(a => <option key={a.id} value={a.id}>{a.activityName}</option>)}</select>
                     <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="">-- เลือกห้องเรียน --</option>{classrooms.map(c => <option key={c} value={c}>{c}</option>)}</select>
                     
