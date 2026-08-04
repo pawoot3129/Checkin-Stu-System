@@ -214,7 +214,7 @@ export default function SemesterSummaryPage() {
             `}</style>
 
             <div id="non-printable" className="max-w-4xl mx-auto">
-                <header className="flex justify-between items-center mb-8"><h1 className="text-3xl font-bold">รายงานสรุปผลกิจกรรม</h1><button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button></header>
+                <header className="flex justify-between items-center mb-8"><h1 className="text-3xl font-bold">รายงานสรุปประเมินผลกิจกรรมปลายเทอม</h1><button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button></header>
                 <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div>
