@@ -217,10 +217,10 @@ export default function DailySummaryPageFinal() {
                                     </thead>
                                     <tbody>
                                         {renderTableRows('ปวช')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
                                         {renderTableRows('ปวส')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
-                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-left">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-center">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
                                     </tbody>
                                 </table>
                                 <Signatures />
@@ -243,7 +243,7 @@ export default function DailySummaryPageFinal() {
                                         <tbody>
                                             {renderTableRows(type)}
                                             <tr className="bg-gray-100 font-bold">
-                                                <td className="border border-black p-1 text-left">รวม {type}.</td>
+                                                <td className="border border-black p-1 text-center">รวม {type}.</td>
                                                 {statKeys.map(k => (
                                                     <td key={k} className="border border-black p-0.5">
                                                         {type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}
