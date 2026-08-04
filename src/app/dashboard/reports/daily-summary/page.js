@@ -32,13 +32,13 @@ export default function DailySummaryPageFinal() {
     }, []);
 
     const Signatures = () => (
-        <div className="flex justify-around text-center mt-12 text-[11px] w-full">
+        <div className="flex justify-around text-center mt-6 text-[11px] w-full">
             {[
                 { n: "นางสาวสุพรรัตน์ ดำเพ็ง", p: "รองผู้อำนวยการฝ่ายบริหารงานทั่วไป" },
                 { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล" }
             ].map((s, i) => (
                 <div key={i} className="w-[40%]">
-                    <p className="mb-4">ลงชื่อ.........................................</p>
+                    <p className="mb-2">ลงชื่อ.........................................</p>
                     <p className="font-bold">({s.n})</p>
                     <p>{s.p}</p>
                 </div>
@@ -132,11 +132,11 @@ export default function DailySummaryPageFinal() {
     };
 
     const Header = ({ title }) => (
-        <div className="text-center mb-6 flex flex-col items-center">
-            <img src="/logo.png" className="w-16 mb-2" alt="Logo" />
-            <h2 className="font-bold text-xl">{title}</h2>
-            <p>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
-            <p>ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
+        <div className="text-center mb-4 flex flex-col items-center">
+            <img src="/logo.png" className="w-14 mb-1" alt="Logo" />
+            <h2 className="font-bold text-lg">{title}</h2>
+            <p className="text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+            <p className="text-sm">ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
         </div>
     );
 
@@ -149,11 +149,11 @@ export default function DailySummaryPageFinal() {
                 if (row.isInternshipOrDual) {
                     return (
                         <tr key={classId}>
-                            <td className="border border-black p-2 text-left">{classId}</td>
-                            <td className="border border-black p-1">{row.totalM}</td>
-                            <td className="border border-black p-1">{row.totalF}</td>
-                            <td className="border border-black p-1">{row.totalSum}</td>
-                            <td colSpan="9" className="border border-black p-2 text-center font-semibold text-gray-800 bg-gray-50">
+                            <td className="border border-black p-1 text-left">{classId}</td>
+                            <td className="border border-black p-0.5">{row.totalM}</td>
+                            <td className="border border-black p-0.5">{row.totalF}</td>
+                            <td className="border border-black p-0.5">{row.totalSum}</td>
+                            <td colSpan="9" className="border border-black p-1 text-center font-semibold text-gray-800 bg-gray-50">
                                 นักศึกษาระบบทวิภาคี / ออกฝึกประสบการณ์วิชาชีพ
                             </td>
                         </tr>
@@ -161,8 +161,8 @@ export default function DailySummaryPageFinal() {
                 }
                 return (
                     <tr key={classId}>
-                        <td className="border border-black p-2 text-left">{classId}</td>
-                        {statKeys.map(k => <td key={k} className="border border-black">{row[k]}</td>)}
+                        <td className="border border-black p-1 text-left">{classId}</td>
+                        {statKeys.map(k => <td key={k} className="border border-black p-0.5">{row[k]}</td>)}
                     </tr>
                 );
             });
@@ -173,11 +173,11 @@ export default function DailySummaryPageFinal() {
             <style jsx global>{`
                 @media print {
                     .no-print { display: none !important; }
-                    @page { size: A4 landscape; margin: 10mm; }
-                    #printable-area { width: 100% !important; color: black !important; background: white !important; }
+                    @page { size: A4 landscape; margin: 5mm; }
+                    #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; }
                     .page-break { break-after: page !important; }
                     .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    .print-table th, .print-table td { padding: 4px !important; border: 1px solid black !important; font-size: 11px !important; }
+                    .print-table th, .print-table td { padding: 2px 4px !important; border: 1px solid black !important; font-size: 10px !important; line-height: 1.1 !important; }
                 }
             `}</style>
             <Toaster />
@@ -200,27 +200,27 @@ export default function DailySummaryPageFinal() {
                 </div>
 
                 {reportData && (
-                    <div id="printable-area" className="bg-white text-black p-8 shadow-2xl">
+                    <div id="printable-area" className="bg-white text-black p-6 shadow-2xl">
                         {printMode === 'merged' ? (
                             <div className="w-full">
                                 <Header title="สรุปสถิติประจำวัน" />
-                                <table className="w-full border-collapse border border-black text-center print-table text-[11px] mb-8">
+                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-4">
                                     <thead>
                                         <tr className="bg-gray-200">
-                                            <th rowSpan="2" className="border border-black p-2">ระดับชั้น</th>
-                                            <th colSpan="3" className="border border-black p-1">จำนวน นศ ทั้งหมด</th>
-                                            <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่มา</th>
-                                            <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่ลา</th>
-                                            <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่ขาด</th>
+                                            <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
+                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
+                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
+                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
+                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ขาด</th>
                                         </tr>
-                                        <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-1">ช</th><th className="border border-black p-1">ญ</th><th className="border border-black p-1">รวม</th></Fragment>)}</tr>
+                                        <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-0.5">ช</th><th className="border border-black p-0.5">ญ</th><th className="border border-black p-0.5">รวม</th></Fragment>)}</tr>
                                     </thead>
                                     <tbody>
                                         {renderTableRows('ปวช')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-2 text-left">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black">{reportData.povochorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
                                         {renderTableRows('ปวส')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-2 text-left">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black">{reportData.povosorTotal[k]}</td>)}</tr>
-                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-2 text-left">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black">{reportData.grandTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-left">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
                                     </tbody>
                                 </table>
                                 <Signatures />
@@ -229,20 +229,20 @@ export default function DailySummaryPageFinal() {
                             ['ปวช', 'ปวส'].map((type, idx) => (
                                 <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
                                     <Header title={`สรุปสถิติประจำวัน (${type})`} />
-                                    <table className="w-full border-collapse border border-black text-center print-table text-[11px] mb-8">
+                                    <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-4">
                                         <thead>
                                             <tr className="bg-gray-200">
-                                                <th rowSpan="2" className="border border-black p-2">ระดับชั้น</th>
-                                                <th colSpan="3" className="border border-black p-1">จำนวน นศ ทั้งหมด</th>
-                                                <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่มา</th>
-                                                <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่ลา</th>
-                                                <th colSpan="3" className="border border-black p-1">จำนวน นศ ที่ขาด</th>
+                                                <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
+                                                <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
+                                                <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
+                                                <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
+                                                <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ขาด</th>
                                             </tr>
-                                            <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-1">ช</th><th className="border border-black p-1">ญ</th><th className="border border-black p-1">รวม</th></Fragment>)}</tr>
+                                            <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-0.5">ช</th><th className="border border-black p-0.5">ญ</th><th className="border border-black p-0.5">รวม</th></Fragment>)}</tr>
                                         </thead>
                                         <tbody>
                                             {renderTableRows(type)}
-                                            <tr className="bg-gray-100 font-bold"><td className="border border-black p-2 text-left">รวม {type}.</td>{statKeys.map(k => <td key={k} className="border border-black">{type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}</td>)}</tr>
+                                            <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม {type}.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}</td>)}</tr>
                                         </tbody>
                                     </table>
                                     <Signatures />
