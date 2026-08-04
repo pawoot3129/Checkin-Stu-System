@@ -20,8 +20,10 @@ export default function SemesterSummaryPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
+        const init = async () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) return router.push('/');
+                
                 const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
                 if (!snap.empty) {
                     const prof = snap.docs[0].data();
@@ -30,11 +32,12 @@ export default function SemesterSummaryPage() {
                     const classes = prof.role === 'admin' 
                         ? classSnap.docs.map(d => { const data = d.data(); return data.department ? `${data.className} ${data.department}` : data.className; })
                         : (prof.assignedClasses || []);
-                    setClassrooms([...new Set(classes)].sort());
-                    if (classes.length > 0) setSelectedClass(classes[0]);
+                    const uniqueClasses = [...new Set(classes)].sort();
+                    setClassrooms(uniqueClasses);
+                    if (uniqueClasses.length > 0) setSelectedClass(uniqueClasses[0]);
                 }
 
-                // ดึงตั้งค่าปีการศึกษาและภาคเรียนจาก system_settings/main_config ให้ตรงกับหน้า settings
+                // ดึงตั้งค่าจาก system_settings/main_config ให้เสร็จในขั้นตอนเดียวกัน
                 const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (settingsSnap.exists()) {
                     const data = settingsSnap.data();
@@ -47,9 +50,9 @@ export default function SemesterSummaryPage() {
                     const semestersForYear = data.semestersByYear?.[currentY] || ['1'];
                     setSelectedSemester(semestersForYear[0]);
                 }
-            } else { router.push('/'); }
-        });
-        return () => unsubscribe();
+            });
+        };
+        init();
     }, [router]);
 
     const handleYearChange = (newYear) => {
@@ -97,7 +100,6 @@ export default function SemesterSummaryPage() {
                 allAtt = attSnap.docs.map(d => d.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
             }
 
-            // ตรวจสอบว่าห้องนี้เป็นห้องทวิภาคีทั้งห้องหรือไม่
             const classStatuses = allAtt.map(r => r.status);
             const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
                 (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
@@ -109,7 +111,6 @@ export default function SemesterSummaryPage() {
                 const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
 
                 semesterActivities.forEach(act => {
-                    // กรองเฉพาะกิจกรรมนี้ และ ตัด "วันหยุด" ออกจากการคำนวณทั้งหมดเหมือนหน้ารายงานกิจกรรมเดี่ยว
                     const actAttAll = allAtt.filter(r => r.activityId === act.id);
                     const actAttendance = actAttAll.filter(r => String(r.status || '').trim() !== 'วันหยุด');
                     
