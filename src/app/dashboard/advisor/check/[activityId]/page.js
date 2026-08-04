@@ -195,7 +195,7 @@ export default function CheckAttendancePage() {
     const filteredStudents = data.students
         .filter(s => {
             if (!selectedClass) return false;
-            if (s.status === "จำหน่าย") return false;
+            if (s.status === "จำหน่าย") return false; // กรองนักเรียนที่ถูกจำหน่ายออก
             const selectedObj = data.classes.find(c => c.id === selectedClass);
             return s.classId?.trim() === selectedClass.trim() || s.classId?.trim() === selectedObj?.name?.trim();
         })
