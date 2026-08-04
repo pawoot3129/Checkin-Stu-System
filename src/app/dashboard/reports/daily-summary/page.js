@@ -32,14 +32,14 @@ export default function DailySummaryPageFinal() {
     }, []);
 
     const Signatures = () => (
-        <div className="flex justify-around text-center mt-6 text-[11px] w-full">
+        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '16px', fontSize: '11px', width: '100%' }}>
             {[
                 { n: "นางสาวสุพรรัตน์ ดำเพ็ง", p: "รองผู้อำนวยการฝ่ายบริหารงานทั่วไป" },
                 { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล" }
             ].map((s, i) => (
-                <div key={i} className="w-[40%]">
-                    <p className="mb-2">ลงชื่อ.........................................</p>
-                    <p className="font-bold">({s.n})</p>
+                <div key={i} style={{ width: '40%' }}>
+                    <p style={{ marginBottom: '8px' }}>ลงชื่อ.........................................</p>
+                    <p style={{ fontWeight: 'bold' }}>({s.n})</p>
                     <p>{s.p}</p>
                 </div>
             ))}
@@ -132,11 +132,11 @@ export default function DailySummaryPageFinal() {
     };
 
     const Header = ({ title }) => (
-        <div className="text-center mb-4 flex flex-col items-center">
-            <img src="/logo.png" className="w-14 mb-1" alt="Logo" />
-            <h2 className="font-bold text-lg">{title}</h2>
-            <p className="text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
-            <p className="text-sm">ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
+        <div style={{ textAlign: 'center', marginBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <img src="/logo.png" style={{ width: '45px', height: 'auto', marginBottom: '4px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="Logo" />
+            <h2 style={{ fontWeight: 'bold', fontSize: '16px', margin: '0 0 2px 0', textAlign: 'center', width: '100%' }}>{title}</h2>
+            <p style={{ fontSize: '12px', margin: '0 0 1px 0', textAlign: 'center', width: '100%' }}>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+            <p style={{ fontSize: '12px', margin: 0, textAlign: 'center', width: '100%' }}>ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
         </div>
     );
 
@@ -173,11 +173,11 @@ export default function DailySummaryPageFinal() {
             <style jsx global>{`
                 @media print {
                     .no-print { display: none !important; }
-                    @page { size: A4 landscape; margin: 5mm; }
+                    @page { size: A4 landscape; margin: 4mm; }
                     #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; }
                     .page-break { break-after: page !important; }
                     .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    .print-table th, .print-table td { padding: 2px 4px !important; border: 1px solid black !important; font-size: 10px !important; line-height: 1.1 !important; }
+                    .print-table th, .print-table td { padding: 1.5px 3px !important; border: 1px solid black !important; font-size: 9.5px !important; line-height: 1.05 !important; }
                 }
             `}</style>
             <Toaster />
@@ -204,7 +204,7 @@ export default function DailySummaryPageFinal() {
                         {printMode === 'merged' ? (
                             <div className="w-full">
                                 <Header title="สรุปสถิติประจำวัน" />
-                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-4">
+                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
                                     <thead>
                                         <tr className="bg-gray-200">
                                             <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
@@ -229,7 +229,7 @@ export default function DailySummaryPageFinal() {
                             ['ปวช', 'ปวส'].map((type, idx) => (
                                 <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
                                     <Header title={`สรุปสถิติประจำวัน (${type})`} />
-                                    <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-4">
+                                    <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
                                         <thead>
                                             <tr className="bg-gray-200">
                                                 <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
@@ -242,7 +242,14 @@ export default function DailySummaryPageFinal() {
                                         </thead>
                                         <tbody>
                                             {renderTableRows(type)}
-                                            <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-left">รวม {type}.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}</td>)}</tr>
+                                            <tr className="bg-gray-100 font-bold">
+                                                <td className="border border-black p-1 text-left">รวม {type}.</td>
+                                                {statKeys.map(k => (
+                                                    <td key={k} className="border border-black p-0.5">
+                                                        {type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}
+                                                    </td>
+                                                ))}
+                                            </tr>
                                         </tbody>
                                     </table>
                                     <Signatures />
