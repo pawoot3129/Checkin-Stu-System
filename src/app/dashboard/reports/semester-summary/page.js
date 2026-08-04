@@ -10,6 +10,8 @@ import toast, { Toaster } from 'react-hot-toast';
 export default function SemesterSummaryPage() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState(null);
+    const [academicYears, setAcademicYears] = useState(['2569']);
+    const [systemConfig, setSystemConfig] = useState({});
     const [selectedYear, setSelectedYear] = useState('2569');
     const [selectedSemester, setSelectedSemester] = useState('1');
     const [classrooms, setClassrooms] = useState([]);
@@ -31,10 +33,30 @@ export default function SemesterSummaryPage() {
                     setClassrooms([...new Set(classes)].sort());
                     if (classes.length > 0) setSelectedClass(classes[0]);
                 }
+
+                // ดึงตั้งค่าปีการศึกษาและภาคเรียนจาก system_settings/main_config ให้ตรงกับหน้า settings
+                const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
+                if (settingsSnap.exists()) {
+                    const data = settingsSnap.data();
+                    setSystemConfig(data);
+                    const years = data.academicYears || ['2569'];
+                    setAcademicYears(years);
+                    const currentY = years[0];
+                    setSelectedYear(currentY);
+
+                    const semestersForYear = data.semestersByYear?.[currentY] || ['1'];
+                    setSelectedSemester(semestersForYear[0]);
+                }
             } else { router.push('/'); }
         });
         return () => unsubscribe();
     }, [router]);
+
+    const handleYearChange = (newYear) => {
+        setSelectedYear(newYear);
+        const semestersForYear = systemConfig.semestersByYear?.[newYear] || ['1'];
+        setSelectedSemester(semestersForYear[0]);
+    };
 
     useEffect(() => { setReportData(null); }, [selectedYear, selectedSemester, selectedClass]);
 
@@ -50,7 +72,6 @@ export default function SemesterSummaryPage() {
 
             const studs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
             
-            // กรองสถานะจำหน่ายออกตั้งแต่ดึงข้อมูล
             const studentList = studs.docs
                 .map(d => ({ id: d.id, ...d.data() }))
                 .filter(s => s.status !== "จำหน่าย")
@@ -76,6 +97,11 @@ export default function SemesterSummaryPage() {
                 allAtt = attSnap.docs.map(d => d.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
             }
 
+            // ตรวจสอบว่าห้องนี้เป็นห้องทวิภาคีทั้งห้องหรือไม่
+            const classStatuses = allAtt.map(r => r.status);
+            const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
+                (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
+
             const processed = studentList.map(st => {
                 const results = {};
                 let hasIncomplete = false; 
@@ -83,8 +109,11 @@ export default function SemesterSummaryPage() {
                 const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
 
                 semesterActivities.forEach(act => {
-                    const actRecs = stRecsAll.filter(r => r.activityId === act.id);
-                    const uniqueDates = [...new Set(allAtt.filter(r => r.activityId === act.id).map(r => r.date))];
+                    // กรองเฉพาะกิจกรรมนี้ และ ตัด "วันหยุด" ออกจากการคำนวณทั้งหมดเหมือนหน้ารายงานกิจกรรมเดี่ยว
+                    const actAttAll = allAtt.filter(r => r.activityId === act.id);
+                    const actAttendance = actAttAll.filter(r => String(r.status || '').trim() !== 'วันหยุด');
+                    
+                    const uniqueDates = [...new Set(actAttendance.map(r => r.date))];
                     const totalSessions = uniqueDates.length;
 
                     if (totalSessions === 0) {
@@ -93,25 +122,45 @@ export default function SemesterSummaryPage() {
                         return;
                     }
 
+                    const actRecs = stRecsAll.filter(r => r.activityId === act.id && String(r.status || '').trim() !== 'วันหยุด');
+                    
                     let penaltyScore = 0;
+                    let isStudentInternshipOrDual = isClassDualOrInternship;
+                    let statsCheckCount = 0;
+
                     actRecs.forEach(r => {
                         let stName = String(r.status || '').trim();
-                        if (stName === 'มา') {
+                        if (stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                            isStudentInternshipOrDual = true;
+                        }
+
+                        if (stName === 'มา' || stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['มา'] ?? 0);
                         } else if (stName === 'สาย') {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['สาย'] ?? 1);
                         } else if (stName.includes('ครึ่ง')) {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['ลาครึ่งวัน'] ?? 0.5);
                         } else if (stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['ลาทั้งวัน'] ?? 0.5);
                         } else if (stName === 'ขาด') {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['ขาด'] ?? 1);
                         } else {
+                            statsCheckCount++;
                             penaltyScore += Number(weights['ขาด'] ?? 1);
                         }
                     });
 
-                    const percent = ((totalSessions - penaltyScore) / totalSessions) * 100;
+                    if (isStudentInternshipOrDual && statsCheckCount > 0) {
+                        results[act.id] = 'ผ';
+                        return;
+                    }
+
+                    const percent = statsCheckCount > 0 ? ((statsCheckCount - penaltyScore) / statsCheckCount) * 100 : 100;
                     const minP = act.minPercent || 80;
                     const isPassed = percent >= minP;
 
@@ -148,6 +197,8 @@ export default function SemesterSummaryPage() {
         }
     };
 
+    const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
+
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
@@ -167,11 +218,17 @@ export default function SemesterSummaryPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div>
                             <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ภาคเรียน</label>
-                            <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="1">ภาคเรียนที่ 1</option><option value="2">ภาคเรียนที่ 2</option></select>
+                            <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800">
+                                {availableSemesters.map(sem => (
+                                    <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ปีการศึกษา</label>
-                            <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800">{['2569', '2570'].map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}</select>
+                            <select value={selectedYear} onChange={e => handleYearChange(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800">
+                                {academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
+                            </select>
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">เลือกห้องเรียน</label>
@@ -210,7 +267,6 @@ export default function SemesterSummaryPage() {
                         <tbody>
                             {reportData.students.map((s, index) => (
                                 <tr key={s.id}>
-                                    {/* รันเลขที่ในตารางรายงานใหม่ต่อเนื่อง 1, 2, 3... */}
                                     <td className="p-2 border border-black">{index + 1}</td>
                                     <td className="p-2 border border-black text-left">{s.name}</td>
                                     {reportData.activities.map(a => (
@@ -226,7 +282,7 @@ export default function SemesterSummaryPage() {
                     <div className="text-sm p-4 bg-gray-50 border rounded-lg mb-10">
                         <strong>หมายเหตุเกณฑ์ประเมิน:</strong>
                         <ul className="list-disc ml-5">
-                            <li>ผลการเข้าร่วมแต่ละกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน" (ผ)</li>
+                            <li>ผลการเข้าร่วมแต่ละกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"</li>
                             <li><strong>สรุปผลรวม:</strong> นักศึกษาต้องผ่าน "ทุกกิจกรรม" จึงจะถือว่ามีผลการประเมินรวมเป็น "ผ่าน" (ผ)</li>
                         </ul>
                     </div>
