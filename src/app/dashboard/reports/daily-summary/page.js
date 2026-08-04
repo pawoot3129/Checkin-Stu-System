@@ -32,13 +32,13 @@ export default function DailySummaryPageFinal() {
     }, []);
 
     const Signatures = () => (
-        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '16px', fontSize: '11px', width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '14px', fontSize: '11px', width: '100%' }}>
             {[
                 { n: "นางสาวสุพรรัตน์ ดำเพ็ง", p: "รองผู้อำนวยการฝ่ายบริหารงานทั่วไป" },
                 { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล" }
             ].map((s, i) => (
                 <div key={i} style={{ width: '40%' }}>
-                    <p style={{ marginBottom: '8px' }}>ลงชื่อ.........................................</p>
+                    <p style={{ marginBottom: '6px' }}>ลงชื่อ.........................................</p>
                     <p style={{ fontWeight: 'bold' }}>({s.n})</p>
                     <p>{s.p}</p>
                 </div>
@@ -132,11 +132,11 @@ export default function DailySummaryPageFinal() {
     };
 
     const Header = ({ title }) => (
-        <div style={{ textAlign: 'center', marginBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-            <img src="/logo.png" style={{ width: '45px', height: 'auto', marginBottom: '4px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="Logo" />
-            <h2 style={{ fontWeight: 'bold', fontSize: '16px', margin: '0 0 2px 0', textAlign: 'center', width: '100%' }}>{title}</h2>
-            <p style={{ fontSize: '12px', margin: '0 0 1px 0', textAlign: 'center', width: '100%' }}>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
-            <p style={{ fontSize: '12px', margin: 0, textAlign: 'center', width: '100%' }}>ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
+        <div style={{ textAlign: 'center', marginBottom: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <img src="/logo.png" style={{ width: '42px', height: 'auto', marginBottom: '3px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="Logo" />
+            <h2 style={{ fontWeight: 'bold', fontSize: '15px', margin: '0 0 2px 0', textAlign: 'center', width: '100%' }}>{title}</h2>
+            <p style={{ fontSize: '11.5px', margin: '0 0 1px 0', textAlign: 'center', width: '100%' }}>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+            <p style={{ fontSize: '11.5px', margin: 0, textAlign: 'center', width: '100%' }}>ประจำวัน {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'full' })}</p>
         </div>
     );
 
@@ -149,7 +149,7 @@ export default function DailySummaryPageFinal() {
                 if (row.isInternshipOrDual) {
                     return (
                         <tr key={classId}>
-                            <td className="border border-black p-1 text-left">{classId}</td>
+                            <td style={{ width: '110px', minWidth: '110px' }} className="border border-black p-1 text-left">{classId}</td>
                             <td className="border border-black p-0.5">{row.totalM}</td>
                             <td className="border border-black p-0.5">{row.totalF}</td>
                             <td className="border border-black p-0.5">{row.totalSum}</td>
@@ -161,7 +161,7 @@ export default function DailySummaryPageFinal() {
                 }
                 return (
                     <tr key={classId}>
-                        <td className="border border-black p-1 text-left">{classId}</td>
+                        <td style={{ width: '110px', minWidth: '110px' }} className="border border-black p-1 text-left">{classId}</td>
                         {statKeys.map(k => <td key={k} className="border border-black p-0.5">{row[k]}</td>)}
                     </tr>
                 );
@@ -176,8 +176,8 @@ export default function DailySummaryPageFinal() {
                     @page { size: A4 landscape; margin: 4mm; }
                     #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; }
                     .page-break { break-after: page !important; }
-                    .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    .print-table th, .print-table td { padding: 1.5px 3px !important; border: 1px solid black !important; font-size: 9.5px !important; line-height: 1.05 !important; }
+                    .print-table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+                    .print-table th, .print-table td { padding: 1.5px 2px !important; border: 1px solid black !important; font-size: 9.5px !important; line-height: 1.05 !important; word-wrap: break-word !important; }
                 }
             `}</style>
             <Toaster />
@@ -204,10 +204,16 @@ export default function DailySummaryPageFinal() {
                         {printMode === 'merged' ? (
                             <div className="w-full">
                                 <Header title="สรุปสถิติประจำวัน" />
-                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
+                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3" style={{ tableLayout: 'fixed' }}>
+                                    <colgroup>
+                                        <col style={{ width: '110px' }} />
+                                        {Array.from({ length: 12 }).map((_, i) => (
+                                            <col key={i} style={{ width: 'auto' }} />
+                                        ))}
+                                    </colgroup>
                                     <thead>
                                         <tr className="bg-gray-200">
-                                            <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
+                                            <th rowSpan="2" className="border border-black p-1" style={{ width: '110px' }}>ระดับชั้น</th>
                                             <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
                                             <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
                                             <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
@@ -217,10 +223,10 @@ export default function DailySummaryPageFinal() {
                                     </thead>
                                     <tbody>
                                         {renderTableRows('ปวช')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td style={{ width: '110px' }} className="border border-black p-1 text-center">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
                                         {renderTableRows('ปวส')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
-                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-center">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
+                                        <tr className="bg-gray-100 font-bold"><td style={{ width: '110px' }} className="border border-black p-1 text-center">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
+                                        <tr className="bg-green-100 font-bold"><td style={{ width: '110px' }} className="border border-black p-1 text-center">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
                                     </tbody>
                                 </table>
                                 <Signatures />
@@ -229,10 +235,16 @@ export default function DailySummaryPageFinal() {
                             ['ปวช', 'ปวส'].map((type, idx) => (
                                 <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
                                     <Header title={`สรุปสถิติประจำวัน (${type})`} />
-                                    <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
+                                    <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3" style={{ tableLayout: 'fixed' }}>
+                                        <colgroup>
+                                            <col style={{ width: '110px' }} />
+                                            {Array.from({ length: 12 }).map((_, i) => (
+                                                <col key={i} style={{ width: 'auto' }} />
+                                            ))}
+                                        </colgroup>
                                         <thead>
                                             <tr className="bg-gray-200">
-                                                <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
+                                                <th rowSpan="2" className="border border-black p-1" style={{ width: '110px' }}>ระดับชั้น</th>
                                                 <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
                                                 <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
                                                 <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
@@ -243,7 +255,7 @@ export default function DailySummaryPageFinal() {
                                         <tbody>
                                             {renderTableRows(type)}
                                             <tr className="bg-gray-100 font-bold">
-                                                <td className="border border-black p-1 text-center">รวม {type}.</td>
+                                                <td style={{ width: '110px' }} className="border border-black p-1 text-center">รวม {type}.</td>
                                                 {statKeys.map(k => (
                                                     <td key={k} className="border border-black p-0.5">
                                                         {type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}
