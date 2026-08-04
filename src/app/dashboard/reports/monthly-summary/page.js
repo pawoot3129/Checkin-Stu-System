@@ -25,6 +25,7 @@ const monthsList = [
 export default function MonthlySummaryPage() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState(null);
+    const [academicYears, setAcademicYears] = useState(['2569']);
     const [selectedYear, setSelectedYear] = useState('2569');
     const [selectedSemester, setSelectedSemester] = useState('1');
     const [selectedMonth, setSelectedMonth] = useState('01');
@@ -60,6 +61,14 @@ export default function MonthlySummaryPage() {
                     classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
                     setClassrooms([...new Set(classes)]);
                     if (classes.length > 0) setSelectedClass(classes[0]);
+                }
+
+                // ดึงปีการศึกษาจาก system_settings/main_config ให้ตรงกับหน้า settings
+                const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
+                if (settingsSnap.exists()) {
+                    const years = settingsSnap.data().academicYears || ['2569'];
+                    setAcademicYears(years);
+                    setSelectedYear(years[0]);
                 }
             } else { router.push('/'); }
         });
@@ -147,7 +156,7 @@ export default function MonthlySummaryPage() {
                         } else if (stName === 'ลาครึ่งวัน') {
                             dailyStatus[i] = { type: 'ลาครึ่งวัน', text: 'ล', hasCheck: true };
                             countHalfLeave++;
-                            countPresent++; // นับรวมคนที่ลาครึ่งวันว่ามาเรียนด้วย
+                            countPresent++; 
                         } else if (stName.includes('ครึ่ง') || stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
                             dailyStatus[i] = { type: 'ลาเต็ม', text: 'ล', hasCheck: false };
                             countLeave++;
@@ -264,7 +273,7 @@ export default function MonthlySummaryPage() {
                         <div>
                             <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ปีการศึกษา</label>
                             <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800">
-                                {['2569', '2570'].map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
+                                {academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
                             </select>
                         </div>
                         <div>
