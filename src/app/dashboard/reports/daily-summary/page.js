@@ -20,6 +20,7 @@ export default function DailySummaryPageFinal() {
     const [reportData, setReportData] = useState(null);
     const [printMode, setPrintMode] = useState('merged');
     const [isLoading, setIsLoading] = useState(false);
+    const [holidayNote, setHolidayNote] = useState('');
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -56,10 +57,29 @@ export default function DailySummaryPageFinal() {
             const studSnap = await getDocs(collection(db, "students"));
             const attSnap = await getDocs(collection(db, "attendance"));
             const attMap = {};
+            let foundHoliday = '';
+
             attSnap.docs.forEach(d => {
                 const data = d.data();
-                if(data.date === selectedDate && data.activityId === activity.id) attMap[data.studentId] = data.status;
+                if(data.date === selectedDate && data.activityId === activity.id) {
+                    attMap[data.studentId] = data.status;
+                    if (data.status === 'วันหยุด' && data.holidayNote) {
+                        foundHoliday = data.holidayNote;
+                    } else if (data.status === 'วันหยุด' && !foundHoliday) {
+                        foundHoliday = 'วันหยุดราชการ / วันหยุดพิเศษ';
+                    }
+                }
             });
+
+            setHolidayNote(foundHoliday);
+
+            // ถ้าเป็นวันหยุด ไม่ต้องคำนวณสถิติตารางต่อ ให้เซ็ตข้อมูลเปล่าแต่มีสถานะวันหยุด
+            if (foundHoliday) {
+                setReportData({ isHoliday: true, holidayNote: foundHoliday });
+                toast.success("สร้างรายงานสำเร็จ (วันหยุด)");
+                setIsLoading(false);
+                return;
+            }
             
             const classSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
             const summary = {};
@@ -126,7 +146,7 @@ export default function DailySummaryPageFinal() {
                 else if (id.includes('ปวส')) statKeys.forEach(k => povosorTotal[k] += data[k]);
                 statKeys.forEach(k => grandTotal[k] += data[k]);
             });
-            setReportData({ summary, povochorTotal, povosorTotal, grandTotal });
+            setReportData({ isHoliday: false, summary, povochorTotal, povosorTotal, grandTotal });
             toast.success("สร้างรายงานสำเร็จ");
         } catch (e) { toast.error("Error: " + e.message); } finally { setIsLoading(false); }
     };
@@ -201,34 +221,25 @@ export default function DailySummaryPageFinal() {
 
                 {reportData && (
                     <div id="printable-area" className="bg-white text-black p-6 shadow-2xl">
-                        {printMode === 'merged' ? (
-                            <div className="w-full">
-                                <Header title="สรุปสถิติประจำวัน" />
-                                <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
-                                    <thead>
-                                        <tr className="bg-gray-200">
-                                            <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
-                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
-                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
-                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
-                                            <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ขาด</th>
-                                        </tr>
-                                        <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-0.5">ช</th><th className="border border-black p-0.5">ญ</th><th className="border border-black p-0.5">รวม</th></Fragment>)}</tr>
-                                    </thead>
-                                    <tbody>
-                                        {renderTableRows('ปวช')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
-                                        {renderTableRows('ปวส')}
-                                        <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
-                                        <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-center">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
-                                    </tbody>
-                                </table>
+                        {reportData.isHoliday ? (
+                            <div className="w-full flex flex-col justify-between" style={{ minHeight: '180px' }}>
+                                <div>
+                                    <Header title="สรุปสถิติประจำวัน" />
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', border: '2px dashed #cbd5e1', borderRadius: '12px', margin: '20px 0', backgroundColor: '#f8fafc' }}>
+                                        <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#334155', marginBottom: '12px' }}>
+                                            --- วันหยุด ---
+                                        </h3>
+                                        <p style={{ fontSize: '18px', color: '#475569', textAlign: 'center', fontWeight: '500' }}>
+                                            {reportData.holidayNote}
+                                        </p>
+                                    </div>
+                                </div>
                                 <Signatures />
                             </div>
                         ) : (
-                            ['ปวช', 'ปวส'].map((type, idx) => (
-                                <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
-                                    <Header title={`สรุปสถิติประจำวัน (${type})`} />
+                            printMode === 'merged' ? (
+                                <div className="w-full">
+                                    <Header title="สรุปสถิติประจำวัน" />
                                     <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
                                         <thead>
                                             <tr className="bg-gray-200">
@@ -241,20 +252,46 @@ export default function DailySummaryPageFinal() {
                                             <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-0.5">ช</th><th className="border border-black p-0.5">ญ</th><th className="border border-black p-0.5">รวม</th></Fragment>)}</tr>
                                         </thead>
                                         <tbody>
-                                            {renderTableRows(type)}
-                                            <tr className="bg-gray-100 font-bold">
-                                                <td className="border border-black p-1 text-center">รวม {type}.</td>
-                                                {statKeys.map(k => (
-                                                    <td key={k} className="border border-black p-0.5">
-                                                        {type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}
-                                                    </td>
-                                                ))}
-                                            </tr>
+                                            {renderTableRows('ปวช')}
+                                            <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวช.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povochorTotal[k]}</td>)}</tr>
+                                            {renderTableRows('ปวส')}
+                                            <tr className="bg-gray-100 font-bold"><td className="border border-black p-1 text-center">รวม ปวส.</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.povosorTotal[k]}</td>)}</tr>
+                                            <tr className="bg-green-100 font-bold"><td className="border border-black p-1 text-center">รวมทั้งสิ้น</td>{statKeys.map(k => <td key={k} className="border border-black p-0.5">{reportData.grandTotal[k]}</td>)}</tr>
                                         </tbody>
                                     </table>
                                     <Signatures />
                                 </div>
-                            ))
+                            ) : (
+                                ['ปวช', 'ปวส'].map((type, idx) => (
+                                    <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
+                                        <Header title={`สรุปสถิติประจำวัน (${type})`} />
+                                        <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
+                                            <thead>
+                                                <tr className="bg-gray-200">
+                                                    <th rowSpan="2" className="border border-black p-1">ระดับชั้น</th>
+                                                    <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ทั้งหมด</th>
+                                                    <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่มา</th>
+                                                    <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ลา</th>
+                                                    <th colSpan="3" className="border border-black p-0.5">จำนวน นศ ที่ขาด</th>
+                                                </tr>
+                                                <tr className="bg-gray-200">{[1,2,3,4].map((_, i) => <Fragment key={i}><th className="border border-black p-0.5">ช</th><th className="border border-black p-0.5">ญ</th><th className="border border-black p-0.5">รวม</th></Fragment>)}</tr>
+                                            </thead>
+                                            <tbody>
+                                                {renderTableRows(type)}
+                                                <tr className="bg-gray-100 font-bold">
+                                                    <td className="border border-black p-1 text-center">รวม {type}.</td>
+                                                    {statKeys.map(k => (
+                                                        <td key={k} className="border border-black p-0.5">
+                                                            {type === 'ปวช' ? reportData.povochorTotal[k] : reportData.povosorTotal[k]}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <Signatures />
+                                    </div>
+                                ))
+                            )
                         )}
                     </div>
                 )}
