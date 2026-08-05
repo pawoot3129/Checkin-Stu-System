@@ -20,7 +20,6 @@ export default function DailySummaryPageFinal() {
     const [reportData, setReportData] = useState(null);
     const [printMode, setPrintMode] = useState('merged');
     const [isLoading, setIsLoading] = useState(false);
-    const [holidayNote, setHolidayNote] = useState('');
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -33,13 +32,13 @@ export default function DailySummaryPageFinal() {
     }, []);
 
     const Signatures = () => (
-        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '14px', fontSize: '11px', width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '30px', fontSize: '11px', width: '100%' }}>
             {[
                 { n: "นางสาวสุพรรัตน์ ดำเพ็ง", p: "รองผู้อำนวยการฝ่ายบริหารงานทั่วไป" },
                 { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล" }
             ].map((s, i) => (
                 <div key={i} style={{ width: '40%' }}>
-                    <p style={{ marginBottom: '6px' }}>ลงชื่อ.........................................</p>
+                    <p style={{ marginBottom: '8px' }}>ลงชื่อ.........................................</p>
                     <p style={{ fontWeight: 'bold' }}>({s.n})</p>
                     <p>{s.p}</p>
                 </div>
@@ -57,25 +56,32 @@ export default function DailySummaryPageFinal() {
             const studSnap = await getDocs(collection(db, "students"));
             const attSnap = await getDocs(collection(db, "attendance"));
             const attMap = {};
-            let foundHoliday = '';
+            let holidayNoteFound = '';
+            let totalCheckedCount = 0;
+            let holidayStatusCount = 0;
 
             attSnap.docs.forEach(d => {
                 const data = d.data();
                 if(data.date === selectedDate && data.activityId === activity.id) {
                     attMap[data.studentId] = data.status;
-                    if (data.status === 'วันหยุด' && data.holidayNote) {
-                        foundHoliday = data.holidayNote;
-                    } else if (data.status === 'วันหยุด' && !foundHoliday) {
-                        foundHoliday = 'วันหยุดราชการ / วันหยุดพิเศษ';
+                    totalCheckedCount++;
+                    if (data.status === 'วันหยุด') {
+                        holidayStatusCount++;
+                        if (data.holidayNote) {
+                            holidayNoteFound = data.holidayNote;
+                        }
                     }
                 }
             });
 
-            setHolidayNote(foundHoliday);
+            // ตรวจสอบว่าเป็นวันหยุดหรือไม่ (ถ้ามีบันทึกสถานะวันหยุด หรือเช็คชื่อเป็นวันหยุดเกินครึ่งหนึ่งของรายการที่บันทึก)
+            const isHolidayDay = holidayStatusCount > 0 && (holidayStatusCount >= totalCheckedCount * 0.5);
 
-            // ถ้าเป็นวันหยุด ไม่ต้องคำนวณสถิติตารางต่อ ให้เซ็ตข้อมูลเปล่าแต่มีสถานะวันหยุด
-            if (foundHoliday) {
-                setReportData({ isHoliday: true, holidayNote: foundHoliday });
+            if (isHolidayDay) {
+                setReportData({ 
+                    isHoliday: true, 
+                    holidayNote: holidayNoteFound || 'วันหยุดราชการ / วันหยุดพิเศษ / ปิดสถานศึกษา' 
+                });
                 toast.success("สร้างรายงานสำเร็จ (วันหยุด)");
                 setIsLoading(false);
                 return;
@@ -222,14 +228,14 @@ export default function DailySummaryPageFinal() {
                 {reportData && (
                     <div id="printable-area" className="bg-white text-black p-6 shadow-2xl">
                         {reportData.isHoliday ? (
-                            <div className="w-full flex flex-col justify-between" style={{ minHeight: '180px' }}>
+                            <div className="w-full flex flex-col justify-between" style={{ minHeight: '420px' }}>
                                 <div>
                                     <Header title="สรุปสถิติประจำวัน" />
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', border: '2px dashed #cbd5e1', borderRadius: '12px', margin: '20px 0', backgroundColor: '#f8fafc' }}>
-                                        <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#334155', marginBottom: '12px' }}>
-                                            --- วันหยุด ---
-                                        </h3>
-                                        <p style={{ fontSize: '18px', color: '#475569', textAlign: 'center', fontWeight: '500' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '90px 20px', border: '3px solid #1e293b', borderRadius: '8px', margin: '30px 0', backgroundColor: '#f8fafc' }}>
+                                        <h2 style={{ fontSize: '32px', fontWeight: 'bold', color: '#b91c1c', marginBottom: '16px', letterSpacing: '2px' }}>
+                                            [ วันหยุด ]
+                                        </h2>
+                                        <p style={{ fontSize: '20px', color: '#0f172a', textAlign: 'center', fontWeight: 'bold' }}>
                                             {reportData.holidayNote}
                                         </p>
                                     </div>
