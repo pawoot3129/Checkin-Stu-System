@@ -207,7 +207,7 @@ export default function DailySummaryPageFinal() {
             <Toaster />
             
             <div className="max-w-6xl mx-auto">
-                <div className="no-print bg-gray-900 p-6 rounded-3xl mb-8">
+                <div className="no-print bg-gray-900 p-6 rounded-3xl mb-8 shadow-xl border border-gray-800">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-bold flex items-center gap-3">
                             <span className="text-indigo-500">📊</span>
@@ -216,28 +216,50 @@ export default function DailySummaryPageFinal() {
                         <button onClick={() => router.back()} className="bg-gray-800 px-6 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
                     </div>
                     <div className="flex flex-wrap items-end gap-6">
-                        <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="bg-gray-950 p-3 rounded-xl border border-gray-800" />
-                        <select value={printMode} onChange={e => setPrintMode(e.target.value)} className="bg-gray-950 p-3 rounded-xl border border-gray-800"><option value="merged">รวมหน้าเดียว</option><option value="separated">แยก ปวช/ปวส</option></select>
-                        <button onClick={generateReport} className="bg-indigo-600 px-8 py-3 rounded-xl font-bold">สร้างรายงาน</button>
-                        <button onClick={() => window.print()} className="bg-white text-black px-8 py-3 rounded-xl font-bold">พิมพ์เอกสาร</button>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-gray-400 font-medium">เลือกวันที่ต้องการดูรายงาน</label>
+                            <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="bg-gray-950 p-3 rounded-xl border border-gray-700 focus:border-indigo-500 outline-none transition" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-gray-400 font-medium">รูปแบบการแสดงผล</label>
+                            <select value={printMode} onChange={e => setPrintMode(e.target.value)} className="bg-gray-950 p-3 rounded-xl border border-gray-700 focus:border-indigo-500 outline-none transition">
+                                <option value="merged">รวมหน้าเดียว</option>
+                                <option value="separated">แยก ปวช / ปวส</option>
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={generateReport} 
+                                disabled={isLoading}
+                                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-7 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transform active:scale-95 transition disabled:opacity-50"
+                            >
+                                <span>{isLoading ? '⏳ กำลังประมวลผล...' : '🔍 สร้างรายงาน'}</span>
+                            </button>
+                            <button 
+                                onClick={() => window.print()} 
+                                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-7 py-3 rounded-xl font-bold shadow-lg shadow-emerald-600/30 flex items-center gap-2 transform active:scale-95 transition"
+                            >
+                                <span>🖨️ พิมพ์เอกสาร</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {reportData && (
                     <div id="printable-area" className="bg-white text-black p-6 shadow-2xl relative">
                         {reportData.isHoliday && (
-                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10, width: '65%', backgroundColor: '#ffffff', border: '3px solid #1e293b', padding: '24px 30px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#b91c1c', marginBottom: '8px', letterSpacing: '1px' }}>
+                            <div style={{ position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10, width: '60%', backgroundColor: '#ffffff', border: '3px solid #1e293b', padding: '22px 28px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#b91c1c', marginBottom: '6px', letterSpacing: '1px' }}>
                                     [ ประกาศวันหยุด / วันสำคัญ ]
                                 </h3>
-                                <p style={{ fontSize: '16px', color: '#0f172a', fontWeight: '600', margin: 0 }}>
+                                <p style={{ fontSize: '15px', color: '#0f172a', fontWeight: '600', margin: 0 }}>
                                     {reportData.holidayNote}
                                 </p>
                             </div>
                         )}
 
                         {printMode === 'merged' ? (
-                            <div className="w-full" style={{ opacity: reportData.isHoliday ? 0.25 : 1 }}>
+                            <div className="w-full">
                                 <Header title="สรุปสถิติประจำวัน" />
                                 <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
                                     <thead>
@@ -262,7 +284,7 @@ export default function DailySummaryPageFinal() {
                             </div>
                         ) : (
                             ['ปวช', 'ปวส'].map((type, idx) => (
-                                <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`} style={{ opacity: reportData.isHoliday ? 0.25 : 1 }}>
+                                <div key={type} className={`w-full ${idx === 0 ? 'page-break' : ''}`}>
                                     <Header title={`สรุปสถิติประจำวัน (${type})`} />
                                     <table className="w-full border-collapse border border-black text-center print-table text-[10px] mb-3">
                                         <thead>
