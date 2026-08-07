@@ -3,7 +3,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '../../../../lib/firebase';
-import { collection, getDocs, query, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, orderBy } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
 const statKeys = [
@@ -53,8 +53,14 @@ export default function DailySummaryPageFinal() {
             const activity = actSnap.docs.find(d => d.data().activityName?.includes("กิจกรรมเข้าแถว"));
             if (!activity) throw new Error("ไม่พบกิจกรรมเข้าแถวหน้าเสาธง");
             
-            const studSnap = await getDocs(collection(db, "students"));
-            const attSnap = await getDocs(collection(db, "attendance"));
+            // 🚀 ปรับปรุงใหม่: Query เฉพาะวันที่เลือกและกิจกรรมที่กำหนดจาก Firebase โดยตรง
+            const attQuery = query(
+                collection(db, "attendance"),
+                where("date", "==", selectedDate),
+                where("activityId", "==", activity.id)
+            );
+            const attSnap = await getDocs(attQuery);
+            
             const attMap = {};
             let holidayNoteFound = '';
             let totalCheckedCount = 0;
@@ -62,14 +68,12 @@ export default function DailySummaryPageFinal() {
 
             attSnap.docs.forEach(d => {
                 const data = d.data();
-                if(data.date === selectedDate && data.activityId === activity.id) {
-                    attMap[data.studentId] = data.status;
-                    totalCheckedCount++;
-                    if (data.status === 'วันหยุด') {
-                        holidayStatusCount++;
-                        if (data.holidayNote) {
-                            holidayNoteFound = data.holidayNote;
-                        }
+                attMap[data.studentId] = data.status;
+                totalCheckedCount++;
+                if (data.status === 'วันหยุด') {
+                    holidayStatusCount++;
+                    if (data.holidayNote) {
+                        holidayNoteFound = data.holidayNote;
                     }
                 }
             });
@@ -89,6 +93,7 @@ export default function DailySummaryPageFinal() {
                 };
             });
             
+            const studSnap = await getDocs(collection(db, "students"));
             const classStatuses = {};
             studSnap.docs.forEach(doc => {
                 const student = doc.data();
