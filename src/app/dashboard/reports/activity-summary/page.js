@@ -91,14 +91,24 @@ export default function ActivitySummaryPage() {
                 return;
             }
 
-            const studentIdsSet = new Set(students.map(st => String(st.id).trim()));
+            const studentIds = students.map(st => String(st.id).trim());
 
-            const aSnap = await getDocs(query(
-                collection(db, "attendance"), 
-                where("activityId", "==", selectedActivityId)
-            ));
-            
-            const allAttendance = aSnap.docs.map(doc => doc.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
+            // แบ่ง studentIds เป็นกลุ่มย่อยกลุ่มละไม่เกิน 30 คน เพื่อใช้ query แบบ 'in' ของ Firestore
+            const chunks = [];
+            for (let i = 0; i < studentIds.length; i += 30) {
+                chunks.push(studentIds.slice(i, i + 30));
+            }
+
+            let allAttendance = [];
+            for (const chunk of chunks) {
+                const aQuery = query(
+                    collection(db, "attendance"),
+                    where("activityId", "==", selectedActivityId),
+                    where("studentId", "in", chunk)
+                );
+                const aSnap = await getDocs(aQuery);
+                aSnap.docs.forEach(d => allAttendance.push(d.data()));
+            }
 
             // กรองวันที่เป็น "วันหยุด" ออกจากการคำนวณทั้งหมด
             const attendance = allAttendance.filter(r => String(r.status || '').trim() !== 'วันหยุด');
