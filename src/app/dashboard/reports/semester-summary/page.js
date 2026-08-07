@@ -37,7 +37,6 @@ export default function SemesterSummaryPage() {
                     if (uniqueClasses.length > 0) setSelectedClass(uniqueClasses[0]);
                 }
 
-                // ดึงตั้งค่าจาก system_settings/main_config ให้เสร็จในขั้นตอนเดียวกัน
                 const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (settingsSnap.exists()) {
                     const data = settingsSnap.data();
@@ -91,13 +90,25 @@ export default function SemesterSummaryPage() {
                 return;
             }
 
-            const studentIdsSet = new Set(studentList.map(st => String(st.id).trim()));
+            const studentIds = studentList.map(st => String(st.id).trim());
             const actIds = semesterActivities.map(a => a.id);
             
             let allAtt = [];
-            if (actIds.length > 0) {
-                const attSnap = await getDocs(query(collection(db, "attendance"), where("activityId", "in", actIds)));
-                allAtt = attSnap.docs.map(d => d.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
+            if (actIds.length > 0 && studentIds.length > 0) {
+                // แบ่ง Chunk รหัส นศ. ไม่เกิน 30 คนต่อรอบตามข้อจำกัด Firebase 'in' query เพื่อความเสถียรและรวดเร็ว
+                const studentChunks = [];
+                for (let i = 0; i < studentIds.length; i += 30) {
+                    studentChunks.push(studentIds.slice(i, i + 30));
+                }
+
+                for (const chunk of studentChunks) {
+                    const attSnap = await getDocs(query(
+                        collection(db, "attendance"), 
+                        where("activityId", "in", actIds),
+                        where("studentId", "in", chunk)
+                    ));
+                    attSnap.docs.forEach(d => allAtt.push(d.data()));
+                }
             }
 
             const classStatuses = allAtt.map(r => r.status);
