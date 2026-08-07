@@ -53,7 +53,6 @@ export default function DailySummaryPageFinal() {
             const activity = actSnap.docs.find(d => d.data().activityName?.includes("กิจกรรมเข้าแถว"));
             if (!activity) throw new Error("ไม่พบกิจกรรมเข้าแถวหน้าเสาธง");
             
-            // 🚀 ปรับปรุงใหม่: Query เฉพาะวันที่เลือกและกิจกรรมที่กำหนดจาก Firebase โดยตรง
             const attQuery = query(
                 collection(db, "attendance"),
                 where("date", "==", selectedDate),
@@ -201,15 +200,19 @@ export default function DailySummaryPageFinal() {
         <div className="min-h-screen bg-gray-950 text-white p-6">
             <style jsx global>{`
                 @media print {
+                    body, html { background: white !important; color: black !important; }
                     .no-print { display: none !important; }
                     @page { size: A4 landscape; margin: 4mm; }
-                    #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; }
+                    #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; box-shadow: none !important; }
                     .page-break { break-after: page !important; }
                     .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    .print-table th, .print-table td { padding: 4.5px 4px !important; border: 1px solid black !important; font-size: 11px !important; line-height: 1.05 !important; }
+                    /* ขยายขนาดตาราง ตัวอักษร และ padding ตามที่ต้องการ */
+                    .print-table th, .print-table td { padding: 4px 4px !important; border: 1px solid black !important; font-size: 11px !important; line-height: 1.2 !important; }
                 }
             `}</style>
-            <Toaster />
+            <div className="no-print">
+                <Toaster />
+            </div>
             
             <div className="max-w-6xl mx-auto">
                 <div className="no-print bg-gray-900 p-6 rounded-3xl mb-8 shadow-xl border border-gray-800">
