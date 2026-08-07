@@ -63,7 +63,6 @@ export default function MonthlySummaryPage() {
                     if (classes.length > 0) setSelectedClass(classes[0]);
                 }
 
-                // ดึงปีการศึกษาจาก system_settings/main_config ให้ตรงกับหน้า settings
                 const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (settingsSnap.exists()) {
                     const years = settingsSnap.data().academicYears || ['2569'];
@@ -164,10 +163,11 @@ export default function MonthlySummaryPage() {
                             dailyStatus[i] = { type: 'ขาด', text: 'ข', hasCheck: false };
                             countEx++;
                         } else {
-                            dailyStatus[i] = { type: 'ขาด', text: 'ข', hasCheck: false };
-                            countEx++;
+                            // ถ้ามีเรคคอร์ดแต่สถานะไม่ตรง ให้เว้นว่างไว้เพื่อความปลอดภัย
+                            dailyStatus[i] = { type: 'empty', text: '' };
                         }
                     } else {
+                        // ถ้าไม่มีเรคคอร์ดการเช็คชื่อในวันนี้ ให้เว้นว่างไว้ (ไม่ตีความว่าเป็นมา)
                         dailyStatus[i] = { type: 'empty', text: '' };
                     }
                 }
@@ -198,7 +198,7 @@ export default function MonthlySummaryPage() {
                 processedStudents.forEach(st => {
                     const val = st.dailyStatus[i];
                     if (val && val.type !== 'empty') {
-                        if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลาครึ่งวัน' || val.type === 'ลาเต็ม' || val.type === 'ขาด') {
+                        if (['มา', 'สาย', 'ลาครึ่งวัน', 'ลาเต็ม', 'ขาด'].includes(val.type)) {
                             hasNormalCheck = true;
                         }
                         if (val.type === 'มา' || val.type === 'สาย' || val.type === 'ลาครึ่งวัน') p++;
@@ -209,7 +209,7 @@ export default function MonthlySummaryPage() {
                     }
                 });
 
-                summaryDailyTotal[i] = isHolidayDay ? '-' : ((hasNormalCheck || isHolidayDay) ? studentList.length : '-');
+                summaryDailyTotal[i] = isHolidayDay ? '-' : (hasNormalCheck ? studentList.length : '-');
                 summaryDailyPresent[i] = isHolidayDay ? '-' : (hasNormalCheck ? p : '-');
                 summaryDailyAbsent[i] = isHolidayDay ? '-' : (hasNormalCheck ? ab : '-');
                 summaryDailyLeave[i] = isHolidayDay ? '-' : (hasNormalCheck ? lv : '-');
