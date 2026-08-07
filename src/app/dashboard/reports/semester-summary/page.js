@@ -90,24 +90,28 @@ export default function SemesterSummaryPage() {
                 return;
             }
 
-            const studentIds = studentList.map(st => String(st.id).trim());
+            const studentIdsSet = new Set(studentList.map(st => String(st.id).trim()));
             const actIds = semesterActivities.map(a => a.id);
             
             let allAtt = [];
-            if (actIds.length > 0 && studentIds.length > 0) {
-                // แบ่ง Chunk รหัส นศ. ไม่เกิน 30 คนต่อรอบตามข้อจำกัด Firebase 'in' query เพื่อความเสถียรและรวดเร็ว
-                const studentChunks = [];
-                for (let i = 0; i < studentIds.length; i += 30) {
-                    studentChunks.push(studentIds.slice(i, i + 30));
+            if (actIds.length > 0) {
+                // 🚀 แก้ไข: Query เฉพาะ activityId ด้วย 'in' (ซึ่งมีจำนวนน้อย ไม่เกินขีดจำกัด) แล้วมาคัดกรอง studentId ใน JS
+                const actChunks = [];
+                for (let i = 0; i < actIds.length; i += 30) {
+                    actChunks.push(actIds.slice(i, i + 30));
                 }
 
-                for (const chunk of studentChunks) {
+                for (const chunk of actChunks) {
                     const attSnap = await getDocs(query(
                         collection(db, "attendance"), 
-                        where("activityId", "in", actIds),
-                        where("studentId", "in", chunk)
+                        where("activityId", "in", chunk)
                     ));
-                    attSnap.docs.forEach(d => allAtt.push(d.data()));
+                    attSnap.docs.forEach(d => {
+                        const data = d.data();
+                        if (studentIdsSet.has(String(data.studentId).trim())) {
+                            allAtt.push(data);
+                        }
+                    });
                 }
             }
 
