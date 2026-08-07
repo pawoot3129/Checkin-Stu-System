@@ -34,6 +34,7 @@ export default function DashboardPage() {
     };
 
     const menuItems = [
+        { label: 'จัดการข้อมูลสถานศึกษา', path: '/dashboard/school-settings', icon: '🏫', adminOnly: true },
         { label: 'จัดการปีการศึกษา', path: '/dashboard/settings', icon: '📅', adminOnly: true },
         { label: 'กำหนดรายการกิจกรรม', path: '/dashboard/activities', icon: '📝', adminOnly: true },
         { label: 'กำหนดเกณฑ์การประเมิน', path: '/dashboard/evaluation-config', icon: '⚙️', adminOnly: true },
