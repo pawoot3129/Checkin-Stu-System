@@ -80,6 +80,11 @@ export default function MonthlySummaryPage() {
         if (!selectedClass) return toast.error("กรุณาเลือกห้องเรียน");
         setIsLoading(true);
         try {
+            // ค้นหากิจกรรมเข้าแถวหน้าเสาธงก่อน เพื่อให้ดึงเฉพาะข้อมูลของกิจกรรมนี้จริงๆ
+            const actSnap = await getDocs(collection(db, "activities"));
+            const activity = actSnap.docs.find(d => d.data().activityName?.includes("กิจกรรมเข้าแถว"));
+            const activityId = activity ? activity.id : null;
+
             const studs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
             const studentList = studs.docs
                 .map(d => ({ id: d.id, ...d.data() }))
@@ -100,7 +105,11 @@ export default function MonthlySummaryPage() {
             const studentIdsSet = new Set(studentList.map(st => String(st.id).trim()));
 
             const attSnap = await getDocs(collection(db, "attendance"));
-            const allAtt = attSnap.docs.map(d => d.data()).filter(r => studentIdsSet.has(String(r.studentId).trim()));
+            const allAtt = attSnap.docs.map(d => d.data()).filter(r => {
+                const matchStudent = studentIdsSet.has(String(r.studentId).trim());
+                const matchActivity = activityId ? r.activityId === activityId : true;
+                return matchStudent && matchActivity;
+            });
 
             const christYear = parseInt(selectedYear) - 543;
             const monthNum = parseInt(selectedMonth);
@@ -139,7 +148,7 @@ export default function MonthlySummaryPage() {
 
                     if (holidayDaysMap[i]) {
                         dailyStatus[i] = { type: 'วันหยุด', text: holidayDaysMap[i] };
-                    } else if (rec) {
+                    } else if (rec && rec.status && rec.status !== '') {
                         let stName = String(rec.status || '').trim();
                         if (stName === 'มา') {
                             dailyStatus[i] = { type: 'มา', text: '/' };
@@ -163,11 +172,10 @@ export default function MonthlySummaryPage() {
                             dailyStatus[i] = { type: 'ขาด', text: 'ข', hasCheck: false };
                             countEx++;
                         } else {
-                            // ถ้ามีเรคคอร์ดแต่สถานะไม่ตรง ให้เว้นว่างไว้เพื่อความปลอดภัย
                             dailyStatus[i] = { type: 'empty', text: '' };
                         }
                     } else {
-                        // ถ้าไม่มีเรคคอร์ดการเช็คชื่อในวันนี้ ให้เว้นว่างไว้ (ไม่ตีความว่าเป็นมา)
+                        // ถ้าไม่มีข้อมูลการเช็คชื่อในวันนั้นจริงๆ ให้เว้นว่างสนิท
                         dailyStatus[i] = { type: 'empty', text: '' };
                     }
                 }
