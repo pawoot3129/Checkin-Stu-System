@@ -80,7 +80,6 @@ export default function MonthlySummaryPage() {
         if (!selectedClass) return toast.error("กรุณาเลือกห้องเรียน");
         setIsLoading(true);
         try {
-            // ค้นหากิจกรรมเข้าแถวหน้าเสาธงก่อน เพื่อให้ดึงเฉพาะข้อมูลของกิจกรรมนี้จริงๆ
             const actSnap = await getDocs(collection(db, "activities"));
             const activity = actSnap.docs.find(d => d.data().activityName?.includes("กิจกรรมเข้าแถว"));
             const activityId = activity ? activity.id : null;
@@ -175,7 +174,6 @@ export default function MonthlySummaryPage() {
                             dailyStatus[i] = { type: 'empty', text: '' };
                         }
                     } else {
-                        // ถ้าไม่มีข้อมูลการเช็คชื่อในวันนั้นจริงๆ ให้เว้นว่างสนิท
                         dailyStatus[i] = { type: 'empty', text: '' };
                     }
                 }
