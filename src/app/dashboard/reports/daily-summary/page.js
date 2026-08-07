@@ -206,10 +206,11 @@ export default function DailySummaryPageFinal() {
                     #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; box-shadow: none !important; }
                     .page-break { break-after: page !important; }
                     .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    /* ขยายขนาดตาราง ตัวอักษร และ padding ตามที่ต้องการ */
+                    /* ขยายขนาดตาราง ตัวอักษร และ padding ตามที่กำหนด */
                     .print-table th, .print-table td { padding: 4px 4px !important; border: 1px solid black !important; font-size: 11px !important; line-height: 1.2 !important; }
                 }
             `}</style>
+            
             <div className="no-print">
                 <Toaster />
             </div>
