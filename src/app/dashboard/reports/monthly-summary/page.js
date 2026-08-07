@@ -107,28 +107,21 @@ export default function MonthlySummaryPage() {
             const monthNum = parseInt(selectedMonth);
             const daysCount = new Date(christYear, monthNum, 0).getDate();
 
-            // กำหนดช่วงวันที่เริ่มต้นและสิ้นสุดของเดือนนั้นๆ เพื่อดึงข้อมูลเฉพาะเดือนที่เลือกจาก Firebase โดยตรง (ลดโหลดและประหยัดโควต้า)
+            // 🚀 ปรับปรุงใหม่: Query เฉพาะช่วงวันที่ (ไม่ต้องใช้ Composite Index) แล้วมา filter activityId และ studentId ในโค้ด
             const startDateStr = `${christYear}-${selectedMonth}-01`;
             const endDateStr = `${christYear}-${selectedMonth}-${String(daysCount).padStart(2, '0')}`;
 
-            let attQuery = query(
+            const attQuery = query(
                 collection(db, "attendance"),
                 where("date", ">=", startDateStr),
                 where("date", "<=", endDateStr)
             );
-            if (activityId) {
-                attQuery = query(
-                    collection(db, "attendance"),
-                    where("date", ">=", startDateStr),
-                    where("date", "<=", endDateStr),
-                    where("activityId", "==", activityId)
-                );
-            }
 
             const attSnap = await getDocs(attQuery);
             const allAtt = attSnap.docs.map(d => d.data()).filter(r => {
                 const matchStudent = studentIdsSet.has(String(r.studentId).trim());
-                return matchStudent;
+                const matchActivity = activityId ? r.activityId === activityId : true;
+                return matchStudent && matchActivity;
             });
 
             const monthFilteredAtt = allAtt;
