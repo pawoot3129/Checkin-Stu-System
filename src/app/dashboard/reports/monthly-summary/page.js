@@ -103,22 +103,35 @@ export default function MonthlySummaryPage() {
 
             const studentIdsSet = new Set(studentList.map(st => String(st.id).trim()));
 
-            const attSnap = await getDocs(collection(db, "attendance"));
-            const allAtt = attSnap.docs.map(d => d.data()).filter(r => {
-                const matchStudent = studentIdsSet.has(String(r.studentId).trim());
-                const matchActivity = activityId ? r.activityId === activityId : true;
-                return matchStudent && matchActivity;
-            });
-
             const christYear = parseInt(selectedYear) - 543;
             const monthNum = parseInt(selectedMonth);
             const daysCount = new Date(christYear, monthNum, 0).getDate();
 
-            const monthFilteredAtt = allAtt.filter(r => {
-                if (!r.date) return false;
-                const [y, m] = r.date.split('-');
-                return parseInt(y) === christYear && m === selectedMonth;
+            // กำหนดช่วงวันที่เริ่มต้นและสิ้นสุดของเดือนนั้นๆ เพื่อดึงข้อมูลเฉพาะเดือนที่เลือกจาก Firebase โดยตรง (ลดโหลดและประหยัดโควต้า)
+            const startDateStr = `${christYear}-${selectedMonth}-01`;
+            const endDateStr = `${christYear}-${selectedMonth}-${String(daysCount).padStart(2, '0')}`;
+
+            let attQuery = query(
+                collection(db, "attendance"),
+                where("date", ">=", startDateStr),
+                where("date", "<=", endDateStr)
+            );
+            if (activityId) {
+                attQuery = query(
+                    collection(db, "attendance"),
+                    where("date", ">=", startDateStr),
+                    where("date", "<=", endDateStr),
+                    where("activityId", "==", activityId)
+                );
+            }
+
+            const attSnap = await getDocs(attQuery);
+            const allAtt = attSnap.docs.map(d => d.data()).filter(r => {
+                const matchStudent = studentIdsSet.has(String(r.studentId).trim());
+                return matchStudent;
             });
+
+            const monthFilteredAtt = allAtt;
 
             const holidayDaysMap = {};
             monthFilteredAtt.forEach(r => {
