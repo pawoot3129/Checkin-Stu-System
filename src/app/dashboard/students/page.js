@@ -37,11 +37,13 @@ function ManageStudentsPage({ userProfile }) {
     const [selectedClass, setSelectedClass] = useState('');
     const [students, setStudents] = useState([]);
     
-    // State สำหรับฟอร์มเพิ่มทีละคน (รองรับระเบียนประวัติแล้ว)
+    // State สำหรับฟอร์มเพิ่มทีละคน (ครบทุกช่องระเบียนประวัติ)
     const [num, setNum] = useState('');
     const [name, setName] = useState('');
     const [studentId, setStudentId] = useState('');
     const [idCard, setIdCard] = useState('');
+    const [birthDate, setBirthDate] = useState('');
+    const [address, setAddress] = useState('');
 
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -100,7 +102,7 @@ function ManageStudentsPage({ userProfile }) {
         return (n.startsWith('นาง') || n.startsWith('น.ส.') || n.startsWith('ด.ญ.')) ? 'หญิง' : 'ชาย';
     };
 
-    // ฟังก์ชันเพิ่มนักเรียนทีละคน (บันทึกรหัส นศ. และเลขบัตร ปชช. ลง Firebase ทันที)
+    // ฟังก์ชันเพิ่มนักเรียนทีละคนพร้อมระเบียนประวัติครบถ้วน
     const handleAdd = async (e) => {
         e.preventDefault();
         if (!num || !name) return toast.error('กรุณากรอกเลขที่และชื่อ-นามสกุล');
@@ -112,6 +114,8 @@ function ManageStudentsPage({ userProfile }) {
                 name: name.trim(), 
                 studentId: studentId.trim(),
                 idCard: idCard.trim(),
+                birthDate: birthDate.trim(),
+                address: address.trim(),
                 gender: detectGender(name), 
                 status: "ปกติ" 
             });
@@ -120,6 +124,8 @@ function ManageStudentsPage({ userProfile }) {
             setName(''); 
             setStudentId('');
             setIdCard('');
+            setBirthDate('');
+            setAddress('');
             fetchStudents();
         } catch (error) {
             toast.error("เกิดข้อผิดพลาดในการเพิ่มข้อมูล");
@@ -254,17 +260,21 @@ function ManageStudentsPage({ userProfile }) {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (อัปเกรดให้กรอกระเบียนประวัติได้แล้ว) */}
+                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (เพิ่มช่อง วดป.เกิด และที่อยู่ครบถ้วน) */}
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
-                        <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน</h3>
+                        <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
                         <form onSubmit={handleAdd} className="space-y-3">
                             <div className="flex gap-2">
                                 <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-20 p-3 bg-gray-800 rounded-xl text-sm" required />
                                 <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" required />
                             </div>
-                            <div className="flex gap-2">
-                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา (ถ้ามี)" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm font-mono" />
-                                <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขบัตร ปชช. (ถ้ามี)" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา" className="p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                                <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขบัตร ปชช." className="p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <input value={birthDate} onChange={e => setBirthDate(e.target.value)} placeholder="ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)" className="p-3 bg-gray-800 rounded-xl text-sm" />
+                                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่" className="p-3 bg-gray-800 rounded-xl text-sm" />
                             </div>
                             <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm">➕ เพิ่มนักเรียนเข้าห้อง</button>
                         </form>
