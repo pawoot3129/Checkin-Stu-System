@@ -60,50 +60,77 @@ export default function PrintStudentsPage() {
         return match ? (new Date().getFullYear() + 543) - (2500 + parseInt(match[0])) : '-';
     };
 
-    if (isLoading) return <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white">กำลังโหลด...</div>;
+    if (isLoading) return <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white font-sans">กำลังโหลดข้อมูล...</div>;
 
     return (
         <div className="min-h-screen bg-gray-950 text-gray-200 print:bg-white print:text-black">
             <style jsx global>{`
                 @media print {
-                    @page { size: landscape; margin: 10mm; }
+                    @page { 
+                        size: A4 landscape; 
+                        margin: 10mm; 
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                    }
                 }
             `}</style>
             
+            {/* ส่วนควบคุมหน้าจอ (ซ่อนตอนปริ้นท์) */}
             <div className="max-w-6xl mx-auto p-6 print:hidden">
-                <div className="flex justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-xl gap-4">
-                    <h1 className="text-2xl font-bold flex items-center gap-3 text-white">🖨️ พิมพ์ระเบียนประวัติ</h1>
-                    <div className="flex gap-3">
-                        <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="p-3 bg-gray-800 rounded-xl outline-none">{classrooms.map(c => <option key={c} value={c}>{c}</option>)}</select>
-                        <button onClick={() => window.print()} className="bg-emerald-600 px-6 py-3 rounded-xl font-bold">สั่งพิมพ์</button>
-                        <button onClick={() => router.back()} className="bg-gray-800 px-6 py-3 rounded-xl">ย้อนกลับ</button>
+                <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
+                    <h1 className="text-2xl font-bold flex items-center gap-3 text-white">
+                        <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">🖨️</span> 
+                        พิมพ์ระเบียนประวัติผู้เรียน
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <select 
+                            value={selectedClass} 
+                            onChange={(e) => setSelectedClass(e.target.value)} 
+                            className="p-3.5 bg-gray-800 border border-gray-700 rounded-2xl text-white outline-none focus:border-indigo-500 transition cursor-pointer font-medium"
+                        >
+                            {classrooms.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <button 
+                            onClick={() => window.print()} 
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-6 py-3.5 rounded-2xl font-bold text-white shadow-lg shadow-emerald-900/30 transform hover:-translate-y-0.5 transition active:translate-y-0 flex items-center gap-2"
+                        >
+                            <span>🖨️</span> สั่งพิมพ์เอกสาร
+                        </button>
+                        <button 
+                            onClick={() => router.back()} 
+                            className="bg-gray-800 hover:bg-gray-700 px-6 py-3.5 rounded-2xl text-gray-300 hover:text-white border border-gray-700/50 transition font-medium"
+                        >
+                            ← ย้อนกลับ
+                        </button>
                     </div>
                 </div>
             </div>
 
+            {/* ส่วนกระดาษเอกสารสำหรับแสดงผลและสั่งพิมพ์ */}
             <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0">
-                <div className="bg-white text-black p-8 rounded-xl shadow-2xl print:shadow-none">
+                <div className="bg-white text-black p-8 rounded-2xl shadow-2xl print:shadow-none border border-gray-200 print:border-none">
                     <div className="text-center mb-6 font-serif">
-                        <img src="/logo.png" className="mx-auto h-20 mb-3" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h2 className="text-xl font-bold">ระเบียนข้อมูลนักเรียน</h2>
-                        <p>ห้องเรียน: <b>{selectedClass}</b> | วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                        <img src="/logo.png" className="mx-auto h-20 mb-3 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h2 className="text-xl font-bold tracking-wide">ระเบียนข้อมูลนักเรียน</h2>
+                        <p className="text-sm text-gray-700 mt-1">ห้องเรียน: <span className="font-semibold text-black">{selectedClass}</span> | วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                     </div>
 
                     <table className="w-full border-collapse text-sm">
                         <thead>
                             <tr className="bg-gray-100 print:bg-gray-200">
-                                <th className="border border-gray-400 p-2 text-center">ลำดับ</th>
-                                <th className="border border-gray-400 p-2 text-center">รหัสนักศึกษา</th>
-                                <th className="border border-gray-400 p-2 text-center">ชื่อ - นามสกุล</th>
-                                <th className="border border-gray-400 p-2 text-center">เลขประจำตัวประชาชน</th>
-                                <th className="border border-gray-400 p-2 text-center">ว.ด.ป. เกิด</th>
-                                <th className="border border-gray-400 p-2 text-center">อายุ</th>
-                                <th className="border border-gray-400 p-2 text-center">ที่อยู่</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ลำดับ</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">รหัสนักศึกษา</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ชื่อ - นามสกุล</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">เลขประจำตัวประชาชน</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ว.ด.ป. เกิด</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">อายุ</th>
+                                <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ที่อยู่</th>
                             </tr>
                         </thead>
                         <tbody>
                             {students.map((s) => (
-                                <tr key={s.id}>
+                                <tr key={s.id} className="hover:bg-gray-50/50">
                                     <td className="border border-gray-400 p-2 text-center">{s.studentNumber}</td>
                                     <td className="border border-gray-400 p-2 text-center font-mono">{s.studentId || '-'}</td>
                                     <td className="border border-gray-400 p-2 font-semibold">{s.name}</td>
@@ -116,16 +143,17 @@ export default function PrintStudentsPage() {
                         </tbody>
                     </table>
                     
-                    <div className="mt-12 grid grid-cols-2 gap-8 text-center text-sm font-serif">
+                    {/* ส่วนลายเซ็นท้ายกระดาษ */}
+                    <div className="mt-14 grid grid-cols-2 gap-8 text-center text-sm font-serif">
                         <div>
-                            <p className="mb-4">ลงชื่อ...........................................................</p>
-                            <p>(.................................................................)</p>
-                            <p>ครูที่ปรึกษา</p>
+                            <p className="mb-6">ลงชื่อ...........................................................</p>
+                            <p className="mb-1">(.................................................................)</p>
+                            <p className="font-medium">ครูที่ปรึกษา</p>
                         </div>
                         <div>
-                            <p className="mb-4">ลงชื่อ...........................................................</p>
-                            <p>(ดร.ประชากร บริบูรณ์)</p>
-                            <p>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                            <p className="mb-6">ลงชื่อ...........................................................</p>
+                            <p className="mb-1 font-medium">(ดร.ประชากร บริบูรณ์)</p>
+                            <p className="font-medium">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                         </div>
                     </div>
                 </div>
