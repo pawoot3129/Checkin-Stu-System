@@ -35,31 +35,18 @@ export default function PrintStudentsPage() {
                 const existingClassesMap = new Set(
                     allClassroomsSnap.docs.map(d => `${d.data().className} ${d.data().department || ''}`.trim())
                 );
-
-                let classes = [];
-                if (userProfile.role === 'admin') {
-                    classes = Array.from(existingClassesMap);
-                } else {
-                    const assigned = userProfile.assignedClasses || [];
-                    classes = assigned.filter(c => existingClassesMap.has(c));
-                }
-                
+                let classes = userProfile.role === 'admin' ? Array.from(existingClassesMap) : (userProfile.assignedClasses || []).filter(c => existingClassesMap.has(c));
                 classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
                 setClassrooms(classes);
                 if (classes.length > 0) setSelectedClass(classes[0]);
-            } catch (error) {
-                console.error("Error fetching classes:", error);
-            }
+            } catch (error) { console.error("Error fetching classes:", error); }
         };
         fetchClasses();
     }, [userProfile]);
 
     useEffect(() => {
         const fetchStudents = async () => {
-            if (!selectedClass) {
-                setStudents([]);
-                return;
-            }
+            if (!selectedClass) { setStudents([]); return; }
             const q = query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber"));
             const snap = await getDocs(q);
             setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -70,111 +57,77 @@ export default function PrintStudentsPage() {
     const calculateAge = (birthDateStr) => {
         if (!birthDateStr) return '-';
         const match = birthDateStr.match(/\d{2}$/); 
-        if (match) {
-            let birthYear = 2500 + parseInt(match[0]);
-            let currentYear = new Date().getFullYear() + 543;
-            return currentYear - birthYear;
-        }
-        return '-';
+        return match ? (new Date().getFullYear() + 543) - (2500 + parseInt(match[0])) : '-';
     };
 
     if (isLoading) return <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white">กำลังโหลด...</div>;
 
     return (
         <div className="min-h-screen bg-gray-950 text-gray-200 print:bg-white print:text-black">
+            <style jsx global>{`
+                @media print {
+                    @page { size: landscape; margin: 10mm; }
+                }
+            `}</style>
             
-            {/* แถบเครื่องมือด้านบน (ซ่อนตอนพิมพ์) */}
             <div className="max-w-6xl mx-auto p-6 print:hidden">
-                <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-xl gap-4">
-                    <h1 className="text-2xl font-bold flex items-center gap-3 text-white">
-                        <span className="text-emerald-500">🖨️</span> พิมพ์ระเบียนประวัตินักเรียน
-                    </h1>
-                    
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <select 
-                            value={selectedClass} 
-                            onChange={(e) => setSelectedClass(e.target.value)} 
-                            className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:border-emerald-500 w-full md:w-64 cursor-pointer"
-                        >
-                            {classrooms.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <button 
-                            onClick={() => window.print()} 
-                            className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl text-white font-bold transition shadow-lg whitespace-nowrap flex items-center gap-2"
-                        >
-                            สั่งพิมพ์
-                        </button>
-                        <button 
-                            onClick={() => router.back()} 
-                            className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-xl text-white transition whitespace-nowrap"
-                        >
-                            ย้อนกลับ
-                        </button>
+                <div className="flex justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-xl gap-4">
+                    <h1 className="text-2xl font-bold flex items-center gap-3 text-white">🖨️ พิมพ์ระเบียนประวัติ</h1>
+                    <div className="flex gap-3">
+                        <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="p-3 bg-gray-800 rounded-xl outline-none">{classrooms.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                        <button onClick={() => window.print()} className="bg-emerald-600 px-6 py-3 rounded-xl font-bold">สั่งพิมพ์</button>
+                        <button onClick={() => router.back()} className="bg-gray-800 px-6 py-3 rounded-xl">ย้อนกลับ</button>
                     </div>
                 </div>
             </div>
 
-            {/* ส่วนกระดาษจำลองสำหรับพิมพ์ */}
-            <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0 print:max-w-none">
-                <div className="bg-white text-black p-6 md:p-8 rounded-xl shadow-2xl print:shadow-none print:p-0">
-                    
-                    {/* หัวเอกสารพร้อมโลโก้ */}
+            <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0">
+                <div className="bg-white text-black p-8 rounded-xl shadow-2xl print:shadow-none">
                     <div className="text-center mb-6 font-serif">
-                        <img 
-                            src="/logo.png" 
-                            alt="Logo วิทยาลัยเทคโนโลยีพณิชยการสิชล" 
-                            className="mx-auto h-16 mb-2 object-contain"
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                        <h2 className="text-xl font-bold mb-1">ระเบียนประวัติและรายชื่อนักเรียน</h2>
-                        <p className="text-base">ห้องเรียน: <span className="font-bold">{selectedClass}</span></p>
-                        <p className="text-sm text-gray-700">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                        <img src="/logo.png" className="mx-auto h-20 mb-3" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h2 className="text-xl font-bold">ระเบียนประวัติและรายชื่อนักเรียน</h2>
+                        <p>ห้องเรียน: <b>{selectedClass}</b> | วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                     </div>
 
-                    {/* ตารางข้อมูล (ปรับ Padding ให้กระชับ ไม่เปลืองพื้นที่) */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-xs md:text-sm">
-                            <thead>
-                                <tr className="bg-gray-100 print:bg-gray-200">
-                                    <th className="border border-gray-400 p-2 text-center w-12">ลำดับ</th>
-                                    <th className="border border-gray-400 p-2 text-center">รหัสนักศึกษา</th>
-                                    <th className="border border-gray-400 p-2 text-left">ชื่อ - นามสกุล</th>
-                                    <th className="border border-gray-400 p-2 text-center">เลขประจำตัวประชาชน</th>
-                                    <th className="border border-gray-400 p-2 text-center w-20">ว.ด.ป. เกิด</th>
-                                    <th className="border border-gray-400 p-2 text-center w-12">อายุ</th>
-                                    <th className="border border-gray-400 p-2 text-left">ที่อยู่</th>
+                    <table className="w-full border-collapse text-sm">
+                        <thead>
+                            <tr className="bg-gray-100 print:bg-gray-200">
+                                <th className="border border-gray-400 p-2 text-center">ลำดับ</th>
+                                <th className="border border-gray-400 p-2 text-center">รหัสนักศึกษา</th>
+                                <th className="border border-gray-400 p-2 text-center">ชื่อ - นามสกุล</th>
+                                <th className="border border-gray-400 p-2 text-center">เลขประจำตัวประชาชน</th>
+                                <th className="border border-gray-400 p-2 text-center">ว.ด.ป. เกิด</th>
+                                <th className="border border-gray-400 p-2 text-center">อายุ</th>
+                                <th className="border border-gray-400 p-2 text-center">ที่อยู่</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.map((s) => (
+                                <tr key={s.id}>
+                                    <td className="border border-gray-400 p-2 text-center">{s.studentNumber}</td>
+                                    <td className="border border-gray-400 p-2 text-center font-mono">{s.studentId || '-'}</td>
+                                    <td className="border border-gray-400 p-2 font-semibold">{s.name}</td>
+                                    <td className="border border-gray-400 p-2 text-center font-mono">{s.idCard || '-'}</td>
+                                    <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
+                                    <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
+                                    <td className="border border-gray-400 p-2 text-xs">{s.address || '-'}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {students.map((s, index) => (
-                                    <tr key={s.id} className="hover:bg-gray-50 print:hover:bg-transparent">
-                                        <td className="border border-gray-400 p-2 text-center">{s.studentNumber}</td>
-                                        <td className="border border-gray-400 p-2 text-center font-mono">{s.studentId || '-'}</td>
-                                        <td className="border border-gray-400 p-2 font-semibold">{s.name}</td>
-                                        <td className="border border-gray-400 p-2 text-center font-mono">{s.idCard || '-'}</td>
-                                        <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
-                                        <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
-                                        <td className="border border-gray-400 p-2 text-xs leading-tight">{s.address || '-'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            ))}
+                        </tbody>
+                    </table>
                     
-                    {/* ส่วนลงนามท้ายเอกสาร (ปรับระยะห่างให้จบในหน้าเดียวสวยๆ) */}
-                    <div className="mt-10 grid grid-cols-2 gap-8 text-center text-xs md:text-sm font-serif">
-                        <div className="flex flex-col items-center">
-                            <p className="mb-8">ลงชื่อ...........................................................</p>
+                    <div className="mt-12 grid grid-cols-2 gap-8 text-center text-sm font-serif">
+                        <div>
+                            <p className="mb-10">ลงชื่อ...........................................................</p>
                             <p>(.................................................................)</p>
-                            <p className="mt-1">ครูที่ปรึกษา</p>
+                            <p>ครูที่ปรึกษา</p>
                         </div>
-                        <div className="flex flex-col items-center">
-                            <p className="mb-8">ลงชื่อ...........................................................</p>
+                        <div>
+                            <p className="mb-10">ลงชื่อ...........................................................</p>
                             <p>(ดร.ประชากร บริบูรณ์)</p>
-                            <p className="mt-1">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                            <p>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
