@@ -228,24 +228,26 @@ function ManageStudentsPage({ userProfile }) {
                     </div>
                 </div>
 
-                {/* ฟอร์มเพิ่มนักเรียนทีละคน (ขยายเต็มพื้นที่กว้างสะใจ) */}
+                {/* ฟอร์มเพิ่มนักเรียนทีละคน (จัดสัดส่วนใหม่ให้สมดุลและสวยงาม) */}
                 <div className="mb-8">
-                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
-                        <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
+                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 max-w-4xl mx-auto">
+                        <h3 className="font-bold mb-4 text-center">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
                         <form onSubmit={handleAdd} className="space-y-3">
-                            <div className="flex gap-2">
-                                <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-24 p-3 bg-gray-800 rounded-xl text-sm" required />
-                                <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" required />
+                            <div className="flex gap-3">
+                                <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-28 p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm text-center" required />
+                                <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ - นามสกุล (เช่น นายกฤษฎา กรรฤทธิ์)" className="flex-1 p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" required />
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา" className="p-3 bg-gray-800 rounded-xl text-sm font-mono" />
-                                <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขบัตร ปชช." className="p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา (เช่น 69319100051)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono" />
+                                <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขประจำตัวประชาชน 13 หลัก" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono" />
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <input value={birthDate} onChange={e => setBirthDate(e.target.value)} placeholder="ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)" className="p-3 bg-gray-800 rounded-xl text-sm" />
-                                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่" className="p-3 bg-gray-800 rounded-xl text-sm" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input value={birthDate} onChange={e => setBirthDate(e.target.value)} placeholder="ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" />
+                                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่ (บ้านเลขที่ หมู่ ตำบล อำเภอ จังหวัด)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" />
                             </div>
-                            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm">➕ เพิ่มนักเรียนเข้าห้อง</button>
+                            <div className="pt-2">
+                                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm shadow-lg">➕ เพิ่มนักเรียนเข้าห้อง</button>
+                            </div>
                         </form>
                     </div>
                 </div>
