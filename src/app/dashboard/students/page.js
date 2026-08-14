@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
 import { collection, query, where, getDocs, orderBy, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import Papa from 'papaparse';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function StudentManagementWrapper() {
@@ -32,7 +31,6 @@ export default function StudentManagementWrapper() {
 
 function ManageStudentsPage({ userProfile }) {
     const router = useRouter();
-    const fileInputRef = useRef(null);
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [students, setStudents] = useState([]);
@@ -44,8 +42,6 @@ function ManageStudentsPage({ userProfile }) {
     const [idCard, setIdCard] = useState('');
     const [birthDate, setBirthDate] = useState('');
     const [address, setAddress] = useState('');
-
-    const [isProcessing, setIsProcessing] = useState(false);
 
     // State สำหรับ Modal แก้ไขข้อมูลทั้งหมด
     const [editingStudent, setEditingStudent] = useState(null);
@@ -180,33 +176,6 @@ function ManageStudentsPage({ userProfile }) {
         fetchStudents();
     };
 
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!window.confirm(`⚠️ ยืนยันการนำเข้าไฟล์ใหม่? ข้อมูลนักเรียนทั้งหมดในห้อง "${selectedClass}" จะถูกลบและแทนที่ด้วยข้อมูลใหม่!`)) return;
-        
-        setIsProcessing(true);
-        Papa.parse(file, {
-            skipEmptyLines: true,
-            complete: async (results) => {
-                try {
-                    const batch = writeBatch(db);
-                    const oldDocs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
-                    oldDocs.docs.forEach(d => batch.delete(d.ref));
-                    results.data.forEach((row, i) => {
-                        if (i === 0) return;
-                        const ref = doc(collection(db, "students"));
-                        batch.set(ref, { classId: selectedClass, studentNumber: parseInt(row[0]), name: row[1].trim(), gender: detectGender(row[1]), status: "ปกติ" });
-                    });
-                    await batch.commit();
-                    toast.success('นำเข้าสำเร็จ');
-                    fetchStudents();
-                } catch (e) { toast.error('เกิดข้อผิดพลาด'); }
-                finally { setIsProcessing(false); }
-            }
-        });
-    };
-
     const handleDeleteAll = async () => {
         if (!window.confirm(`⚠️ คำเตือน! ลบนักเรียนทั้งหมดในห้อง "${selectedClass}" ออกจากฐานข้อมูลถาวร ยืนยันหรือไม่?`)) return;
         const batch = writeBatch(db);
@@ -235,7 +204,7 @@ function ManageStudentsPage({ userProfile }) {
                             onClick={() => router.push('/dashboard/students/import')} 
                             className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg text-sm"
                         >
-                            📥 อัปเดตระเบียนประวัติ
+                            📥 อัปเดตระเบียนข้อมูลนักเรียน
                         </button>
                         <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition text-sm">← ย้อนกลับ</button>
                     </div>
@@ -259,13 +228,13 @@ function ManageStudentsPage({ userProfile }) {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (ครบทุกช่อง) */}
+                {/* ฟอร์มเพิ่มนักเรียนทีละคน (ขยายเต็มพื้นที่กว้างสะใจ) */}
+                <div className="mb-8">
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
                         <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
                         <form onSubmit={handleAdd} className="space-y-3">
                             <div className="flex gap-2">
-                                <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-20 p-3 bg-gray-800 rounded-xl text-sm" required />
+                                <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-24 p-3 bg-gray-800 rounded-xl text-sm" required />
                                 <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" required />
                             </div>
                             <div className="grid grid-cols-2 gap-2">
@@ -278,13 +247,6 @@ function ManageStudentsPage({ userProfile }) {
                             </div>
                             <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm">➕ เพิ่มนักเรียนเข้าห้อง</button>
                         </form>
-                    </div>
-
-                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
-                        <h3 className="font-bold mb-4">นำเข้าไฟล์รายชื่อแบบเดิม (นามสกุล .CSV)</h3>
-                        <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden"/>
-                        <button disabled={isProcessing} onClick={() => fileInputRef.current.click()} className="w-full py-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition disabled:opacity-50 mt-2">เลือกไฟล์</button>
-                        <p className="text-xs text-gray-500 mt-4">* สำหรับอัปโหลดไฟล์ CSV ทั้งห้องทีเดียว</p>
                     </div>
                 </div>
 
