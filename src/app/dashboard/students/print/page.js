@@ -1,159 +1,127 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { db } from '../../../../lib/firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import Papa from 'papaparse';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../../../../lib/firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
-export default function ImportStudentsPage() {
+export default function PrintStudentsPage() {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [previewData, setPreviewData] = useState([]);
+    const [userProfile, setUserProfile] = useState(null);
+    const [classrooms, setClassrooms] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('');
+    const [students, setStudents] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // ฟังก์ชันอ่านไฟล์ CSV (กรองแถวว่างออกอัตโนมัติ)
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                // กรองเฉพาะแถวที่มีชื่อนักเรียนจริงๆ เพื่อป้องกันแถวว่างท้ายไฟล์
-                const validData = results.data.filter(row => (row['ชื่อ-นามสกุล'] || '').trim() !== '');
-                setPreviewData(validData);
-                toast.success(`โหลดข้อมูลจากไฟล์สำเร็จ (${validData.length} รายชื่อ)`);
-            },
-            error: (error) => {
-                toast.error("เกิดข้อผิดพลาดในการอ่านไฟล์: " + error.message);
-            }
-        });
-    };
-
-    // ฟังก์ชันซิงค์ข้อมูลเข้า Firebase
-    const handleSyncToFirebase = async () => {
-        if (previewData.length === 0) {
-            toast.error("ยังไม่มีข้อมูลสำหรับอัปเดต");
-            return;
-        }
-
-        setIsLoading(true);
-        const toastId = toast.loading("กำลังอัปเดตข้อมูลลงฐานข้อมูล...");
-
+    // ฟังก์ชันคำนวณอายุอัตโนมัติจาก ว.ด.ป. เกิด
+    const calculateAge = (birthDate) => {
+        if (!birthDate) return '-';
         try {
-            const studentsSnap = await getDocs(collection(db, "students"));
-            const existingStudents = [];
-            studentsSnap.forEach((docSnap) => {
-                existingStudents.push({ id: docSnap.id, ...docSnap.data() });
-            });
-
-            let updateCount = 0;
-            let notFoundCount = 0;
-
-            for (const row of previewData) {
-                const csvName = (row['ชื่อ-นามสกุล'] || '').trim();
-                const studentId = (row['เลขประจำตัวนักเรียน'] || '').trim();
-                const idCard = (row['เลขประจำตัวประชาชน'] || '').trim();
-                const birthDate = (row['ว.ด.ป. เกิด'] || '').trim();
-                const address = (row['ที่อยู่'] || '').trim();
-
-                if (!csvName) continue;
-
-                // เทียบหาชื่อ-นามสกุลให้ตรงกับของเดิมในระบบ
-                const matchedStudent = existingStudents.find(s => {
-                    const fullName = s.name ? s.name.trim() : `${s.firstName || ''} ${s.lastName || ''}`.trim();
-                    return fullName === csvName;
-                });
-
-                if (matchedStudent) {
-                    const studentRef = doc(db, "students", matchedStudent.id);
-                    await updateDoc(studentRef, {
-                        studentId: studentId || matchedStudent.studentId || '',
-                        idCard: idCard || '',
-                        birthDate: birthDate || '',
-                        address: address || ''
-                    });
-                    updateCount++;
-                } else {
-                    notFoundCount++;
-                }
-            }
-
-            toast.success(`อัปเดตสำเร็จ ${updateCount} รายชื่อ (ไม่พบในระบบเดิม ${notFoundCount} รายชื่อ)`, { id: toastId });
-        } catch (error) {
-            toast.error("เกิดข้อผิดพลาด: " + error.message, { id: toastId });
-        } finally {
-            setIsLoading(false);
-        }
+            const currentYear = new Date().getFullYear();
+            const parts = birthDate.split(' ');
+            let birthYear = parseInt(parts[parts.length - 1]);
+            
+            if (birthYear < 100) birthYear += 2500;
+            
+            const age = (currentYear + 543) - birthYear;
+            return age > 0 ? age : '-';
+        } catch (e) { return '-'; }
     };
+
+    // เช็คสิทธิ์ผู้ใช้งาน
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const q = query(collection(db, 'users'), where('email', '==', user.email));
+                const snap = await getDocs(q);
+                if (!snap.empty) setUserProfile(snap.docs[0].data());
+                else router.push('/dashboard');
+            } else router.push('/');
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [router]);
+
+    // ดึงห้องเรียน
+    useEffect(() => {
+        if (!userProfile) return;
+        const fetchClasses = async () => {
+            try {
+                const allClassroomsSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
+                const existingClassesMap = new Set(allClassroomsSnap.docs.map(d => `${d.data().className} ${d.data().department || ''}`.trim()));
+                let classes = userProfile.role === 'admin' ? Array.from(existingClassesMap) : (userProfile.assignedClasses || []).filter(c => existingClassesMap.has(c));
+                classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                setClassrooms(classes);
+                if (classes.length > 0) setSelectedClass(classes[0]);
+            } catch (error) { toast.error("เกิดข้อผิดพลาดในการโหลดห้องเรียน"); }
+        };
+        fetchClasses();
+    }, [userProfile]);
+
+    // ดึงรายชื่อนักเรียนตามห้องที่เลือก
+    useEffect(() => {
+        const fetchStudentsData = async () => {
+            if (!selectedClass) { setStudents([]); return; }
+            const q = query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber"));
+            const snap = await getDocs(q);
+            setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        };
+        fetchStudentsData();
+    }, [selectedClass]);
+
+    if (isLoading) return <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white">กำลังโหลด...</div>;
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white p-6">
+        <div className="min-h-screen bg-gray-950 text-white p-6 print:bg-white print:text-black">
             <Toaster />
-            <div className="max-w-5xl mx-auto">
-                <div className="flex justify-between items-center mb-6 bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl">
-                    <h1 className="text-xl font-bold flex items-center gap-3">
-                        <span className="text-indigo-500">📥</span>
-                        อัปเดตประวัตินักเรียนผ่านไฟล์ CSV
-                    </h1>
-                    <button onClick={() => router.back()} className="bg-gray-800 px-5 py-2.5 rounded-xl text-white hover:bg-gray-700 transition">
-                        ← ย้อนกลับ
-                    </button>
+            <div className="max-w-5xl mx-auto mb-6 print:hidden flex justify-between items-center bg-gray-900 p-6 rounded-3xl border border-gray-800">
+                <h1 className="text-xl font-bold">🖨️ พิมพ์ระเบียนประวัตินักเรียน</h1>
+                <div className="flex gap-2">
+                    <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="bg-gray-800 p-2 rounded-xl text-sm">
+                        {classrooms.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <button onClick={() => window.print()} className="bg-indigo-600 px-5 py-2 rounded-xl font-bold">สั่งพิมพ์</button>
+                    <button onClick={() => router.back()} className="bg-gray-800 px-5 py-2 rounded-xl">ย้อนกลับ</button>
                 </div>
+            </div>
 
-                <div className="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl mb-6">
-                    <label className="block text-sm text-gray-400 mb-2">เลือกไฟล์ CSV (ที่บันทึกมาจาก Excel ระเบียนประวัติ)</label>
-                    <input 
-                        type="file" 
-                        accept=".csv" 
-                        onChange={handleFileUpload}
-                        className="block w-full text-sm text-gray-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 transition cursor-pointer bg-gray-950 p-3 rounded-xl border border-gray-800"
-                    />
-                    <p className="text-xs text-yellow-500 mt-3">
-                        * หัวคอลัมน์ใน CSV ต้องตรงกับ: ชื่อ-นามสกุล, เลขประจำตัวนักเรียน, เลขประจำตัวประชาชน, ว.ด.ป. เกิด, ที่อยู่
-                    </p>
-                </div>
-
-                {previewData.length > 0 && (
-                    <div className="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="font-bold text-gray-200">ตัวอย่างข้อมูลที่จะอัปเดต ({previewData.length} แถว)</h2>
-                            <button 
-                                onClick={handleSyncToFirebase}
-                                disabled={isLoading}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition disabled:opacity-50"
-                            >
-                                {isLoading ? '⏳ กำลังซิงค์ข้อมูล...' : '🚀 ยืนยันอัปเดตลงฐานข้อมูล'}
-                            </button>
-                        </div>
-                        <div className="overflow-x-auto max-h-96">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-gray-400 uppercase bg-gray-800 sticky top-0">
-                                    <tr>
-                                        <th className="p-3">รหัสนักศึกษา</th>
-                                        <th className="p-3">ชื่อ-นามสกุล</th>
-                                        <th className="p-3">เลขประจำตัวประชาชน</th>
-                                        <th className="p-3">ว.ด.ป. เกิด</th>
-                                        <th className="p-3">ที่อยู่</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-800">
-                                    {previewData.map((row, idx) => (
-                                        <tr key={idx} className="hover:bg-gray-800/50">
-                                            <td className="p-3 font-mono text-indigo-400">{row['เลขประจำตัวนักเรียน']}</td>
-                                            <td className="p-3">{row['ชื่อ-นามสกุล']}</td>
-                                            <td className="p-3 font-mono">{row['เลขประจำตัวประชาชน']}</td>
-                                            <td className="p-3">{row['ว.ด.ป. เกิด']}</td>
-                                            <td className="p-3">{row['ที่อยู่']}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+            <div className="max-w-5xl mx-auto bg-gray-900 print:bg-white p-8 rounded-3xl border border-gray-800 print:border-none">
+                <div className="flex items-center justify-center gap-6 mb-6">
+                    <img src="https://www.sichon.ac.th/images/logo.png" alt="Logo" className="h-20 w-auto print:block hidden" />
+                    <div className="text-center">
+                        <h2 className="text-xl font-bold text-white print:text-black">ระเบียนประวัติและรายชื่อนักเรียน</h2>
+                        <p className="text-gray-400 print:text-gray-600 text-sm">ห้องเรียน: {selectedClass}</p>
                     </div>
-                )}
+                </div>
+
+                <table className="w-full text-sm border-collapse border border-gray-700 print:border-gray-400">
+                    <thead>
+                        <tr className="bg-gray-800 print:bg-gray-200 text-gray-300 print:text-black">
+                            <th className="border border-gray-400 p-2">ลำดับที่</th>
+                            <th className="border border-gray-400 p-2">รหัสนักศึกษา</th>
+                            <th className="border border-gray-400 p-2">ชื่อ - นามสกุล</th>
+                            <th className="border border-gray-400 p-2">เลขประจำตัวประชาชน</th>
+                            <th className="border border-gray-400 p-2">ว.ด.ป เกิด</th>
+                            <th className="border border-gray-400 p-2">อายุ</th>
+                            <th className="border border-gray-400 p-2">ที่อยู่</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {students.map((s, index) => (
+                            <tr key={s.id} className={s.status === "จำหน่าย" ? "opacity-50 line-through" : ""}>
+                                <td className="border border-gray-400 p-2 text-center">{index + 1}</td>
+                                <td className="border border-gray-400 p-2 text-center">{s.studentId || '-'}</td>
+                                <td className="border border-gray-400 p-2">{s.name}</td>
+                                <td className="border border-gray-400 p-2 text-center">{s.idCard || '-'}</td>
+                                <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
+                                <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
+                                <td className="border border-gray-400 p-2">{s.address || '-'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
