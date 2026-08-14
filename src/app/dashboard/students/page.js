@@ -188,24 +188,13 @@ function ManageStudentsPage({ userProfile }) {
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <Toaster />
             <div className="max-w-7xl mx-auto">
+                {/* Header เหลือแค่หัวข้อกับปุ่มย้อนกลับ สะอาดตา */}
                 <header className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold flex items-center gap-3">
                         <span className="text-indigo-500">📋</span> 
                         จัดการรายชื่อและระเบียนประวัตินักเรียน
                     </h1>
-                    <div className="flex gap-3">
-                        <button 
-                            onClick={() => router.push('/dashboard/students/print')} 
-                            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg text-sm"
-                        >
-                            🖨️ ไปหน้าพิมพ์
-                        </button>
-                        <button 
-                            onClick={() => router.push('/dashboard/students/import')} 
-                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg text-sm"
-                        >
-                            📥 อัปเดตระเบียนข้อมูลนักเรียน
-                        </button>
+                    <div>
                         <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition text-sm">← ย้อนกลับ</button>
                     </div>
                 </header>
@@ -228,27 +217,50 @@ function ManageStudentsPage({ userProfile }) {
                     </div>
                 </div>
 
-                {/* ฟอร์มเพิ่มนักเรียนทีละคน (จัดสัดส่วนใหม่ให้สมดุลและสวยงาม) */}
-                <div className="mb-8">
-                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 max-w-4xl mx-auto">
-                        <h3 className="font-bold mb-4 text-center">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
+                {/* ฟอร์มเพิ่มนักเรียน และปุ่มทางลัดด้านล่าง */}
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    {/* ฟอร์มเพิ่มนักเรียน (กินพื้นที่ 2 คอลัมน์) */}
+                    <div className="md:col-span-2 bg-gray-900 p-6 rounded-2xl border border-gray-700">
+                        <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
                         <form onSubmit={handleAdd} className="space-y-3">
                             <div className="flex gap-3">
                                 <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-28 p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm text-center" required />
                                 <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ - นามสกุล (เช่น นายกฤษฎา กรรฤทธิ์)" className="flex-1 p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" required />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา (เช่น 69319100051)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono" />
+                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono" />
                                 <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขประจำตัวประชาชน 13 หลัก" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input value={birthDate} onChange={e => setBirthDate(e.target.value)} placeholder="ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" />
-                                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่ (บ้านเลขที่ หมู่ ตำบล อำเภอ จังหวัด)" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" />
+                                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่" className="p-3 bg-gray-800 border border-gray-700 rounded-xl text-sm" />
                             </div>
                             <div className="pt-2">
                                 <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm shadow-lg">➕ เพิ่มนักเรียนเข้าห้อง</button>
                             </div>
                         </form>
+                    </div>
+
+                    {/* กล่องปุ่มทางลัด (ย้ายมาไว้แทนที่ช่อง CSV เดิม) */}
+                    <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 flex flex-col justify-between">
+                        <div>
+                            <h3 className="font-bold mb-2">เมนูด่วนสำหรับจัดการห้องนี้</h3>
+                            <p className="text-xs text-gray-400 mb-6">พิมพ์เอกสารระเบียนประวัติ หรือจัดการข้อมูลภาพรวมของห้องเรียน</p>
+                        </div>
+                        <div className="space-y-3">
+                            <button 
+                                onClick={() => router.push('/dashboard/students/print')} 
+                                className="w-full bg-emerald-600 hover:bg-emerald-500 p-3.5 rounded-xl text-white transition flex items-center justify-center gap-2 font-bold shadow-lg text-sm"
+                            >
+                                🖨️ ไปหน้าพิมพ์ระเบียนประวัติ
+                            </button>
+                            <button 
+                                onClick={() => router.push('/dashboard/students/import')} 
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 p-3.5 rounded-xl text-white transition flex items-center justify-center gap-2 font-bold shadow-lg text-sm"
+                            >
+                                📥 อัปเดตระเบียนข้อมูลนักเรียน
+                            </button>
+                        </div>
                     </div>
                 </div>
 
