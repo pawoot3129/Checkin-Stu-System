@@ -116,60 +116,60 @@ export default function PrintStudentsPage() {
 
             {/* ส่วนกระดาษจำลองสำหรับพิมพ์ */}
             <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0 print:max-w-none">
-                <div className="bg-white text-black p-10 md:p-12 rounded-xl shadow-2xl print:shadow-none print:p-0">
+                <div className="bg-white text-black p-6 md:p-8 rounded-xl shadow-2xl print:shadow-none print:p-0">
                     
-                    {/* หัวเอกสารพร้อมดึงโลโก้จากโฟลเดอร์ public โดยตรง */}
-                    <div className="text-center mb-8 font-serif">
+                    {/* หัวเอกสารพร้อมโลโก้ */}
+                    <div className="text-center mb-6 font-serif">
                         <img 
                             src="/logo.png" 
                             alt="Logo วิทยาลัยเทคโนโลยีพณิชยการสิชล" 
-                            className="mx-auto h-20 mb-3 object-contain"
+                            className="mx-auto h-16 mb-2 object-contain"
                             onError={(e) => { e.target.style.display = 'none'; }}
                         />
-                        <h2 className="text-2xl font-bold mb-2">ระเบียนประวัติและรายชื่อนักเรียน</h2>
-                        <p className="text-lg">ห้องเรียน: <span className="font-bold">{selectedClass}</span></p>
-                        <p className="text-md text-gray-700 mt-1">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                        <h2 className="text-xl font-bold mb-1">ระเบียนประวัติและรายชื่อนักเรียน</h2>
+                        <p className="text-base">ห้องเรียน: <span className="font-bold">{selectedClass}</span></p>
+                        <p className="text-sm text-gray-700">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                     </div>
 
-                    {/* ตารางข้อมูล */}
+                    {/* ตารางข้อมูล (ปรับ Padding ให้กระชับ ไม่เปลืองพื้นที่) */}
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-sm">
+                        <table className="w-full border-collapse text-xs md:text-sm">
                             <thead>
                                 <tr className="bg-gray-100 print:bg-gray-200">
-                                    <th className="border border-gray-400 p-3 text-center w-16">ลำดับที่</th>
-                                    <th className="border border-gray-400 p-3 text-center">รหัสนักศึกษา</th>
-                                    <th className="border border-gray-400 p-3 text-left">ชื่อ - นามสกุล</th>
-                                    <th className="border border-gray-400 p-3 text-center">เลขประจำตัวประชาชน</th>
-                                    <th className="border border-gray-400 p-3 text-center w-24">ว.ด.ป. เกิด</th>
-                                    <th className="border border-gray-400 p-3 text-center w-16">อายุ</th>
-                                    <th className="border border-gray-400 p-3 text-left">ที่อยู่</th>
+                                    <th className="border border-gray-400 p-2 text-center w-12">ลำดับ</th>
+                                    <th className="border border-gray-400 p-2 text-center">รหัสนักศึกษา</th>
+                                    <th className="border border-gray-400 p-2 text-left">ชื่อ - นามสกุล</th>
+                                    <th className="border border-gray-400 p-2 text-center">เลขประจำตัวประชาชน</th>
+                                    <th className="border border-gray-400 p-2 text-center w-20">ว.ด.ป. เกิด</th>
+                                    <th className="border border-gray-400 p-2 text-center w-12">อายุ</th>
+                                    <th className="border border-gray-400 p-2 text-left">ที่อยู่</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {students.map((s, index) => (
                                     <tr key={s.id} className="hover:bg-gray-50 print:hover:bg-transparent">
-                                        <td className="border border-gray-400 p-3 text-center">{s.studentNumber}</td>
-                                        <td className="border border-gray-400 p-3 text-center font-mono">{s.studentId || '-'}</td>
-                                        <td className="border border-gray-400 p-3 font-semibold">{s.name}</td>
-                                        <td className="border border-gray-400 p-3 text-center font-mono">{s.idCard || '-'}</td>
-                                        <td className="border border-gray-400 p-3 text-center">{s.birthDate || '-'}</td>
-                                        <td className="border border-gray-400 p-3 text-center">{calculateAge(s.birthDate)}</td>
-                                        <td className="border border-gray-400 p-3 text-xs md:text-sm leading-relaxed max-w-xs">{s.address || '-'}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{s.studentNumber}</td>
+                                        <td className="border border-gray-400 p-2 text-center font-mono">{s.studentId || '-'}</td>
+                                        <td className="border border-gray-400 p-2 font-semibold">{s.name}</td>
+                                        <td className="border border-gray-400 p-2 text-center font-mono">{s.idCard || '-'}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
+                                        <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
+                                        <td className="border border-gray-400 p-2 text-xs leading-tight">{s.address || '-'}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                     
-                    {/* ส่วนลงนามท้ายเอกสาร (ครูที่ปรึกษา & ผู้อำนวยการ) */}
-                    <div className="mt-16 grid grid-cols-2 gap-8 text-center text-sm font-serif">
+                    {/* ส่วนลงนามท้ายเอกสาร (ปรับระยะห่างให้จบในหน้าเดียวสวยๆ) */}
+                    <div className="mt-10 grid grid-cols-2 gap-8 text-center text-xs md:text-sm font-serif">
                         <div className="flex flex-col items-center">
-                            <p className="mb-12">ลงชื่อ...........................................................</p>
+                            <p className="mb-8">ลงชื่อ...........................................................</p>
                             <p>(.................................................................)</p>
                             <p className="mt-1">ครูที่ปรึกษา</p>
                         </div>
                         <div className="flex flex-col items-center">
-                            <p className="mb-12">ลงชื่อ...........................................................</p>
+                            <p className="mb-8">ลงชื่อ...........................................................</p>
                             <p>(ดร.ประชากร บริบูรณ์)</p>
                             <p className="mt-1">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                         </div>
