@@ -12,7 +12,7 @@ export default function ImportStudentsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [previewData, setPreviewData] = useState([]);
 
-    // ฟังก์ชันอ่านไฟล์ CSV (กรองแถวว่างเปล่าออกอย่างเด็ดขาด)
+    // ฟังก์ชันอ่านไฟล์ CSV (กรองแถวว่างออกอัตโนมัติ)
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -21,7 +21,6 @@ export default function ImportStudentsPage() {
             header: true,
             skipEmptyLines: true,
             complete: (results) => {
-                // กรองเฉพาะแถวที่มีทั้ง "ชื่อ-นามสกุล" และ "เลขประจำตัวนักเรียน" จริงๆ เท่านั้น
                 const validData = results.data.filter(row => {
                     const name = (row['ชื่อ-นามสกุล'] || '').trim();
                     const studentId = (row['เลขประจำตัวนักเรียน'] || '').trim();
@@ -66,7 +65,6 @@ export default function ImportStudentsPage() {
 
                 if (!csvName) continue;
 
-                // เทียบหาชื่อ-นามสกุลให้ตรงกับของเดิมในระบบ
                 const matchedStudent = existingStudents.find(s => {
                     const fullName = s.name ? s.name.trim() : `${s.firstName || ''} ${s.lastName || ''}`.trim();
                     return fullName === csvName;
@@ -103,9 +101,15 @@ export default function ImportStudentsPage() {
                         <span className="text-indigo-500">📥</span>
                         อัปเดตประวัตินักเรียนผ่านไฟล์ CSV
                     </h1>
-                    <button onClick={() => router.back()} className="bg-gray-800 px-5 py-2.5 rounded-xl text-white hover:bg-gray-700 transition">
-                        ← ย้อนกลับ
-                    </button>
+                    {/* เพิ่มปุ่มกดไปหน้าพิมพ์ตรงนี้ */}
+                    <div className="flex gap-2">
+                        <button onClick={() => router.push('/dashboard/students/print')} className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-white font-bold text-sm transition">
+                            🖨️ ไปหน้าพิมพ์ระเบียนประวัติ
+                        </button>
+                        <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2.5 rounded-xl text-white text-sm hover:bg-gray-700 transition">
+                            ← ย้อนกลับ
+                        </button>
+                    </div>
                 </div>
 
                 <div className="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl mb-6">
