@@ -118,13 +118,13 @@ export default function PrintStudentsPage() {
             <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0 print:max-w-none">
                 <div className="bg-white text-black p-10 md:p-12 rounded-xl shadow-2xl print:shadow-none print:p-0">
                     
-                    {/* หัวเอกสารพร้อมโลโก้ */}
+                    {/* หัวเอกสารพร้อมโลโก้จริงจากเว็บ */}
                     <div className="text-center mb-8 font-serif">
                         <img 
-                            src="/images/logo.png" 
-                            alt="Logo" 
+                            src="https://www.sichon.ac.th/images/logo.png" 
+                            alt="Logo วิทยาลัยเทคโนโลยีพณิชยการสิชล" 
                             className="mx-auto h-20 mb-3 object-contain"
-                            onError={(e) => { e.target.style.display = 'none'; }} // ซ่อนอัตโนมัติถ้ายังไม่ได้ใส่ไฟล์รูป
+                            onError={(e) => { e.target.style.display = 'none'; }}
                         />
                         <h2 className="text-2xl font-bold mb-2">ระเบียนประวัติและรายชื่อนักเรียน</h2>
                         <p className="text-lg">ห้องเรียน: <span className="font-bold">{selectedClass}</span></p>
@@ -170,7 +170,7 @@ export default function PrintStudentsPage() {
                         </div>
                         <div className="flex flex-col items-center">
                             <p className="mb-12">ลงชื่อ...........................................................</p>
-                            <p>(ดร.ประชากร  บริบูรณ์)</p>
+                            <p>(ดร.ประชากร บริบูรณ์)</p>
                             <p className="mt-1">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                         </div>
                     </div>
