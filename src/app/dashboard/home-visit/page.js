@@ -278,9 +278,8 @@ function HomeVisitForm({ userProfile }) {
                             
                             <div className="mt-8 flex justify-end">
                                 <div className="text-center w-56 text-sm">
-                                    <p className="mb-4">ลงชื่อ............................................. </p>
-                                    <p className="mt-1">({reportData.advisorName})</p>
-                                    <p className="mb-1">ครูที่ปรึกษา</p>
+                                    <p className="mb-4">ลงชื่อ............................................. ครูที่ปรึกษา</p>
+                                    <p className="mb-1">(...................................................)</p>
                                 </div>
                             </div>
                         </div>
