@@ -40,6 +40,16 @@ function ManageStudentsPage({ userProfile }) {
     const [num, setNum] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // State สำหรับ Modal แก้ไขข้อมูลทั้งหมด
+    const [editingStudent, setEditingStudent] = useState(null);
+    const [formData, setFormData] = useState({
+        studentId: '',
+        name: '',
+        idCard: '',
+        birthDate: '',
+        address: ''
+    });
+
     useEffect(() => {
         const fetchClasses = async () => {
             try {
@@ -93,18 +103,37 @@ function ManageStudentsPage({ userProfile }) {
         setNum(''); setName(''); fetchStudents();
     };
 
-    const handleEditName = async (id, currentName) => {
-        const newName = prompt("แก้ไขชื่อ-นามสกุล:", currentName);
-        if (!newName || newName.trim() === "") return;
+    // เปิด Modal แก้ไขข้อมูล
+    const openEditModal = (student) => {
+        setEditingStudent(student);
+        setFormData({
+            studentId: student.studentId || '',
+            name: student.name || '',
+            idCard: student.idCard || '',
+            birthDate: student.birthDate || '',
+            address: student.address || ''
+        });
+    };
+
+    // บันทึกข้อมูลที่แก้ไข
+    const handleUpdateStudent = async (e) => {
+        e.preventDefault();
+        if (!editingStudent) return;
         try {
-            await updateDoc(doc(db, "students", id), { 
-                name: newName.trim(),
-                gender: detectGender(newName) 
+            const studentRef = doc(db, "students", editingStudent.id);
+            await updateDoc(studentRef, {
+                studentId: formData.studentId.trim(),
+                name: formData.name.trim(),
+                gender: detectGender(formData.name),
+                idCard: formData.idCard.trim(),
+                birthDate: formData.birthDate.trim(),
+                address: formData.address.trim()
             });
-            toast.success("แก้ไขชื่อสำเร็จ");
+            toast.success("บันทึกการแก้ไขสำเร็จ");
+            setEditingStudent(null);
             fetchStudents();
-        } catch (e) {
-            toast.error("เกิดข้อผิดพลาดในการแก้ไข");
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการบันทึก");
         }
     };
 
@@ -251,7 +280,7 @@ function ManageStudentsPage({ userProfile }) {
                                         <td className="p-4 text-center">
                                             <div className="flex justify-center gap-1.5">
                                                 {s.status !== "จำหน่าย" && <button onClick={() => handleWithdraw(s.id, s.name)} className="text-orange-400 border border-orange-900 px-2 py-1 rounded-lg text-xs hover:bg-orange-900/20 transition">จำหน่าย</button>}
-                                                <button onClick={() => handleEditName(s.id, s.name)} className="text-blue-400 border border-blue-900 px-2 py-1 rounded-lg text-xs hover:bg-blue-900/20 transition">แก้ไข</button>
+                                                <button onClick={() => openEditModal(s)} className="text-blue-400 border border-blue-900 px-2 py-1 rounded-lg text-xs hover:bg-blue-900/20 transition">แก้ไข</button>
                                                 <button onClick={() => handleDelete(s.id, s.name)} className="text-red-400 border border-red-900 px-2 py-1 rounded-lg text-xs hover:bg-red-900/20 transition">ลบ</button>
                                             </div>
                                         </td>
@@ -262,6 +291,80 @@ function ManageStudentsPage({ userProfile }) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal สำหรับแก้ไขข้อมูลทั้งหมด */}
+            {editingStudent && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                    <div className="bg-gray-900 border border-gray-700 w-full max-w-lg p-6 rounded-3xl shadow-2xl">
+                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>✏️</span> แก้ไขข้อมูลระเบียนประวัติ
+                        </h2>
+                        <form onSubmit={handleUpdateStudent} className="space-y-4">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">รหัสนักศึกษา</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.studentId} 
+                                    onChange={e => setFormData({...formData, studentId: e.target.value})} 
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">ชื่อ - นามสกุล</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.name} 
+                                    onChange={e => setFormData({...formData, name: e.target.value})} 
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">เลขประจำตัวประชาชน</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.idCard} 
+                                    onChange={e => setFormData({...formData, idCard: e.target.value})} 
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.birthDate} 
+                                    onChange={e => setFormData({...formData, birthDate: e.target.value})} 
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">ที่อยู่</label>
+                                <textarea 
+                                    rows="2"
+                                    value={formData.address} 
+                                    onChange={e => setFormData({...formData, address: e.target.value})} 
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setEditingStudent(null)} 
+                                    className="bg-gray-800 hover:bg-gray-700 px-5 py-2.5 rounded-xl text-white text-sm transition"
+                                >
+                                    ยกเลิก
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-xl text-white font-bold text-sm transition"
+                                >
+                                    บันทึกการแก้ไข
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
