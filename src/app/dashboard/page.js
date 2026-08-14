@@ -33,6 +33,33 @@ export default function DashboardPage() {
         } catch (e) { toast.error("เกิดข้อผิดพลาด"); }
     };
 
+    // ฟังก์ชันสำรองข้อมูลระบบทั้งหมด (เฉพาะแอดมิน)
+    const handleBackupDatabase = async () => {
+        if (!confirm("ต้องการสำรองข้อมูลทั้งหมดในระบบใช่หรือไม่?")) return;
+        try {
+            const collectionsToBackup = ['students', 'attendance', 'activities', 'home_visits', 'users', 'classrooms'];
+            const backupPayload = {};
+
+            for (const col of collectionsToBackup) {
+                const snap = await getDocs(collection(db, col));
+                backupPayload[col] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPayload, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadAnchor.setAttribute("download", `system_full_backup_${dateStr}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            toast.success("สำรองข้อมูลทั้งหมดสำเร็จ!");
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการสำรองข้อมูล");
+        }
+    };
+
     const menuItems = [
         { label: 'จัดการข้อมูลสถานศึกษา', path: '/dashboard/school-settings', icon: '🏫', adminOnly: true },
         { label: 'จัดการปีการศึกษา', path: '/dashboard/settings', icon: '📅', adminOnly: true },
@@ -85,6 +112,14 @@ export default function DashboardPage() {
                         </button>
                     ))
                 }
+
+                {/* ปุ่มสำรองข้อมูล (แสดงเฉพาะ Admin) */}
+                {userProfile?.role === 'admin' && (
+                    <button onClick={handleBackupDatabase} className="bg-amber-950/20 hover:bg-amber-900/40 p-8 rounded-3xl border border-amber-900/50 transition-all text-left flex items-center gap-4 w-full md:w-[320px] shadow-lg">
+                        <div className="text-3xl bg-gray-950 p-4 rounded-2xl">💾</div>
+                        <span className="text-lg font-bold text-amber-400">สำรองข้อมูลระบบ</span>
+                    </button>
+                )}
 
                 {userProfile?.role === 'admin' && (
                     <button onClick={handleResetDatabase} className="bg-orange-950/20 hover:bg-orange-900/40 p-8 rounded-3xl border border-orange-900/50 transition-all text-left flex items-center gap-4 w-full md:w-[320px] shadow-lg">
