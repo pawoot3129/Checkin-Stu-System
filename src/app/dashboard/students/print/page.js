@@ -67,13 +67,12 @@ export default function PrintStudentsPage() {
         fetchStudents();
     }, [selectedClass]);
 
-    // ฟังก์ชันคำนวณอายุจาก ว.ด.ป. เกิด (เช่น 16 เม.ย. 50 -> 50 คือปี 2550)
     const calculateAge = (birthDateStr) => {
         if (!birthDateStr) return '-';
         const match = birthDateStr.match(/\d{2}$/); 
         if (match) {
             let birthYear = 2500 + parseInt(match[0]);
-            let currentYear = new Date().getFullYear() + 543; // ปีปัจจุบันแบบ พ.ศ.
+            let currentYear = new Date().getFullYear() + 543;
             return currentYear - birthYear;
         }
         return '-';
@@ -115,19 +114,24 @@ export default function PrintStudentsPage() {
                 </div>
             </div>
 
-            {/* ส่วนกระดาษจำลองสำหรับพิมพ์ (Preview & Print Area) */}
+            {/* ส่วนกระดาษจำลองสำหรับพิมพ์ */}
             <div className="max-w-6xl mx-auto px-6 pb-10 print:p-0 print:max-w-none">
-                {/* กล่องกระดาษสีขาว (บนจอจะเห็นเป็นแผ่นกระดาษ, ตอนพิมพ์จะเป็นพื้นหลังปกติ) */}
                 <div className="bg-white text-black p-10 md:p-12 rounded-xl shadow-2xl print:shadow-none print:p-0">
                     
-                    {/* หัวเอกสาร */}
+                    {/* หัวเอกสารพร้อมโลโก้ */}
                     <div className="text-center mb-8 font-serif">
+                        <img 
+                            src="/images/logo.png" 
+                            alt="Logo" 
+                            className="mx-auto h-20 mb-3 object-contain"
+                            onError={(e) => { e.target.style.display = 'none'; }} // ซ่อนอัตโนมัติถ้ายังไม่ได้ใส่ไฟล์รูป
+                        />
                         <h2 className="text-2xl font-bold mb-2">ระเบียนประวัติและรายชื่อนักเรียน</h2>
                         <p className="text-lg">ห้องเรียน: <span className="font-bold">{selectedClass}</span></p>
                         <p className="text-md text-gray-700 mt-1">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                     </div>
 
-                    {/* ตารางข้อมูล (ปรับดีไซน์ให้สะอาดตาและโมเดิร์นขึ้น) */}
+                    {/* ตารางข้อมูล */}
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-sm">
                             <thead>
@@ -157,12 +161,16 @@ export default function PrintStudentsPage() {
                         </table>
                     </div>
                     
-                    {/* ท้ายเอกสาร (ซ่อนไว้โชว์เฉพาะตอนปริ้นก็ได้ หรือจะโชว์ไว้ก็สวยครับ) */}
-                    <div className="mt-8 flex justify-end">
-                        <div className="text-center w-64">
-                            <p className="mb-8">ผู้รายงานข้อมูล</p>
-                            <p>...........................................................</p>
-                            <p className="mt-2">( ครูที่ปรึกษา )</p>
+                    {/* ส่วนลงนามท้ายเอกสาร (ครูที่ปรึกษา & ผู้อำนวยการ) */}
+                    <div className="mt-16 grid grid-cols-2 gap-8 text-center text-sm font-serif">
+                        <div className="flex flex-col items-center">
+                            <p className="mb-12">ลงชื่อ...........................................................ครูที่ปรึกษา</p>
+                            <p>(.................................................................)</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <p className="mb-12">ลงชื่อ...........................................................ผู้อำนวยการ</p>
+                            <p>(.................................................................)</p>
+                            <p className="mt-1">วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                         </div>
                     </div>
 

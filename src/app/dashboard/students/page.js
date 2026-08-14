@@ -260,7 +260,7 @@ function ManageStudentsPage({ userProfile }) {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (เพิ่มช่อง วดป.เกิด และที่อยู่ครบถ้วน) */}
+                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (ครบทุกช่อง) */}
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
                         <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน (พร้อมระเบียนประวัติ)</h3>
                         <form onSubmit={handleAdd} className="space-y-3">
