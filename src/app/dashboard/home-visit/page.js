@@ -35,7 +35,7 @@ function HomeVisitForm({ userProfile }) {
     const [students, setStudents] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [imagePreviews, setImagePreviews] = useState([]); // เก็บ URL รูปสำหรับพรีวิวและพิมพ์ชั่วคราว
+    const [imagePreviews, setImagePreviews] = useState([]); 
     
     const [headerInfo, setHeaderInfo] = useState({ 
         semester: '1', 
@@ -50,7 +50,6 @@ function HomeVisitForm({ userProfile }) {
         familyInfo: '', dailyTasks: '', studyProblems: '' 
     });
 
-    // ฟังก์ชันดึงรูปจากเครื่องมาแสดงชั่วคราว
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         const previews = files.map(file => URL.createObjectURL(file));
@@ -153,7 +152,16 @@ function HomeVisitForm({ userProfile }) {
             `}</style>
 
             <div className="max-w-[210mm] mx-auto bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl print-container print-content-box">
-                <button onClick={() => router.back()} className="mb-4 text-gray-400 hover:text-white text-sm no-print transition">← ย้อนกลับ</button>
+                
+                {/* ปุ่มย้อนกลับดีไซน์ใหม่ ย้ายมาไว้ขวามือ ทันสมัย */}
+                <div className="no-print flex justify-end mb-4">
+                    <button 
+                        onClick={() => router.back()} 
+                        className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-5 py-2.5 rounded-2xl transition border border-gray-700/60 shadow-lg text-sm font-bold flex items-center gap-2 group cursor-pointer"
+                    >
+                        ย้อนกลับ <span className="transform group-hover:translate-x-1 transition">→</span>
+                    </button>
+                </div>
                 
                 {/* --- หน้าที่ 1: แบบบันทึกข้อมูลเยี่ยมบ้าน --- */}
                 <div>
@@ -282,12 +290,11 @@ function HomeVisitForm({ userProfile }) {
                     )}
                 </div>
 
-                {/* --- หน้าที่ 2: รูปภาพเยี่ยมบ้านนักศึกษา (แยกหน้าอัตโนมัติเวลาสั่งพิมพ์) --- */}
+                {/* --- หน้าที่ 2: รูปภาพเยี่ยมบ้านนักศึกษา --- */}
                 {selectedStudent && (
                     <div className="page-break pt-12 mt-12 border-t border-dashed border-gray-700 print:border-none">
                         <h2 className="font-bold text-xl text-center mb-6 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
                         
-                        {/* ส่วนเลือกรูป (ซ่อนตอนพิมพ์) */}
                         <div className="no-print mb-6">
                             <label className="block bg-gray-800 p-6 rounded-2xl border-2 border-dashed border-gray-600 text-center cursor-pointer hover:border-indigo-500 transition">
                                 <span className="text-indigo-400 font-bold block mb-1">📸 คลิกเพื่อเลือกรูปภาพประกอบการเยี่ยมบ้าน</span>
@@ -296,7 +303,6 @@ function HomeVisitForm({ userProfile }) {
                             </label>
                         </div>
                         
-                        {/* ช่องแสดงตัวอย่างรูปภาพ */}
                         <div className="grid grid-cols-2 gap-4">
                             {imagePreviews.map((src, index) => (
                                 <div key={index} className="border border-gray-700 print:border-gray-400 p-2 bg-gray-800 print:bg-white rounded-xl overflow-hidden">
@@ -308,12 +314,27 @@ function HomeVisitForm({ userProfile }) {
                     </div>
                 )}
 
-                {/* ปุ่มควบคุมด้านล่าง (ซ่อนตอนพิมพ์) */}
+                {/* ปุ่มควบคุมด้านล่างดีไซน์ใหม่ ทันสมัย มีไอคอนครบถ้วน */}
                 {selectedStudent && (
-                    <div className="flex gap-4 mt-10 no-print pt-4 border-t border-gray-800">
-                        <button onClick={handleSave} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-500 transition">บันทึกข้อมูล</button>
-                        <button onClick={handleClear} className="bg-red-600/20 text-red-400 border border-red-900/50 py-3 px-6 rounded-xl font-bold hover:bg-red-600/30 transition">ล้าง</button>
-                        <button onClick={() => window.print()} className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-500 transition">พิมพ์เอกสารทั้งหมด</button>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-10 no-print pt-4 border-t border-gray-800">
+                        <button 
+                            onClick={handleSave} 
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-indigo-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>💾</span> บันทึกข้อมูล
+                        </button>
+                        <button 
+                            onClick={handleClear} 
+                            className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-3.5 px-6 rounded-2xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>🗑️</span> ล้างฟอร์ม
+                        </button>
+                        <button 
+                            onClick={() => window.print()} 
+                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-emerald-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>🖨️</span> พิมพ์เอกสารทั้งหมด
+                        </button>
                     </div>
                 )}
             </div>
