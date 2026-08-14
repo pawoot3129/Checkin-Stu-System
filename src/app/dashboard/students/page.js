@@ -98,6 +98,21 @@ function ManageStudentsPage({ userProfile }) {
         setNum(''); setName(''); fetchStudents();
     };
 
+    const handleEditName = async (id, currentName) => {
+        const newName = prompt("แก้ไขชื่อ-นามสกุล:", currentName);
+        if (!newName || newName.trim() === "") return;
+        try {
+            await updateDoc(doc(db, "students", id), { 
+                name: newName.trim(),
+                gender: detectGender(newName) 
+            });
+            toast.success("แก้ไขชื่อสำเร็จ");
+            fetchStudents();
+        } catch (e) {
+            toast.error("เกิดข้อผิดพลาดในการแก้ไข");
+        }
+    };
+
     const handleWithdraw = async (id, name) => {
         if (!window.confirm(`ยืนยันการจำหน่ายนักเรียน "${name}" ออกจากระบบหรือไม่?`)) return;
         await updateDoc(doc(db, "students", id), { status: "จำหน่าย" });
@@ -157,7 +172,6 @@ function ManageStudentsPage({ userProfile }) {
                         จัดการรายชื่อนักเรียน
                     </h1>
                     <div className="flex gap-3">
-                        {/* ปุ่มเชื่อมโยงไปหน้าอัปเดตระเบียนประวัติ CSV */}
                         <button 
                             onClick={() => router.push('/dashboard/students/import')} 
                             className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg"
@@ -216,8 +230,9 @@ function ManageStudentsPage({ userProfile }) {
                                 <td className="p-4 text-center">{s.gender}</td>
                                 <td className="p-4 text-center">{s.status}</td>
                                 <td className="p-4 text-center flex justify-center gap-2">
-                                    {s.status !== "จำหน่าย" && <button onClick={() => handleWithdraw(s.id, s.name)} className="text-orange-400 border border-orange-900 px-2 py-1 rounded hover:bg-orange-900/20">จำหน่าย</button>}
-                                    <button onClick={() => handleDelete(s.id, s.name)} className="text-red-400 border border-red-900 px-2 py-1 rounded hover:bg-red-900/20">ลบ</button>
+                                    {s.status !== "จำหน่าย" && <button onClick={() => handleWithdraw(s.id, s.name)} className="text-orange-400 border border-orange-900 px-2.5 py-1 rounded-lg text-xs hover:bg-orange-900/20 transition">จำหน่าย</button>}
+                                    <button onClick={() => handleEditName(s.id, s.name)} className="text-blue-400 border border-blue-900 px-2.5 py-1 rounded-lg text-xs hover:bg-blue-900/20 transition">แก้ไข</button>
+                                    <button onClick={() => handleDelete(s.id, s.name)} className="text-red-400 border border-red-900 px-2.5 py-1 rounded-lg text-xs hover:bg-red-900/20 transition">ลบ</button>
                                 </td>
                             </tr>
                         ))}</tbody>
