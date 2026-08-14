@@ -258,7 +258,7 @@ function ManageStudentsPage({ userProfile }) {
                                 onClick={() => router.push('/dashboard/students/import')} 
                                 className="w-full bg-indigo-600 hover:bg-indigo-500 p-3.5 rounded-xl text-white transition flex items-center justify-center gap-2 font-bold shadow-lg text-sm"
                             >
-                                📥 อัปเดตระเบียนข้อมูลนักเรียน
+                                📥 อัปเดตระเบียนข้อมูลนักเรียน (แนบไฟล์ .csv)
                             </button>
                         </div>
                     </div>
