@@ -30,7 +30,7 @@ export default function ImportStudentsPage() {
         });
     };
 
-    // ฟังก์ชันซิงค์ข้อมูลเข้า Firebase (จับคู่จาก ชื่อ - นามสกุล)
+    // ฟังก์ชันซิงค์ข้อมูลเข้า Firebase (จับคู่จาก ชื่อ-นามสกุล และ เลขประจำตัวนักเรียน)
     const handleSyncToFirebase = async () => {
         if (previewData.length === 0) {
             toast.error("ยังไม่มีข้อมูลสำหรับอัปเดต");
@@ -51,16 +51,18 @@ export default function ImportStudentsPage() {
             let notFoundCount = 0;
 
             for (const row of previewData) {
-                const csvName = (row['ชื่อ - นามสกุล'] || '').trim();
+                const csvName = (row['ชื่อ-นามสกุล'] || '').trim();
+                const studentId = (row['เลขประจำตัวนักเรียน'] || '').trim();
                 const idCard = (row['เลขประจำตัวประชาชน'] || '').trim();
-                const studentId = (row['เลขประจำตัวนักศึกษา'] || '').trim();
                 const birthDate = (row['ว.ด.ป. เกิด'] || '').trim();
+                const age = (row['อายุ'] || '').trim();
+                const address = (row['ที่อยู่'] || '').trim();
 
                 if (!csvName) continue;
 
                 // เทียบหาชื่อ-นามสกุลให้ตรงกับของเดิมในระบบ
                 const matchedStudent = existingStudents.find(s => {
-                    const fullName = `${s.firstName || ''} ${s.lastName || ''}`.trim();
+                    const fullName = s.name ? s.name.trim() : `${s.firstName || ''} ${s.lastName || ''}`.trim();
                     return fullName === csvName;
                 });
 
@@ -69,7 +71,9 @@ export default function ImportStudentsPage() {
                     await updateDoc(studentRef, {
                         studentId: studentId || matchedStudent.studentId || '',
                         idCard: idCard || '',
-                        birthDate: birthDate || ''
+                        birthDate: birthDate || '',
+                        age: age || '',
+                        address: address || ''
                     });
                     updateCount++;
                 } else {
@@ -88,7 +92,7 @@ export default function ImportStudentsPage() {
     return (
         <div className="min-h-screen bg-gray-950 text-white p-6">
             <Toaster />
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
                 <div className="flex justify-between items-center mb-6 bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl">
                     <h1 className="text-xl font-bold flex items-center gap-3">
                         <span className="text-indigo-500">📥</span>
@@ -108,7 +112,7 @@ export default function ImportStudentsPage() {
                         className="block w-full text-sm text-gray-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 transition cursor-pointer bg-gray-950 p-3 rounded-xl border border-gray-800"
                     />
                     <p className="text-xs text-yellow-500 mt-3">
-                        * ระบบจะทำการเทียบ "ชื่อ - นามสกุล" จากไฟล์ CSV กับฐานข้อมูลเดิม แล้วเติมเลขประจำตัวประชาชน, รหัสนักศึกษา และวันเกิดให้โดยอัตโนมัติ โดยที่ประวัติการเช็คชื่อเดิมไม่หายครับ
+                        * หัวคอลัมน์ใน CSV ต้องตรงกับ: ชื่อ-นามสกุล, เลขประจำตัวนักเรียน, เลขประจำตัวประชาชน, ว.ด.ป. เกิด, อายุ, ที่อยู่
                     </p>
                 </div>
 
@@ -128,19 +132,23 @@ export default function ImportStudentsPage() {
                             <table className="w-full text-sm text-left">
                                 <thead className="text-gray-400 uppercase bg-gray-800 sticky top-0">
                                     <tr>
-                                        <th className="p-3">ชื่อ - นามสกุล</th>
+                                        <th className="p-3">รหัสนักศึกษา</th>
+                                        <th className="p-3">ชื่อ-นามสกุล</th>
                                         <th className="p-3">เลขประจำตัวประชาชน</th>
-                                        <th className="p-3">เลขประจำตัวนักศึกษา</th>
                                         <th className="p-3">ว.ด.ป. เกิด</th>
+                                        <th className="p-3">อายุ</th>
+                                        <th className="p-3">ที่อยู่</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
                                     {previewData.map((row, idx) => (
                                         <tr key={idx} className="hover:bg-gray-800/50">
-                                            <td className="p-3">{row['ชื่อ - นามสกุล']}</td>
+                                            <td className="p-3 font-mono text-indigo-400">{row['เลขประจำตัวนักเรียน']}</td>
+                                            <td className="p-3">{row['ชื่อ-นามสกุล']}</td>
                                             <td className="p-3 font-mono">{row['เลขประจำตัวประชาชน']}</td>
-                                            <td className="p-3 font-mono text-indigo-400">{row['เลขประจำตัวนักศึกษา']}</td>
                                             <td className="p-3">{row['ว.ด.ป. เกิด']}</td>
+                                            <td className="p-3 text-center">{row['อายุ']}</td>
+                                            <td className="p-3">{row['ที่อยู่']}</td>
                                         </tr>
                                     ))}
                                 </tbody>
