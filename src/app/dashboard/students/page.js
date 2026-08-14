@@ -156,7 +156,16 @@ function ManageStudentsPage({ userProfile }) {
                         <span className="text-indigo-500">📋</span> 
                         จัดการรายชื่อนักเรียน
                     </h1>
-                    <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
+                    <div className="flex gap-3">
+                        {/* ปุ่มเชื่อมโยงไปหน้าอัปเดตระเบียนประวัติ CSV */}
+                        <button 
+                            onClick={() => router.push('/dashboard/students/import')} 
+                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg"
+                        >
+                            <span>📥 อัปเดตระเบียนประวัติ</span>
+                        </button>
+                        <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
+                    </div>
                 </header>
 
                 <div className="mb-8">
@@ -187,7 +196,7 @@ function ManageStudentsPage({ userProfile }) {
                         </form>
                     </div>
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
-                        <h3 className="font-bold mb-4">นำเข้าไฟล์รายชื่อ (นามสกุล .CSV)</h3>
+                        <h3 className="font-bold mb-4">นำเข้าไฟล์รายชื่อแบบเดิม (นามสกุล .CSV)</h3>
                         <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden"/>
                         <button disabled={isProcessing} onClick={() => fileInputRef.current.click()} className="w-full py-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition disabled:opacity-50">เลือกไฟล์</button>
                     </div>
