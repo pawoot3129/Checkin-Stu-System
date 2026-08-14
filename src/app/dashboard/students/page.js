@@ -49,7 +49,6 @@ function ManageStudentsPage({ userProfile }) {
                 );
 
                 let classes = [];
-
                 if (userProfile.role === 'admin') {
                     classes = Array.from(existingClassesMap);
                 } else {
@@ -58,13 +57,9 @@ function ManageStudentsPage({ userProfile }) {
                 }
                 
                 classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-                
                 setClassrooms(classes);
-                if (classes.length > 0) {
-                    setSelectedClass(classes[0]);
-                } else {
-                    setSelectedClass('');
-                }
+                if (classes.length > 0) setSelectedClass(classes[0]);
+                else setSelectedClass('');
             } catch (error) {
                 console.error("Error fetching classes:", error);
                 toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลห้องเรียน");
@@ -165,20 +160,26 @@ function ManageStudentsPage({ userProfile }) {
     return (
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <Toaster />
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <header className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold flex items-center gap-3">
                         <span className="text-indigo-500">📋</span> 
-                        จัดการรายชื่อนักเรียน
+                        จัดการรายชื่อและระเบียนประวัตินักเรียน
                     </h1>
                     <div className="flex gap-3">
                         <button 
-                            onClick={() => router.push('/dashboard/students/import')} 
-                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg"
+                            onClick={() => router.push('/dashboard/students/print')} 
+                            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg text-sm"
                         >
-                            <span>📥 อัปเดตระเบียนประวัติ</span>
+                            🖨️ ไปหน้าพิมพ์
                         </button>
-                        <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition">← ย้อนกลับ</button>
+                        <button 
+                            onClick={() => router.push('/dashboard/students/import')} 
+                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white transition flex items-center gap-2 font-bold shadow-lg text-sm"
+                        >
+                            📥 อัปเดตระเบียนประวัติ
+                        </button>
+                        <button onClick={() => router.back()} className="bg-gray-800 px-4 py-2 rounded-xl text-white hover:bg-gray-700 transition text-sm">← ย้อนกลับ</button>
                     </div>
                 </header>
 
@@ -216,27 +217,47 @@ function ManageStudentsPage({ userProfile }) {
                     </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                        <h3 className="font-bold">รายชื่อ ({students.length} คน)</h3>
-                        <button onClick={handleDeleteAll} className="text-red-500 text-sm hover:underline">ลบทั้งหมด</button>
+                <div className="bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden shadow-xl">
+                    <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
+                        <h3 className="font-bold">รายชื่อและระเบียนประวัติ ({students.length} คน)</h3>
+                        <button onClick={handleDeleteAll} className="text-red-400 text-sm hover:underline">ลบทั้งหมด</button>
                     </div>
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-800 text-gray-400"><tr><th className="p-4">เลขที่</th><th className="p-4 text-left">ชื่อ-นามสกุล</th><th className="p-4">เพศ</th><th className="p-4">สถานะ</th><th className="p-4">จัดการ</th></tr></thead>
-                        <tbody>{students.map(s => (
-                            <tr key={s.id} className={`border-t border-gray-800 ${s.status === "จำหน่าย" ? "opacity-50 line-through" : ""}`}>
-                                <td className="p-4 text-center">{s.studentNumber}</td>
-                                <td className="p-4">{s.name}</td>
-                                <td className="p-4 text-center">{s.gender}</td>
-                                <td className="p-4 text-center">{s.status}</td>
-                                <td className="p-4 text-center flex justify-center gap-2">
-                                    {s.status !== "จำหน่าย" && <button onClick={() => handleWithdraw(s.id, s.name)} className="text-orange-400 border border-orange-900 px-2.5 py-1 rounded-lg text-xs hover:bg-orange-900/20 transition">จำหน่าย</button>}
-                                    <button onClick={() => handleEditName(s.id, s.name)} className="text-blue-400 border border-blue-900 px-2.5 py-1 rounded-lg text-xs hover:bg-blue-900/20 transition">แก้ไข</button>
-                                    <button onClick={() => handleDelete(s.id, s.name)} className="text-red-400 border border-red-900 px-2.5 py-1 rounded-lg text-xs hover:bg-red-900/20 transition">ลบ</button>
-                                </td>
-                            </tr>
-                        ))}</tbody>
-                    </table>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-800 text-gray-400 uppercase text-xs">
+                                <tr>
+                                    <th className="p-4 text-center">เลขที่</th>
+                                    <th className="p-4">รหัส นศ.</th>
+                                    <th className="p-4">ชื่อ-นามสกุล</th>
+                                    <th className="p-4 text-center">เลขบัตรประชาชน</th>
+                                    <th className="p-4 text-center">ว.ด.ป. เกิด</th>
+                                    <th className="p-4">ที่อยู่</th>
+                                    <th className="p-4 text-center">สถานะ</th>
+                                    <th className="p-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                                {students.map(s => (
+                                    <tr key={s.id} className={`hover:bg-gray-800/50 ${s.status === "จำหน่าย" ? "opacity-50 line-through" : ""}`}>
+                                        <td className="p-4 text-center">{s.studentNumber}</td>
+                                        <td className="p-4 font-mono text-indigo-400">{s.studentId || '-'}</td>
+                                        <td className="p-4 font-bold">{s.name}</td>
+                                        <td className="p-4 text-center font-mono">{s.idCard || '-'}</td>
+                                        <td className="p-4 text-center">{s.birthDate || '-'}</td>
+                                        <td className="p-4 max-w-xs truncate text-gray-300">{s.address || '-'}</td>
+                                        <td className="p-4 text-center">{s.status}</td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex justify-center gap-1.5">
+                                                {s.status !== "จำหน่าย" && <button onClick={() => handleWithdraw(s.id, s.name)} className="text-orange-400 border border-orange-900 px-2 py-1 rounded-lg text-xs hover:bg-orange-900/20 transition">จำหน่าย</button>}
+                                                <button onClick={() => handleEditName(s.id, s.name)} className="text-blue-400 border border-blue-900 px-2 py-1 rounded-lg text-xs hover:bg-blue-900/20 transition">แก้ไข</button>
+                                                <button onClick={() => handleDelete(s.id, s.name)} className="text-red-400 border border-red-900 px-2 py-1 rounded-lg text-xs hover:bg-red-900/20 transition">ลบ</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
