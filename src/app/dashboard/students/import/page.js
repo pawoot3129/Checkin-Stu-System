@@ -12,7 +12,7 @@ export default function ImportStudentsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [previewData, setPreviewData] = useState([]);
 
-    // ฟังก์ชันอ่านไฟล์ CSV
+    // ฟังก์ชันอ่านไฟล์ CSV (กรองแถวว่างเปล่าออกอย่างเด็ดขาด)
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -21,8 +21,15 @@ export default function ImportStudentsPage() {
             header: true,
             skipEmptyLines: true,
             complete: (results) => {
-                setPreviewData(results.data);
-                toast.success(`โหลดข้อมูลจากไฟล์สำเร็จ (${results.data.length} รายชื่อ)`);
+                // กรองเฉพาะแถวที่มีทั้ง "ชื่อ-นามสกุล" และ "เลขประจำตัวนักเรียน" จริงๆ เท่านั้น
+                const validData = results.data.filter(row => {
+                    const name = (row['ชื่อ-นามสกุล'] || '').trim();
+                    const studentId = (row['เลขประจำตัวนักเรียน'] || '').trim();
+                    return name !== '' && studentId !== '';
+                });
+
+                setPreviewData(validData);
+                toast.success(`โหลดข้อมูลจากไฟล์สำเร็จ (${validData.length} รายชื่อ)`);
             },
             error: (error) => {
                 toast.error("เกิดข้อผิดพลาดในการอ่านไฟล์: " + error.message);
@@ -30,7 +37,7 @@ export default function ImportStudentsPage() {
         });
     };
 
-    // ฟังก์ชันซิงค์ข้อมูลเข้า Firebase (จับคู่จาก ชื่อ-นามสกุล และ เลขประจำตัวนักเรียน)
+    // ฟังก์ชันซิงค์ข้อมูลเข้า Firebase
     const handleSyncToFirebase = async () => {
         if (previewData.length === 0) {
             toast.error("ยังไม่มีข้อมูลสำหรับอัปเดต");
@@ -55,7 +62,6 @@ export default function ImportStudentsPage() {
                 const studentId = (row['เลขประจำตัวนักเรียน'] || '').trim();
                 const idCard = (row['เลขประจำตัวประชาชน'] || '').trim();
                 const birthDate = (row['ว.ด.ป. เกิด'] || '').trim();
-                const age = (row['อายุ'] || '').trim();
                 const address = (row['ที่อยู่'] || '').trim();
 
                 if (!csvName) continue;
@@ -72,7 +78,6 @@ export default function ImportStudentsPage() {
                         studentId: studentId || matchedStudent.studentId || '',
                         idCard: idCard || '',
                         birthDate: birthDate || '',
-                        age: age || '',
                         address: address || ''
                     });
                     updateCount++;
@@ -112,7 +117,7 @@ export default function ImportStudentsPage() {
                         className="block w-full text-sm text-gray-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 transition cursor-pointer bg-gray-950 p-3 rounded-xl border border-gray-800"
                     />
                     <p className="text-xs text-yellow-500 mt-3">
-                        * หัวคอลัมน์ใน CSV ต้องตรงกับ: ชื่อ-นามสกุล, เลขประจำตัวนักเรียน, เลขประจำตัวประชาชน, ว.ด.ป. เกิด, อายุ, ที่อยู่
+                        * หัวคอลัมน์ใน CSV ต้องตรงกับ: ชื่อ-นามสกุล, เลขประจำตัวนักเรียน, เลขประจำตัวประชาชน, ว.ด.ป. เกิด, ที่อยู่
                     </p>
                 </div>
 
@@ -136,7 +141,6 @@ export default function ImportStudentsPage() {
                                         <th className="p-3">ชื่อ-นามสกุล</th>
                                         <th className="p-3">เลขประจำตัวประชาชน</th>
                                         <th className="p-3">ว.ด.ป. เกิด</th>
-                                        <th className="p-3">อายุ</th>
                                         <th className="p-3">ที่อยู่</th>
                                     </tr>
                                 </thead>
@@ -147,7 +151,6 @@ export default function ImportStudentsPage() {
                                             <td className="p-3">{row['ชื่อ-นามสกุล']}</td>
                                             <td className="p-3 font-mono">{row['เลขประจำตัวประชาชน']}</td>
                                             <td className="p-3">{row['ว.ด.ป. เกิด']}</td>
-                                            <td className="p-3 text-center">{row['อายุ']}</td>
                                             <td className="p-3">{row['ที่อยู่']}</td>
                                         </tr>
                                     ))}
