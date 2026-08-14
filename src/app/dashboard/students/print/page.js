@@ -15,6 +15,24 @@ export default function PrintStudentsPage() {
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // ฟังก์ชันคำนวณอายุจาก ว.ด.ป. เกิด (เช่น 16 เม.ย. 50)
+    const calculateAge = (birthDate) => {
+        if (!birthDate) return '-';
+        try {
+            const currentYear = new Date().getFullYear();
+            // ดึงปีออกจากข้อความ (สมมติว่าเป็นปี พ.ศ. 2 หลักหรือ 4 หลักท้าย)
+            const parts = birthDate.split(' ');
+            let birthYear = parseInt(parts[parts.length - 1]);
+            
+            // ปรับปี พ.ศ. 2 หลักเป็น 4 หลัก (เช่น 50 -> 2550)
+            if (birthYear < 100) birthYear += 2500;
+            
+            // คำนวณเป็น พ.ศ. ปัจจุบัน (2569 - 2550 = 19)
+            const age = (currentYear + 543) - birthYear;
+            return age > 0 ? age : '-';
+        } catch (e) { return '-'; }
+    };
+
     // เช็คสิทธิ์ผู้ใช้งาน
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -61,7 +79,6 @@ export default function PrintStudentsPage() {
     return (
         <div className="min-h-screen bg-gray-950 text-white p-6 print:bg-white print:text-black">
             <Toaster />
-            {/* เมนูหน้าจอ (ซ่อนตอนพิมพ์) */}
             <div className="max-w-5xl mx-auto mb-6 print:hidden flex justify-between items-center bg-gray-900 p-6 rounded-3xl border border-gray-800">
                 <h1 className="text-xl font-bold">🖨️ พิมพ์ระเบียนประวัตินักเรียน</h1>
                 <div className="flex gap-2">
@@ -73,7 +90,6 @@ export default function PrintStudentsPage() {
                 </div>
             </div>
 
-            {/* ส่วนเอกสารสำหรับพิมพ์ */}
             <div className="max-w-5xl mx-auto bg-gray-900 print:bg-white p-8 rounded-3xl border border-gray-800 print:border-none">
                 <div className="flex items-center justify-center gap-6 mb-6">
                     <img src="https://www.sichon.ac.th/images/logo.png" alt="Logo" className="h-20 w-auto print:block hidden" />
@@ -103,7 +119,7 @@ export default function PrintStudentsPage() {
                                 <td className="border border-gray-400 p-2">{s.name}</td>
                                 <td className="border border-gray-400 p-2 text-center">{s.idCard || '-'}</td>
                                 <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
-                                <td className="border border-gray-400 p-2 text-center">{s.age || '-'}</td>
+                                <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
                                 <td className="border border-gray-400 p-2">{s.address || '-'}</td>
                             </tr>
                         ))}
