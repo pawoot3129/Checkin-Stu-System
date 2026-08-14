@@ -85,7 +85,7 @@ export default function PrintStudentsPage() {
                 <div className="bg-white text-black p-8 rounded-xl shadow-2xl print:shadow-none">
                     <div className="text-center mb-6 font-serif">
                         <img src="/logo.png" className="mx-auto h-20 mb-3" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h2 className="text-xl font-bold">ระเบียนประวัติและรายชื่อนักเรียน</h2>
+                        <h2 className="text-xl font-bold">ระเบียนข้อมูลนักเรียน</h2>
                         <p>ห้องเรียน: <b>{selectedClass}</b> | วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                     </div>
 
