@@ -36,8 +36,13 @@ function ManageStudentsPage({ userProfile }) {
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [students, setStudents] = useState([]);
-    const [name, setName] = useState('');
+    
+    // State สำหรับฟอร์มเพิ่มทีละคน (รองรับระเบียนประวัติแล้ว)
     const [num, setNum] = useState('');
+    const [name, setName] = useState('');
+    const [studentId, setStudentId] = useState('');
+    const [idCard, setIdCard] = useState('');
+
     const [isProcessing, setIsProcessing] = useState(false);
 
     // State สำหรับ Modal แก้ไขข้อมูลทั้งหมด
@@ -95,12 +100,30 @@ function ManageStudentsPage({ userProfile }) {
         return (n.startsWith('นาง') || n.startsWith('น.ส.') || n.startsWith('ด.ญ.')) ? 'หญิง' : 'ชาย';
     };
 
+    // ฟังก์ชันเพิ่มนักเรียนทีละคน (บันทึกรหัส นศ. และเลขบัตร ปชช. ลง Firebase ทันที)
     const handleAdd = async (e) => {
         e.preventDefault();
-        if (!num || !name) return toast.error('กรุณากรอกข้อมูล');
-        await addDoc(collection(db, 'students'), { classId: selectedClass, studentNumber: parseInt(num), name: name.trim(), gender: detectGender(name), status: "ปกติ" });
-        toast.success('เพิ่มสำเร็จ');
-        setNum(''); setName(''); fetchStudents();
+        if (!num || !name) return toast.error('กรุณากรอกเลขที่และชื่อ-นามสกุล');
+        
+        try {
+            await addDoc(collection(db, 'students'), { 
+                classId: selectedClass, 
+                studentNumber: parseInt(num), 
+                name: name.trim(), 
+                studentId: studentId.trim(),
+                idCard: idCard.trim(),
+                gender: detectGender(name), 
+                status: "ปกติ" 
+            });
+            toast.success('เพิ่มนักเรียนสำเร็จ');
+            setNum(''); 
+            setName(''); 
+            setStudentId('');
+            setIdCard('');
+            fetchStudents();
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการเพิ่มข้อมูล");
+        }
     };
 
     // เปิด Modal แก้ไขข้อมูล
@@ -115,7 +138,7 @@ function ManageStudentsPage({ userProfile }) {
         });
     };
 
-    // บันทึกข้อมูลที่แก้ไข
+    // บันทึกข้อมูลที่แก้ไขผ่าน Modal
     const handleUpdateStudent = async (e) => {
         e.preventDefault();
         if (!editingStudent) return;
@@ -231,18 +254,27 @@ function ManageStudentsPage({ userProfile }) {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    {/* ฟอร์มเพิ่มนักเรียนทีละคน (อัปเกรดให้กรอกระเบียนประวัติได้แล้ว) */}
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
                         <h3 className="font-bold mb-4">เพิ่มนักเรียนทีละคน</h3>
-                        <form onSubmit={handleAdd} className="flex gap-2">
-                            <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-20 p-3 bg-gray-800 rounded-xl"/>
-                            <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="flex-1 p-3 bg-gray-800 rounded-xl"/>
-                            <button type="submit" className="bg-indigo-600 px-6 py-3 rounded-xl hover:bg-indigo-500 transition">เพิ่ม</button>
+                        <form onSubmit={handleAdd} className="space-y-3">
+                            <div className="flex gap-2">
+                                <input type="number" value={num} onChange={e => setNum(e.target.value)} placeholder="เลขที่" className="w-20 p-3 bg-gray-800 rounded-xl text-sm" required />
+                                <input value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" required />
+                            </div>
+                            <div className="flex gap-2">
+                                <input value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="รหัสนักศึกษา (ถ้ามี)" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                                <input value={idCard} onChange={e => setIdCard(e.target.value)} placeholder="เลขบัตร ปชช. (ถ้ามี)" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm font-mono" />
+                            </div>
+                            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl transition font-bold text-sm">➕ เพิ่มนักเรียนเข้าห้อง</button>
                         </form>
                     </div>
+
                     <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700">
                         <h3 className="font-bold mb-4">นำเข้าไฟล์รายชื่อแบบเดิม (นามสกุล .CSV)</h3>
                         <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden"/>
-                        <button disabled={isProcessing} onClick={() => fileInputRef.current.click()} className="w-full py-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition disabled:opacity-50">เลือกไฟล์</button>
+                        <button disabled={isProcessing} onClick={() => fileInputRef.current.click()} className="w-full py-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition disabled:opacity-50 mt-2">เลือกไฟล์</button>
+                        <p className="text-xs text-gray-500 mt-4">* สำหรับอัปโหลดไฟล์ CSV ทั้งห้องทีเดียว</p>
                     </div>
                 </div>
 
