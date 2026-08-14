@@ -153,13 +153,13 @@ function HomeVisitForm({ userProfile }) {
 
             <div className="max-w-[210mm] mx-auto bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl print-container print-content-box">
                 
-                {/* ปุ่มย้อนกลับดีไซน์ใหม่ ย้ายมาไว้ขวามือ ทันสมัย */}
+                {/* ปุ่มย้อนกลับดีไซน์ใหม่ ลูกศรชี้ซ้ายถูกต้อง */}
                 <div className="no-print flex justify-end mb-4">
                     <button 
                         onClick={() => router.back()} 
                         className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-5 py-2.5 rounded-2xl transition border border-gray-700/60 shadow-lg text-sm font-bold flex items-center gap-2 group cursor-pointer"
                     >
-                        ← ย้อนกลับ <span className="transform group-hover:translate-x-1 transition"></span>
+                        <span className="transform group-hover:-translate-x-1 transition">←</span> ย้อนกลับ
                     </button>
                 </div>
                 
@@ -278,9 +278,8 @@ function HomeVisitForm({ userProfile }) {
                             
                             <div className="mt-8 flex justify-end">
                                 <div className="text-center w-56 text-sm">
-                                    <p className="mb-4">ลงชื่อ............................................. </p>
-                                    <p className="mt-1">({userProfile.name})</p>
-                                    <p className="mb-1">ครูที่ปรึกษา</p>
+                                    <p className="mb-4">ลงชื่อ............................................. ครูที่ปรึกษา</p>
+                                    <p className="mb-1">({userProfile.name || '...................................................'})</p>
                                 </div>
                             </div>
                         </div>
