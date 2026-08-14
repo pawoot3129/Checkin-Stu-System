@@ -229,6 +229,7 @@ function ManageStudentsPage({ userProfile }) {
                                     <th className="p-4 text-center">เลขที่</th>
                                     <th className="p-4">รหัส นศ.</th>
                                     <th className="p-4">ชื่อ-นามสกุล</th>
+                                    <th className="p-4 text-center">เพศ</th>
                                     <th className="p-4 text-center">เลขบัตรประชาชน</th>
                                     <th className="p-4 text-center">ว.ด.ป. เกิด</th>
                                     <th className="p-4">ที่อยู่</th>
@@ -242,6 +243,7 @@ function ManageStudentsPage({ userProfile }) {
                                         <td className="p-4 text-center">{s.studentNumber}</td>
                                         <td className="p-4 font-mono text-indigo-400">{s.studentId || '-'}</td>
                                         <td className="p-4 font-bold">{s.name}</td>
+                                        <td className="p-4 text-center">{s.gender || '-'}</td>
                                         <td className="p-4 text-center font-mono">{s.idCard || '-'}</td>
                                         <td className="p-4 text-center">{s.birthDate || '-'}</td>
                                         <td className="p-4 max-w-xs truncate text-gray-300">{s.address || '-'}</td>
