@@ -136,60 +136,25 @@ function HomeVisitForm({ userProfile }) {
             <Toaster />
             <style jsx global>{`
                 @media print {
-                    @page { 
-                        size: A4 portrait; 
-                        margin: 8mm 10mm; 
-                    }
-                    body {
-                        -webkit-print-color-adjust: exact;
-                        background: white !important;
-                        color: black !important;
-                    }
+                    @page { size: A4 portrait; margin: 8mm 10mm; }
+                    body { -webkit-print-color-adjust: exact; background: white !important; color: black !important; }
                     .no-print { display: none !important; }
-                    .print-container { 
-                        background-color: white !important; 
-                        color: black !important; 
-                        box-shadow: none !important; 
-                        border: none !important; 
-                        width: 100% !important; 
-                        max-width: 100% !important;
-                        padding: 0 !important; 
-                        margin: 0 !important;
-                    }
-                    .print-content-box {
-                        font-size: 10pt !important;
-                        line-height: 1.25 !important;
-                    }
-                    .print-row {
-                        margin-bottom: 3px !important;
-                    }
-                    input, select {
-                        border: none !important;
-                        border-bottom: 1px dotted #000 !important;
-                        border-radius: 0 !important;
-                        background: transparent !important;
-                        padding: 1px 4px !important;
-                        height: auto !important;
-                    }
-                    .page-break {
-                        page-break-before: always;
-                    }
+                    .print-container { background-color: white !important; color: black !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+                    .print-content-box { font-size: 10pt !important; line-height: 1.25 !important; }
+                    .print-row { margin-bottom: 3px !important; }
+                    input, select { border: none !important; border-bottom: 1px dotted #000 !important; border-radius: 0 !important; background: transparent !important; padding: 1px 4px !important; height: auto !important; }
+                    .page-break { page-break-before: always; }
                 }
             `}</style>
 
             <div className="max-w-[210mm] mx-auto bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl print-container print-content-box">
                 
-                {/* ปุ่มย้อนกลับดีไซน์ใหม่ ลูกศรชี้ซ้ายถูกต้อง */}
                 <div className="no-print flex justify-end mb-4">
-                    <button 
-                        onClick={() => router.back()} 
-                        className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-5 py-2.5 rounded-2xl transition border border-gray-700/60 shadow-lg text-sm font-bold flex items-center gap-2 group cursor-pointer"
-                    >
+                    <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-5 py-2.5 rounded-2xl transition border border-gray-700/60 shadow-lg text-sm font-bold flex items-center gap-2 group cursor-pointer">
                         <span className="transform group-hover:-translate-x-1 transition">←</span> ย้อนกลับ
                     </button>
                 </div>
                 
-                {/* --- หน้าที่ 1: แบบบันทึกข้อมูลเยี่ยมบ้าน --- */}
                 <div>
                     <div className="text-center mb-4 pt-1">
                         <img src="/logo.png" style={{ height: '38px', width: 'auto' }} className="mx-auto mb-1.5 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
@@ -201,7 +166,6 @@ function HomeVisitForm({ userProfile }) {
                         </div>
                     </div>
 
-                    {/* ส่วนเลือกห้องและนักเรียน (ซ่อนตอนพิมพ์) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print bg-gray-950 p-4 rounded-2xl border border-gray-800">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">เลือกห้องเรียนในความดูแล</label>
@@ -266,8 +230,9 @@ function HomeVisitForm({ userProfile }) {
                                             <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวนรายได้" className="w-full p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท</span>
+                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">รายได้</span>
+                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวน" className="w-full p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท/เดือน</span>
                                         </div>
                                     </div>
                                 </div>
@@ -319,7 +284,6 @@ function HomeVisitForm({ userProfile }) {
                     )}
                 </div>
 
-                {/* --- หน้าที่ 2: รูปภาพเยี่ยมบ้านนักศึกษา (แยกหน้าอัตโนมัติ) --- */}
                 {selectedStudent && (
                     <div className="page-break pt-8 mt-8 border-t border-dashed border-gray-700 print:border-none">
                         <h2 className="font-bold text-xl text-center mb-6 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
@@ -343,25 +307,15 @@ function HomeVisitForm({ userProfile }) {
                     </div>
                 )}
 
-                {/* ปุ่มควบคุมด้านล่างดีไซน์ใหม่ ทันสมัย มีไอคอนครบถ้วน */}
                 {selectedStudent && (
                     <div className="flex flex-col sm:flex-row gap-4 mt-10 no-print pt-4 border-t border-gray-800">
-                        <button 
-                            onClick={handleSave} 
-                            className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-indigo-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
-                        >
+                        <button onClick={handleSave} className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-indigo-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
                             <span>💾</span> บันทึกข้อมูล
                         </button>
-                        <button 
-                            onClick={handleClear} 
-                            className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-3.5 px-6 rounded-2xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-                        >
+                        <button onClick={handleClear} className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-3.5 px-6 rounded-2xl font-bold transition flex items-center justify-center gap-2 cursor-pointer">
                             <span>🗑️</span> ล้างฟอร์ม
                         </button>
-                        <button 
-                            onClick={() => window.print()} 
-                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-emerald-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
-                        >
+                        <button onClick={() => window.print()} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-emerald-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
                             <span>🖨️</span> พิมพ์เอกสารทั้งหมด
                         </button>
                     </div>
