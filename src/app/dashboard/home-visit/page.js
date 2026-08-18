@@ -231,7 +231,7 @@ function HomeVisitForm({ userProfile }) {
                                 <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวเป็น:</span>
+                                <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวข้องเป็น:</span>
                                 <div className="md:col-span-2 flex gap-2">
                                     <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                         <option value="">-- เลือก --</option>
