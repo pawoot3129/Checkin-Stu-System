@@ -75,11 +75,29 @@ function HomeVisitForm({ userProfile }) {
         fetchClassesAndStudents();
     }, [userProfile]);
 
+    const handleStudentSelect = (studentId) => {
+        const student = students.find(s => s.id === studentId);
+        setSelectedStudent(student || null);
+        if (student) {
+            setFormData(prev => ({
+                ...prev,
+                address: student.address || ''
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, address: '' }));
+        }
+    };
+
     const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     const handleHeaderChange = (e) => setHeaderInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
     
     const handleClear = () => {
-        setFormData({ fatherName: '', motherName: '', parentName: '', parentRelation: '', address: '', fatherJob: '', fatherIncome: '', motherJob: '', motherIncome: '', parentJob: '', parentIncome: '', houseType: '', familyInfo: '', dailyTasks: '', studyProblems: '' });
+        setFormData({ 
+            fatherName: '', motherName: '', parentName: '', parentRelation: '', 
+            address: selectedStudent?.address || '', fatherJob: '', fatherIncome: '', 
+            motherJob: '', motherIncome: '', parentJob: '', parentIncome: '', 
+            houseType: '', familyInfo: '', dailyTasks: '', studyProblems: '' 
+        });
         setImagePreviews([]);
         toast.success("ล้างข้อมูลเรียบร้อย");
     };
@@ -112,7 +130,7 @@ function HomeVisitForm({ userProfile }) {
                 @media print {
                     @page { 
                         size: A4 portrait; 
-                        margin: 10mm 12mm; 
+                        margin: 15mm 15mm 15mm 15mm; 
                     }
                     body {
                         -webkit-print-color-adjust: exact;
@@ -132,17 +150,17 @@ function HomeVisitForm({ userProfile }) {
                     }
                     .print-content-box {
                         font-size: 11pt !important;
-                        line-height: 1.35 !important;
+                        line-height: 1.5 !important;
                     }
                     .print-row {
-                        margin-bottom: 6px !important;
+                        margin-bottom: 8px !important;
                     }
                     input, select {
                         border: none !important;
                         border-bottom: 1px dotted #000 !important;
                         border-radius: 0 !important;
                         background: transparent !important;
-                        padding: 1px 4px !important;
+                        padding: 2px 6px !important;
                         height: auto !important;
                     }
                     .page-break {
@@ -165,10 +183,10 @@ function HomeVisitForm({ userProfile }) {
                 
                 {/* --- หน้าที่ 1: แบบบันทึกข้อมูลเยี่ยมบ้าน --- */}
                 <div>
-                    <div className="text-center mb-6">
-                        <img src="/logo.png" style={{ height: '42px', width: 'auto' }} className="mx-auto mb-2 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h1 className="font-bold text-lg text-white print:text-black">แบบบันทึกการเยี่ยมบ้านนักเรียน</h1>
-                        <div className="mt-2 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
+                    <div className="text-center mb-6 pt-2">
+                        <img src="/logo.png" style={{ height: '48px', width: 'auto' }} className="mx-auto mb-3 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h1 className="font-bold text-xl text-white print:text-black tracking-wide">แบบบันทึกการเยี่ยมบ้านนักเรียน</h1>
+                        <div className="mt-3 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
                             <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-10 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                             <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-14 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                             <span>วันที่: <input type="date" name="visitDate" onChange={handleHeaderChange} value={headerInfo.visitDate} className="bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
@@ -179,14 +197,14 @@ function HomeVisitForm({ userProfile }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print bg-gray-950 p-4 rounded-2xl border border-gray-800">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">เลือกห้องเรียนในความดูแล</label>
-                            <select className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none cursor-pointer" onChange={(e) => { setSelectedClass(e.target.value); setSelectedStudent(null); }}>
+                            <select className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none cursor-pointer" onChange={(e) => { setSelectedClass(e.target.value); handleStudentSelect(''); }}>
                                 <option value="">-- เลือกห้อง --</option>
                                 {classrooms.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">เลือกนักศึกษา</label>
-                            <select className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none cursor-pointer" value={selectedStudent ? selectedStudent.id : ''} onChange={(e) => setSelectedStudent(students.find(s => s.id === e.target.value))}>
+                            <select className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none cursor-pointer" value={selectedStudent ? selectedStudent.id : ''} onChange={(e) => handleStudentSelect(e.target.value)}>
                                 <option value="">-- เลือกนักเรียน --</option>
                                 {students.filter(s => s.classId === selectedClass && s.status !== "จำหน่าย").map(s => <option key={s.id} value={s.id}>{s.studentNumber}. {s.name}</option>)}
                             </select>
@@ -194,8 +212,8 @@ function HomeVisitForm({ userProfile }) {
                     </div>
 
                     {selectedStudent ? (
-                        <div className="border-t border-gray-800 print:border-transparent pt-4 space-y-3 text-sm">
-                            <div className="p-3 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black">
+                        <div className="border-t border-gray-800 print:border-transparent pt-4 space-y-4 text-sm">
+                            <div className="p-3.5 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black">
                                 1. ชื่อนักศึกษา: {selectedStudent.name} &nbsp; 
                                 <span className="font-normal text-gray-400 print:text-gray-600">(ห้อง: {selectedClass})</span>
                             </div>
@@ -239,7 +257,10 @@ function HomeVisitForm({ userProfile }) {
                                             </select>
                                             <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                         </div>
-                                        <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleInputChange} placeholder="รายได้ (บาท/ปี)" className="p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                        <div className="flex items-center gap-2">
+                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleInputChange} placeholder="จำนวนรายได้" className="w-full p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -276,9 +297,9 @@ function HomeVisitForm({ userProfile }) {
                                 <input name="studyProblems" value={formData.studyProblems} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             
-                            <div className="mt-8 flex justify-end">
+                            <div className="mt-10 flex justify-end">
                                 <div className="text-center w-56 text-sm">
-                                    <p className="mb-4">ลงชื่อ............................................. ครูที่ปรึกษา</p>
+                                    <p className="mb-6">ลงชื่อ............................................. ครูที่ปรึกษา</p>
                                     <p className="mb-1">({userProfile.name || '...................................................'})</p>
                                 </div>
                             </div>
@@ -305,7 +326,7 @@ function HomeVisitForm({ userProfile }) {
                         
                         <div className="grid grid-cols-2 gap-4">
                             {imagePreviews.map((src, index) => (
-                                <div key={index} className="border border-gray-700 print:border-gray-400 p-2 bg-gray-800 print:bg-white rounded-xl overflow-hidden">
+                                <div key={index} className="border border-gray-700 print:border-gray-400 p-2 bg-gray-800 print:bg-white rounded-xl overflow-hidden shadow-sm">
                                     <img src={src} className="w-full h-56 object-cover rounded-lg" alt={`visit-${index}`} />
                                     <p className="text-center text-xs mt-2 text-gray-300 print:text-black font-medium">รูปที่ {index + 1}: สภาพบ้านและการเยี่ยมบ้าน</p>
                                 </div>
