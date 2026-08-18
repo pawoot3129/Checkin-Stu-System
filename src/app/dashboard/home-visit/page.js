@@ -89,6 +89,17 @@ function HomeVisitForm({ userProfile }) {
     };
 
     const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+    // ฟังก์ชันพิเศษสำหรับจัดรูปแบบตัวเลขใส่ Comma อัตโนมัติเฉพาะช่องรายได้
+    const handleIncomeChange = (e) => {
+        const { name, value } = e.target;
+        // กรองเอาเฉพาะตัวเลข
+        const numericValue = value.replace(/[^0-9]/g, '');
+        // ใส่ Comma คั่นหลักพัน
+        const formattedValue = numericValue ? Number(numericValue).toLocaleString('en-US') : '';
+        setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    };
+
     const handleHeaderChange = (e) => setHeaderInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
     
     const handleClear = () => {
@@ -231,7 +242,7 @@ function HomeVisitForm({ userProfile }) {
                                 <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวข้องเป็น:</span>
+                                <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวเป็น:</span>
                                 <div className="md:col-span-2 flex gap-2">
                                     <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                         <option value="">-- เลือก --</option>
@@ -258,7 +269,7 @@ function HomeVisitForm({ userProfile }) {
                                             <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleInputChange} placeholder="จำนวนรายได้" className="w-full p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวนรายได้" className="w-full p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                             <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท</span>
                                         </div>
                                     </div>
