@@ -90,12 +90,9 @@ function HomeVisitForm({ userProfile }) {
 
     const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-    // ฟังก์ชันพิเศษสำหรับจัดรูปแบบตัวเลขใส่ Comma อัตโนมัติเฉพาะช่องรายได้
     const handleIncomeChange = (e) => {
         const { name, value } = e.target;
-        // กรองเอาเฉพาะตัวเลข
         const numericValue = value.replace(/[^0-9]/g, '');
-        // ใส่ Comma คั่นหลักพัน
         const formattedValue = numericValue ? Number(numericValue).toLocaleString('en-US') : '';
         setFormData(prev => ({ ...prev, [name]: formattedValue }));
     };
@@ -141,7 +138,7 @@ function HomeVisitForm({ userProfile }) {
                 @media print {
                     @page { 
                         size: A4 portrait; 
-                        margin: 15mm 15mm 15mm 15mm; 
+                        margin: 8mm 10mm; 
                     }
                     body {
                         -webkit-print-color-adjust: exact;
@@ -160,18 +157,18 @@ function HomeVisitForm({ userProfile }) {
                         margin: 0 !important;
                     }
                     .print-content-box {
-                        font-size: 11pt !important;
-                        line-height: 1.5 !important;
+                        font-size: 10pt !important;
+                        line-height: 1.25 !important;
                     }
                     .print-row {
-                        margin-bottom: 8px !important;
+                        margin-bottom: 3px !important;
                     }
                     input, select {
                         border: none !important;
                         border-bottom: 1px dotted #000 !important;
                         border-radius: 0 !important;
                         background: transparent !important;
-                        padding: 2px 6px !important;
+                        padding: 1px 4px !important;
                         height: auto !important;
                     }
                     .page-break {
@@ -194,10 +191,10 @@ function HomeVisitForm({ userProfile }) {
                 
                 {/* --- หน้าที่ 1: แบบบันทึกข้อมูลเยี่ยมบ้าน --- */}
                 <div>
-                    <div className="text-center mb-6 pt-2">
-                        <img src="/logo.png" style={{ height: '48px', width: 'auto' }} className="mx-auto mb-3 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h1 className="font-bold text-xl text-white print:text-black tracking-wide">แบบบันทึกการเยี่ยมบ้านนักเรียน</h1>
-                        <div className="mt-3 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
+                    <div className="text-center mb-4 pt-1">
+                        <img src="/logo.png" style={{ height: '38px', width: 'auto' }} className="mx-auto mb-1.5 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h1 className="font-bold text-base text-white print:text-black tracking-wide">แบบบันทึกการเยี่ยมบ้านนักเรียน</h1>
+                        <div className="mt-1.5 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
                             <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-10 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                             <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-14 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                             <span>วันที่: <input type="date" name="visitDate" onChange={handleHeaderChange} value={headerInfo.visitDate} className="bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
@@ -223,38 +220,38 @@ function HomeVisitForm({ userProfile }) {
                     </div>
 
                     {selectedStudent ? (
-                        <div className="border-t border-gray-800 print:border-transparent pt-4 space-y-4 text-sm">
-                            <div className="p-3.5 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black">
+                        <div className="border-t border-gray-800 print:border-transparent pt-3 space-y-2.5 text-sm">
+                            <div className="p-2.5 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black">
                                 1. ชื่อนักศึกษา: {selectedStudent.name} &nbsp; 
                                 <span className="font-normal text-gray-400 print:text-gray-600">(ห้อง: {selectedClass})</span>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">2. ชื่อบิดา:</span>
-                                <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">3. ชื่อมารดา:</span>
-                                <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">4. ชื่อผู้ปกครอง:</span>
-                                <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวเป็น:</span>
                                 <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                         <option value="">-- เลือก --</option>
                                         {relationOptions.map(r => <option key={r} value={r}>{r}</option>)}
                                     </select>
-                                    <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                    <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">5. ที่อยู่บ้านนักศึกษา:</span>
-                                <input name="address" value={formData.address} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="address" value={formData.address} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
 
                             {['father', 'mother', 'parent'].map((type, idx) => (
@@ -262,14 +259,14 @@ function HomeVisitForm({ userProfile }) {
                                     <span className="font-bold text-gray-300 print:text-black">{6+idx}. อาชีพ{type === 'father' ? 'บิดา' : type === 'mother' ? 'มารดา' : 'ผู้ปกครอง'}:</span>
                                     <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <div className="flex gap-2">
-                                            <select onChange={(e) => setFormData(prev => ({ ...prev, [`${type}Job`]: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
+                                            <select onChange={(e) => setFormData(prev => ({ ...prev, [`${type}Job`]: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                                 <option value="">-- เลือกอาชีพ --</option>
                                                 {jobOptions.map(j => <option key={j} value={j}>{j}</option>)}
                                             </select>
-                                            <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวนรายได้" className="w-full p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวนรายได้" className="w-full p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                             <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท</span>
                                         </div>
                                     </div>
@@ -279,38 +276,38 @@ function HomeVisitForm({ userProfile }) {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">9. สภาพบ้าน:</span>
                                 <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, houseType: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, houseType: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                         <option value="">-- เลือกสภาพบ้าน --</option>
                                         {houseConditionOptions.map(h => <option key={h} value={h}>{h}</option>)}
                                     </select>
-                                    <input name="houseType" value={formData.houseType} onChange={handleInputChange} className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                    <input name="houseType" value={formData.houseType} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">10. ลักษณะที่อยู่อาศัย:</span>
                                 <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, familyInfo: e.target.value }))} className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, familyInfo: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
                                         <option value="">-- เลือกประเภท --</option>
                                         {houseTypeOptions.map(h => <option key={h} value={h}>{h}</option>)}
                                     </select>
-                                    <input name="familyInfo" value={formData.familyInfo} onChange={handleInputChange} className="flex-1 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                    <input name="familyInfo" value={formData.familyInfo} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">11. ภาระงานในบ้านที่ช่วย:</span>
-                                <input name="dailyTasks" value={formData.dailyTasks} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="dailyTasks" value={formData.dailyTasks} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
                                 <span className="font-bold text-gray-300 print:text-black">12. ปัญหาที่พบ:</span>
-                                <input name="studyProblems" value={formData.studyProblems} onChange={handleInputChange} className="md:col-span-2 p-2 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                <input name="studyProblems" value={formData.studyProblems} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
                             </div>
                             
-                            <div className="mt-10 flex justify-end">
+                            <div className="mt-6 flex justify-end">
                                 <div className="text-center w-56 text-sm">
-                                    <p className="mb-6">ลงชื่อ............................................. ครูที่ปรึกษา</p>
+                                    <p className="mb-4">ลงชื่อ............................................. ครูที่ปรึกษา</p>
                                     <p className="mb-1">({userProfile.name || '...................................................'})</p>
                                 </div>
                             </div>
@@ -322,9 +319,9 @@ function HomeVisitForm({ userProfile }) {
                     )}
                 </div>
 
-                {/* --- หน้าที่ 2: รูปภาพเยี่ยมบ้านนักศึกษา --- */}
+                {/* --- หน้าที่ 2: รูปภาพเยี่ยมบ้านนักศึกษา (แยกหน้าอัตโนมัติ) --- */}
                 {selectedStudent && (
-                    <div className="page-break pt-12 mt-12 border-t border-dashed border-gray-700 print:border-none">
+                    <div className="page-break pt-8 mt-8 border-t border-dashed border-gray-700 print:border-none">
                         <h2 className="font-bold text-xl text-center mb-6 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
                         
                         <div className="no-print mb-6">
