@@ -13,6 +13,9 @@ export default function PrintStudentsPage() {
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [students, setStudents] = useState([]);
+    
+    // เพิ่ม State สำหรับจัดการปีการศึกษา
+    const [academicYear, setAcademicYear] = useState('2569');
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -73,17 +76,32 @@ export default function PrintStudentsPage() {
                     body {
                         -webkit-print-color-adjust: exact;
                     }
+                    .no-print { display: none !important; }
+                    input, select {
+                        border: none !important;
+                        background: transparent !important;
+                        padding: 0 !important;
+                    }
                 }
             `}</style>
             
             {/* ส่วนควบคุมหน้าจอ (ซ่อนตอนปริ้นท์) */}
-            <div className="max-w-6xl mx-auto p-6 print:hidden">
+            <div className="max-w-6xl mx-auto p-6 no-print">
                 <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
                     <h1 className="text-2xl font-bold flex items-center gap-3 text-white">
                         <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">🖨️</span> 
                         พิมพ์ระเบียนประวัติผู้เรียน
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-2xl border border-gray-700">
+                            <span className="text-xs text-gray-400">ปีการศึกษา:</span>
+                            <input 
+                                type="text" 
+                                value={academicYear} 
+                                onChange={(e) => setAcademicYear(e.target.value)}
+                                className="w-16 bg-transparent text-white text-center font-bold outline-none text-sm"
+                            />
+                        </div>
                         <select 
                             value={selectedClass} 
                             onChange={(e) => setSelectedClass(e.target.value)} 
@@ -112,8 +130,12 @@ export default function PrintStudentsPage() {
                 <div className="bg-white text-black p-8 rounded-2xl shadow-2xl print:shadow-none border border-gray-200 print:border-none">
                     <div className="text-center mb-6 font-serif">
                         <img src="/logo.png" className="mx-auto h-20 mb-3 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h2 className="text-xl font-bold tracking-wide">ระเบียนข้อมูลนักเรียน</h2>
-                        <p className="text-sm text-gray-700 mt-1">ห้องเรียน: <span className="font-semibold text-black">{selectedClass}</span> | วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                        <h2 className="text-xl font-bold tracking-wide">บัญชีเรียกชื่อนักเรียน</h2>
+                        <p className="text-sm text-gray-700 mt-1">
+                            ห้องเรียน: <span className="font-semibold text-black">{selectedClass}</span> 
+                            &nbsp;|&nbsp; ปีการศึกษา: <input type="text" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="w-14 text-center font-semibold text-black bg-transparent border-b border-dotted border-black" /> 
+                            &nbsp;|&nbsp; วิทยาลัยเทคโนโลยีพณิชยการสิชล
+                        </p>
                     </div>
 
                     <table className="w-full border-collapse text-sm">
