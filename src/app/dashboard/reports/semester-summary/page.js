@@ -95,7 +95,6 @@ export default function SemesterSummaryPage() {
             
             let allAtt = [];
             if (actIds.length > 0) {
-                // 🚀 แก้ไข: Query เฉพาะ activityId ด้วย 'in' (ซึ่งมีจำนวนน้อย ไม่เกินขีดจำกัด) แล้วมาคัดกรอง studentId ใน JS
                 const actChunks = [];
                 for (let i = 0; i < actIds.length; i += 30) {
                     actChunks.push(actIds.slice(i, i + 30));
@@ -119,13 +118,32 @@ export default function SemesterSummaryPage() {
             const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
                 (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
 
+            // กำหนดชื่อกิจกรรมหลัก 4 กิจกรรม
+            const mainActivityNames = [
+                "กิจกรรมเข้าแถวหน้าเสาธง",
+                "กิจกรรมตรวจเครื่องแต่งกาย",
+                "กิจกรรมอบรมจริยธรรม (วันพุธ)",
+                "กิจกรรมการออม"
+            ];
+
             const processed = studentList.map(st => {
                 const results = {};
                 let hasIncomplete = false; 
-                let hasFailed = false;     
+                
+                let mainHasFailed = false; // กิจกรรมหลักห้ามตกเลย
+                let subTotalCount = 0;
+                let subFailedCount = 0;    // นับจำนวนกิจกรรมย่อยที่ตก
+
                 const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
 
                 semesterActivities.forEach(act => {
+                    const actName = act.activityName || '';
+                    const isMain = mainActivityNames.includes(actName);
+
+                    if (!isMain) {
+                        subTotalCount++;
+                    }
+
                     const actAttAll = allAtt.filter(r => r.activityId === act.id);
                     const actAttendance = actAttAll.filter(r => String(r.status || '').trim() !== 'วันหยุด');
                     
@@ -135,6 +153,8 @@ export default function SemesterSummaryPage() {
                     if (totalSessions === 0) {
                         results[act.id] = '-';
                         hasIncomplete = true;
+                        if (isMain) mainHasFailed = true;
+                        else subFailedCount++;
                         return;
                     }
 
@@ -181,13 +201,22 @@ export default function SemesterSummaryPage() {
                     const isPassed = percent >= minP;
 
                     results[act.id] = isPassed ? 'ผ' : 'มผ';
+                    
                     if (!isPassed) {
-                        hasFailed = true;
+                        if (isMain) {
+                            mainHasFailed = true;
+                        } else {
+                            subFailedCount++;
+                        }
                     }
                 });
 
+                // คำนวณเกณฑ์กิจกรรมย่อย (ยอมให้ไม่ผ่านไม่เกิน 10% ของกิจกรรมย่อยทั้งหมด)
+                const allowedSubFail = Math.floor(subTotalCount * 0.10);
+                const subPassedCriteria = subFailedCount <= allowedSubFail;
+
                 let overall = 'ผ';
-                if (semesterActivities.length === 0 || hasIncomplete || hasFailed) {
+                if (semesterActivities.length === 0 || hasIncomplete || mainHasFailed || !subPassedCriteria) {
                     overall = 'มผ';
                 }
 
@@ -198,9 +227,18 @@ export default function SemesterSummaryPage() {
                 };
             });
 
+            // จัดเรียงกิจกรรม: ให้กิจกรรมหลักอยู่หน้า กิจกรรมย่อยอยู่หลัง
+            const sortedActivities = [...semesterActivities].sort((a, b) => {
+                const aIsMain = mainActivityNames.includes(a.activityName);
+                const bIsMain = mainActivityNames.includes(b.activityName);
+                if (aIsMain && !bIsMain) return -1;
+                if (!aIsMain && bIsMain) return 1;
+                return 0;
+            });
+
             setReportData({ 
                 students: processed, 
-                activities: semesterActivities, 
+                activities: sortedActivities, 
                 date: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }), 
                 advisor: userProfile?.name || "..................................." 
             });
@@ -214,6 +252,17 @@ export default function SemesterSummaryPage() {
     };
 
     const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
+
+    // แยกกิจกรรมสำหรับหัวตาราง 2 ชั้น
+    const mainActivityNames = [
+        "กิจกรรมเข้าแถวหน้าเสาธง",
+        "กิจกรรมตรวจเครื่องแต่งกาย",
+        "กิจกรรมอบรมจริยธรรม (วันพุธ)",
+        "กิจกรรมการออม"
+    ];
+
+    const mainActs = reportData?.activities.filter(a => mainActivityNames.includes(a.activityName)) || [];
+    const subActs = reportData?.activities.filter(a => !mainActivityNames.includes(a.activityName)) || [];
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
@@ -274,10 +323,19 @@ export default function SemesterSummaryPage() {
                     <table className="w-full border-collapse border border-black text-center text-sm mb-6" style={{ tableLayout: 'fixed' }}>
                         <thead className="bg-gray-200">
                             <tr>
-                                <th className="p-2 border border-black" style={{ width: '40px' }}>เลขที่</th>
-                                <th className="p-2 border border-black">ชื่อ-นามสกุล</th>
-                                {reportData.activities.map(a => <th key={a.id} className="p-2 border border-black">{a.activityName}</th>)}
-                                <th className="p-2 border border-black" style={{ width: '50px' }}>สรุป</th>
+                                <th rowSpan="2" className="p-2 border border-black" style={{ width: '40px' }}>เลขที่</th>
+                                <th rowSpan="2" className="p-2 border border-black">ชื่อ-นามสกุล</th>
+                                {mainActs.length > 0 && (
+                                    <th colSpan={mainActs.length} className="p-2 border border-black">กิจกรรมหลัก</th>
+                                )}
+                                {subActs.length > 0 && (
+                                    <th colSpan={subActs.length} className="p-2 border border-black">กิจกรรมย่อย</th>
+                                )}
+                                <th rowSpan="2" className="p-2 border border-black" style={{ width: '50px' }}>สรุป</th>
+                            </tr>
+                            <tr>
+                                {mainActs.map(a => <th key={a.id} className="p-2 border border-black text-xs">{a.activityName}</th>)}
+                                {subActs.map(a => <th key={a.id} className="p-2 border border-black text-xs">{a.activityName}</th>)}
                             </tr>
                         </thead>
                         <tbody>
@@ -299,7 +357,9 @@ export default function SemesterSummaryPage() {
                         <strong>หมายเหตุเกณฑ์ประเมิน:</strong>
                         <ul className="list-disc ml-5">
                             <li>ผลการเข้าร่วมแต่ละกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"</li>
-                            <li><strong>สรุปผลรวม:</strong> นักศึกษาต้องผ่าน "ทุกกิจกรรม" จึงจะถือว่ามีผลการประเมินรวมเป็น "ผ่าน" (ผ)</li>
+                            <li><strong>กิจกรรมหลัก:</strong> ทั้ง 4 กิจกรรม (เข้าแถว, เครื่องแต่งกาย, จริยธรรม, การออม) ห้ามมีผลประเมินเป็น "มผ" เด็ดขาด ต้องผ่านทั้งหมด</li>
+                            <li><strong>กิจกรรมย่อย:</strong> อนุญาตให้มีผลการประเมินไม่ผ่าน (มผ) ได้ไม่เกิน 10% ของจำนวนกิจกรรมย่อยทั้งหมด</li>
+                            <li><strong>สรุปผลรวม:</strong> หากผ่านเกณฑ์ทั้งกิจกรรมหลักและกิจกรรมย่อย ผลสรุปภาพรวมจึงจะเป็น "ผ่าน" (ผ)</li>
                         </ul>
                     </div>
                     <div className="flex flex-row justify-between items-end mt-16 px-4 text-center text-xs">
