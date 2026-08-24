@@ -118,7 +118,6 @@ export default function SemesterSummaryPage() {
             const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
                 (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
 
-            // กำหนดชื่อกิจกรรมหลัก 4 กิจกรรม
             const mainActivityNames = [
                 "กิจกรรมเข้าแถวหน้าเสาธง",
                 "กิจกรรมตรวจเครื่องแต่งกาย",
@@ -130,9 +129,9 @@ export default function SemesterSummaryPage() {
                 const results = {};
                 let hasIncomplete = false; 
                 
-                let mainHasFailed = false; // กิจกรรมหลักห้ามตกเลย
+                let mainHasFailed = false; 
                 let subTotalCount = 0;
-                let subFailedCount = 0;    // นับจำนวนกิจกรรมย่อยที่ตก
+                let subFailedCount = 0;    
 
                 const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
 
@@ -211,8 +210,8 @@ export default function SemesterSummaryPage() {
                     }
                 });
 
-                // คำนวณเกณฑ์กิจกรรมย่อย (ยอมให้ไม่ผ่านไม่เกิน 10% ของกิจกรรมย่อยทั้งหมด)
-                const allowedSubFail = Math.floor(subTotalCount * 0.10);
+                // ใช้ Math.ceil เพื่อให้ปัดเศษขึ้น (เช่น 8 กิจกรรม * 10% = 0.8 ยอมให้ตกได้ 1 กิจกรรม)
+                const allowedSubFail = Math.ceil(subTotalCount * 0.10);
                 const subPassedCriteria = subFailedCount <= allowedSubFail;
 
                 let overall = 'ผ';
@@ -227,7 +226,6 @@ export default function SemesterSummaryPage() {
                 };
             });
 
-            // จัดเรียงกิจกรรม: ให้กิจกรรมหลักอยู่หน้า กิจกรรมย่อยอยู่หลัง
             const sortedActivities = [...semesterActivities].sort((a, b) => {
                 const aIsMain = mainActivityNames.includes(a.activityName);
                 const bIsMain = mainActivityNames.includes(b.activityName);
@@ -253,7 +251,6 @@ export default function SemesterSummaryPage() {
 
     const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
 
-    // แยกกิจกรรมสำหรับหัวตาราง 2 ชั้น
     const mainActivityNames = [
         "กิจกรรมเข้าแถวหน้าเสาธง",
         "กิจกรรมตรวจเครื่องแต่งกาย",
