@@ -254,7 +254,6 @@ export default function MonthlySummaryPage() {
         }
     };
 
-    // ฟังก์ชันตัดแบ่งนักเรียนออกเป็นกลุ่ม หน้าละ 20 คน
     const chunkStudents = (students, size = 20) => {
         const chunks = [];
         for (let i = 0; i < students.length; i += size) {
@@ -273,7 +272,7 @@ export default function MonthlySummaryPage() {
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
                     #non-printable { display: none !important; } 
                     #printable-area { display: block !important; color: black !important; background: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-                    .print-page { page-break-after: always; break-after: page; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; }
+                    .print-page { page-break-after: always; break-after: page; page-break-inside: avoid; }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                     table { width: 100% !important; font-size: 8px !important; border-collapse: collapse !important; }
                     th, td { padding: 1px !important; border: 1px solid black !important; vertical-align: middle !important; }
@@ -451,7 +450,6 @@ export default function MonthlySummaryPage() {
                                     </table>
                                 </div>
 
-                                {/* ตารางสรุปผลและลายเซ็นจะแสดงเฉพาะหน้าสุดท้ายเท่านั้น */}
                                 {isLastPage && (
                                     <div className="mt-4">
                                         <div className="font-bold text-sm mb-2">สรุปผล</div>
