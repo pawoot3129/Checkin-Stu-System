@@ -369,7 +369,8 @@ export default function MonthlySummaryPage() {
                                                             const isHoliday = !!reportData.holidayDaysMap[day];
 
                                                             if (isHoliday) {
-                                                                if (actualIndex === 0) {
+                                                                // 🛠️ แยกการแสดงผลวันหยุดให้ครอบคลุมเฉพาะนักเรียนในหน้านั้นๆ (นับเฉพาะนักเรียน 20 คนในหน้านั้น)
+                                                                if (idx === 0) {
                                                                     let holidayText = reportData.holidayDaysMap[day];
                                                                     if (reportData.isFewStudents && holidayText.length > 5) {
                                                                         holidayText = holidayText.substring(0, 5) + '..';
@@ -379,7 +380,7 @@ export default function MonthlySummaryPage() {
                                                                     return (
                                                                         <td 
                                                                             key={day} 
-                                                                            rowSpan={reportData.students.length} 
+                                                                            rowSpan={pageStudents.length} 
                                                                             className="border border-black p-0.5 font-medium align-middle relative bg-red-50"
                                                                             style={{ backgroundColor: '#fff5f5', overflow: 'hidden', width: '22px' }}
                                                                         >
