@@ -274,7 +274,7 @@ export default function MonthlySummaryPage() {
                     #printable-area { display: block !important; color: black !important; background: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
                     .print-page { page-break-after: always; break-after: page; page-break-inside: avoid; }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table { width: 100% !important; font-size: 14px !important; border-collapse: collapse !important; }
+                    table { width: 100% !important; font-size: 12.5px !important; border-collapse: collapse !important; }
                     th, td { padding: 0.5px 1px !important; border: 1px solid black !important; vertical-align: middle !important; height: 20px !important; }
                     @page { size: landscape; margin: 0.4cm; }
                 }
