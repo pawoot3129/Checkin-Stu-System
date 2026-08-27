@@ -35,11 +35,16 @@ export default function DailySummaryPageFinal() {
         <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: '14px', fontSize: '11px', width: '100%' }}>
             {[
                 { n: "นางสาวสุพรรัตน์ ดำเพ็ง", p: "รองผู้อำนวยการฝ่ายบริหารงานทั่วไป" },
-                { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล" }
+                { n: "ดร.ประชากร บริบูรณ์", p: "ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล", isDirector: true }
             ].map((s, i) => (
-                <div key={i} style={{ width: '40%' }}>
+                <div key={i} style={{ width: '40%', position: 'relative' }}>
                     <p style={{ marginBottom: '6px' }}>ลงชื่อ.........................................</p>
-                    <p style={{ fontWeight: 'bold' }}>({s.n})</p>
+                    {s.isDirector && (
+                        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '-10px', pointerEvents: 'none' }}>
+                            <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." style={{ height: '40px', margin: '0 auto', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+                        </div>
+                    )}
+                    <p style={{ fontWeight: 'bold', position: 'relative', zIndex: 1 }}>({s.n})</p>
                     <p>{s.p}</p>
                 </div>
             ))}
@@ -206,7 +211,6 @@ export default function DailySummaryPageFinal() {
                     #printable-area { width: 100% !important; color: black !important; background: white !important; padding: 0 !important; box-shadow: none !important; }
                     .page-break { break-after: page !important; }
                     .print-table { width: 100% !important; border-collapse: collapse !important; }
-                    /* ขยายขนาดตาราง ตัวอักษร และ padding ตามที่กำหนด */
                     .print-table th, .print-table td { padding: 4px 4px !important; border: 1px solid black !important; font-size: 11px !important; line-height: 1.2 !important; }
                 }
             `}</style>
