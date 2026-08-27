@@ -111,7 +111,7 @@ export default function PrintStudentsPage() {
                     .print-page table th, 
                     .print-page table td { 
                         padding: 6px 8px !important; 
-                        font-size: 15px !important; 
+                        font-size: 14px !important; 
                         line-height: 1.3 !important;
                         -webkit-print-color-adjust: exact; 
                     }
@@ -221,7 +221,7 @@ export default function PrintStudentsPage() {
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-lg">
+                                        <table className="w-full border-collapse text-sm">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
                                                     <th className="border border-gray-400 p-2 text-center font-bold text-black">ลำดับ</th>
