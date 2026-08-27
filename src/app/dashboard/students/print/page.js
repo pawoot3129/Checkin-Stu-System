@@ -106,7 +106,7 @@ export default function PrintStudentsPage() {
                         padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 4px 6px !important; font-size: 16px !important; }
+                    table th, table td { padding: 4px 6px !important; font-size: 13.5px !important; }
                 }
             `}</style>
             
@@ -213,7 +213,7 @@ export default function PrintStudentsPage() {
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-base">
+                                        <table className="w-full border-collapse text-sm">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
                                                     <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ลำดับ</th>
