@@ -40,7 +40,7 @@ export default function DailySummaryPageFinal() {
                 <div key={i} style={{ width: '40%', position: 'relative' }}>
                     <p style={{ marginBottom: '6px' }}>ลงชื่อ.........................................</p>
                     {s.isDirector && (
-                        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '-10px', pointerEvents: 'none' }}>
+                        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '-16px', pointerEvents: 'none' }}>
                             <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." style={{ height: '40px', margin: '0 auto', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
                         </div>
                     )}
