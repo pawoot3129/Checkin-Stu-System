@@ -106,7 +106,7 @@ export default function PrintStudentsPage() {
                         padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 4px 6px !important; font-size: 16px !important; }
+                    table th, table td { padding: 8px 10px !important; font-size: 16px !important; }
                 }
             `}</style>
             
