@@ -66,7 +66,6 @@ export default function PrintStudentsPage() {
     const maleCount = students.filter(s => s.gender === 'ชาย' || (s.name && (s.name.startsWith('นาย') || s.name.startsWith('ด.ช.')))).length;
     const femaleCount = totalCount - maleCount;
 
-    // ฟังก์ชันตัดแบ่งรายชื่อนักเรียนออกเป็นกลุ่ม หน้าละ 20 คน
     const chunkStudents = (studentsList, size = 20) => {
         const chunks = [];
         for (let i = 0; i < studentsList.length; i += size) {
@@ -85,16 +84,15 @@ export default function PrintStudentsPage() {
                 @media print {
                     @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 10mm; }
                     .no-print { display: none !important; }
+                    .print-cover-page { width: 100% !important; min-height: 271mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: none !important; border: none !important; margin: 0 !important; padding: 10mm !important; }
                     .print-page { page-break-after: always; break-after: page; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                 }
             `}</style>
             
-            {/* แถบควบคุมด้านบนสุด จัดวางใหม่ให้ใช้งานง่าย */}
+            {/* แถบควบคุมด้านบนสุด */}
             <div className="max-w-6xl mx-auto p-6 no-print">
                 <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
-                    
-                    {/* ฝั่งซ้าย: หัวข้อ + ปุ่มสลับหน้าปก/หน้ารายชื่อ + ปุ่มสั่งพิมพ์ */}
                     <div className="flex flex-wrap items-center gap-3">
                         <h1 className="text-xl font-bold text-white flex items-center gap-2">
                             <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">🖨️</span>
@@ -116,7 +114,6 @@ export default function PrintStudentsPage() {
                         </button>
                     </div>
 
-                    {/* ฝั่งขวา: ปีการศึกษา, เลือกห้อง, ปุ่มย้อนกลับ */}
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-xl border border-gray-700">
                             <span className="text-xs text-gray-400">ปีการศึกษา:</span>
@@ -147,28 +144,28 @@ export default function PrintStudentsPage() {
             {/* ส่วนกระดาษแสดงผล */}
             <div className="max-w-6xl mx-auto px-6 pb-12 print:p-0">
                 {viewMode === 'cover' ? (
-                    <div className="max-w-[210mm] mx-auto bg-white text-black p-8 rounded-2xl shadow-lg border border-gray-200 print:border-none print-full-page font-serif">
-                        <div className="text-center">
-                            <img src="/logo.png" className="mx-auto h-24 mb-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
-                            <h1 className="text-2xl font-bold mb-1">บัญชีเรียกชื่อนักเรียน</h1>
-                            <p className="text-lg font-semibold text-gray-800">ห้องเรียน: {selectedClass}</p>
-                            <p className="text-sm text-gray-600">ปีการศึกษา {academicYear}</p>
+                    <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white text-black p-10 rounded-2xl shadow-lg border border-gray-200 print:border-none print-cover-page font-serif flex flex-col justify-between">
+                        <div className="text-center pt-4">
+                            <img src="/logo.png" className="mx-auto h-28 mb-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                            <h1 className="text-3xl font-bold mb-2">บัญชีเรียกชื่อนักเรียน</h1>
+                            <p className="text-xl font-semibold text-gray-800">ห้องเรียน: {selectedClass}</p>
+                            <p className="text-base text-gray-600 mt-1">ปีการศึกษา {academicYear}</p>
                         </div>
 
-                        <div className="bg-gray-50 p-5 rounded-xl border border-gray-300 space-y-2 my-4 font-sans text-sm">
-                            <div className="flex justify-between border-b border-gray-200 pb-2"><span>จำนวนนักเรียนในบัญชีเรียกชื่อ:</span><span>ชาย {maleCount} คน | หญิง {femaleCount} คน | <strong>รวม {totalCount} คน</strong></span></div>
-                            <div className="flex justify-between border-b border-gray-200 pb-2"><span>จำนวนนักเรียนเข้าระหว่างปี:</span><span>ชาย 0 คน | หญิง 0 คน | <strong>รวม 0 คน</strong></span></div>
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-300 space-y-3 my-6 font-sans text-base">
+                            <div className="flex justify-between border-b border-gray-200 pb-3"><span>จำนวนนักเรียนในบัญชีเรียกชื่อ:</span><span>ชาย {maleCount} คน | หญิง {femaleCount} คน | <strong>รวม {totalCount} คน</strong></span></div>
+                            <div className="flex justify-between border-b border-gray-200 pb-3"><span>จำนวนนักเรียนเข้าระหว่างปี:</span><span>ชาย 0 คน | หญิง 0 คน | <strong>รวม 0 คน</strong></span></div>
                             <div className="flex justify-between pb-1"><span>จำนวนนักเรียนออกระหว่างปี:</span><span>ชาย 0 คน | หญิง 0 คน | <strong>รวม 0 คน</strong></span></div>
                         </div>
 
-                        <div className="text-center space-y-1">
-                            <h2 className="text-xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                            <p className="text-sm">สำนักงานคณะกรรมการการอาชีวศึกษา</p>
-                            <p className="text-sm">อำเภอสิชล จังหวัดนครศรีธรรมราช</p>
-                            <p className="text-sm font-medium mt-3">เริ่มใช้เมื่อวันที่ 20 เดือน พฤษภาคม พ.ศ. {academicYear}</p>
+                        <div className="text-center space-y-1.5 my-auto">
+                            <h2 className="text-2xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                            <p className="text-base">สำนักงานคณะกรรมการการอาชีวศึกษา</p>
+                            <p className="text-base">อำเภอสิชล จังหวัดนครศรีธรรมราช</p>
+                            <p className="text-base font-medium mt-4">เริ่มใช้เมื่อวันที่ 20 เดือน พฤษภาคม พ.ศ. {academicYear}</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-8 text-center text-sm mt-6">
+                        <div className="grid grid-cols-2 gap-8 text-center text-base pb-6">
                             <div>
                                 <p className="mb-8">ลงชื่อ...........................................................</p>
                                 <p>(................................................................)<br/>ครูที่ปรึกษา</p>
@@ -178,7 +175,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
                             </div>
                         </div>
                     </div>
