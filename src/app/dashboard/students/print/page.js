@@ -213,7 +213,7 @@ export default function PrintStudentsPage() {
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-sm">
+                                        <table className="w-full border-collapse text-base">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
                                                     <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ลำดับ</th>
