@@ -66,15 +66,20 @@ export default function PrintStudentsPage() {
     const maleCount = students.filter(s => s.gender === 'ชาย' || (s.name && (s.name.startsWith('นาย') || s.name.startsWith('ด.ช.')))).length;
     const femaleCount = totalCount - maleCount;
 
-    const chunkStudents = (studentsList, size = 20) => {
+    // ฟังก์ชันจัดหน้าฉลาด: ปรับเกณฑ์ไม่เกิน 27 คนให้อยู่หน้าเดียวจบ ไม่ให้เกิดหน้าสองที่มีเด็กน้อยเกินไป
+    const getStudentPages = (studentsList) => {
+        if (studentsList.length <= 27) {
+            return [studentsList]; 
+        }
         const chunks = [];
+        const size = 22;
         for (let i = 0; i < studentsList.length; i += size) {
             chunks.push(studentsList.slice(i, i + size));
         }
-        return chunks.length > 0 ? chunks : [[]];
+        return chunks;
     };
 
-    const studentPages = chunkStudents(students, 20);
+    const studentPages = getStudentPages(students);
 
     if (isLoading) return <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white">กำลังโหลด...</div>;
 
@@ -97,7 +102,7 @@ export default function PrintStudentsPage() {
                         padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 4px 6px !important; font-size: 14px !important; }
+                    table th, table td { padding: 4px 6px !important; font-size: 12px !important; }
                 }
             `}</style>
             
@@ -181,7 +186,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                             </div>
                         </div>
                     </div>
@@ -189,7 +194,7 @@ export default function PrintStudentsPage() {
                     <div className="bg-white text-black p-8 rounded-2xl shadow-2xl print:shadow-none border border-gray-200 print:border-none">
                         {studentPages.map((pageStudents, pageIndex) => {
                             const isLastPage = pageIndex === studentPages.length - 1;
-                            const startIndex = pageIndex * 20;
+                            const startIndex = pageIndex * (studentPages.length === 1 ? 0 : 22);
 
                             return (
                                 <div key={pageIndex} className="print-page mb-10 pb-6 last:mb-0 bg-white">
@@ -218,7 +223,7 @@ export default function PrintStudentsPage() {
                                             </thead>
                                             <tbody>
                                                 {pageStudents.map((s, idx) => {
-                                                    const actualNumber = startIndex + idx + 1;
+                                                    const actualNumber = studentPages.length === 1 ? idx + 1 : startIndex + idx + 1;
                                                     return (
                                                         <tr key={s.id || idx} className="hover:bg-gray-50/50">
                                                             <td className="border border-gray-400 p-1 text-center">{actualNumber}</td>
