@@ -106,7 +106,13 @@ export default function PrintStudentsPage() {
                         padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 4px 6px !important; font-size: 13.5px !important; }
+                    
+                    /* บังคับขนาดฟอนต์ตอนพิมพ์ให้ใหญ่ชัดเจน ไม่โดนเบราว์เซอร์ย่อ */
+                    table th, table td { 
+                        padding: 4px 6px !important; 
+                        font-size: 14px !important; 
+                        -webkit-print-color-adjust: exact; 
+                    }
                 }
             `}</style>
             
