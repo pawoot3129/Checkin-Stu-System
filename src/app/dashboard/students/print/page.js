@@ -82,22 +82,19 @@ export default function PrintStudentsPage() {
         <div className="min-h-screen bg-gray-950 text-gray-200 print:bg-white print:text-black">
             <style jsx global>{`
                 @media print {
-                    @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 6mm; }
+                    @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 10mm; }
                     .no-print { display: none !important; }
                     .print-cover-page { width: 100% !important; min-height: 271mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; }
                     .print-page { 
                         width: 100% !important;
-                        display: flex !important; 
-                        flex-direction: column !important; 
-                        justify-content: space-between !important; 
+                        display: block !important;
                         page-break-after: always; 
                         break-after: page; 
                         page-break-inside: avoid; 
                         break-inside: avoid;
                         box-sizing: border-box;
                         margin: 0 !important;
-                        padding: 0 !important;
-                        min-height: 94vh !important;
+                        padding-bottom: 20mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                 }
@@ -183,7 +180,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
                             </div>
                         </div>
                     </div>
@@ -194,7 +191,7 @@ export default function PrintStudentsPage() {
                             const startIndex = pageIndex * 20;
 
                             return (
-                                <div key={pageIndex} className="print-page mb-10 pb-6 last:mb-0 bg-white">
+                                <div key={pageIndex} className="print-page mb-12 pb-8 last:mb-0 bg-white">
                                     <div>
                                         <div className="text-center mb-4 font-serif">
                                             <img src="/logo.png" className="mx-auto h-16 mb-2 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
