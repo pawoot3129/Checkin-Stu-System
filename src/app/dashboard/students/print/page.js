@@ -84,37 +84,45 @@ export default function PrintStudentsPage() {
                 @media print {
                     @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 10mm; }
                     .no-print { display: none !important; }
-                    .print-cover-page { width: 100% !important; min-height: 271mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: none !important; border: none !important; margin: 0 !important; padding: 10mm !important; }
-                    .print-page { page-break-after: always; break-after: page; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; }
+                    .print-cover-page { width: 100% !important; min-height: 271mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; }
+                    .print-page { 
+                        width: 100% !important;
+                        height: 271mm !important; 
+                        max-height: 271mm !important;
+                        display: flex !important; 
+                        flex-direction: column !important; 
+                        justify-content: space-between !important; 
+                        page-break-after: always; 
+                        break-after: page; 
+                        page-break-inside: avoid; 
+                        box-sizing: border-box;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                 }
             `}</style>
             
             {/* แถบควบคุมด้านบนสุด */}
             <div className="max-w-6xl mx-auto p-6 no-print">
-                <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                            <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">🖨️</span>
-                            {viewMode === 'cover' ? 'พรีวิวหน้าปกรายงาน' : 'พิมพ์ระเบียนประวัติ'}
-                        </h1>
-                        
+                <div className="flex flex-col lg:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
+                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <button 
                             onClick={() => setViewMode(viewMode === 'cover' ? 'list' : 'cover')}
-                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
                         >
-                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อ' : '📖 หน้าปก'}</span>
+                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อนักเรียน' : '📖 หน้าปกรายงาน'}</span>
                         </button>
 
                         <button 
                             onClick={() => window.print()} 
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
                         >
                             <span>🖨️</span> สั่งพิมพ์{viewMode === 'cover' ? 'หน้าปก' : 'เอกสาร'}
                         </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
                         <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-xl border border-gray-700">
                             <span className="text-xs text-gray-400">ปีการศึกษา:</span>
                             <input 
@@ -186,28 +194,28 @@ export default function PrintStudentsPage() {
                             const startIndex = pageIndex * 20;
 
                             return (
-                                <div key={pageIndex} className="print-page mb-10 pb-6 last:mb-0">
+                                <div key={pageIndex} className="print-page mb-10 pb-6 last:mb-0 bg-white">
                                     <div>
-                                        <div className="text-center mb-6 font-serif">
-                                            <img src="/logo.png" className="mx-auto h-20 mb-3 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                                            <h2 className="text-xl font-bold tracking-wide">บัญชีเรียกชื่อนักเรียน {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</h2>
-                                            <p className="text-sm text-gray-700 mt-1">
+                                        <div className="text-center mb-4 font-serif">
+                                            <img src="/logo.png" className="mx-auto h-16 mb-2 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <h2 className="text-lg font-bold tracking-wide">บัญชีเรียกชื่อนักเรียน {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</h2>
+                                            <p className="text-xs text-gray-700 mt-0.5">
                                                 ห้องเรียน: <span className="font-semibold text-black">{selectedClass}</span> 
                                                 &nbsp;|&nbsp; ปีการศึกษา: <input type="text" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="w-14 text-center font-semibold text-black bg-transparent border-b border-dotted border-black" /> 
                                                 &nbsp;|&nbsp; วิทยาลัยเทคโนโลยีพณิชยการสิชล
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-sm">
+                                        <table className="w-full border-collapse text-xs">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ลำดับ</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">รหัสนักศึกษา</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ชื่อ - นามสกุล</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">เลขประจำตัวประชาชน</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ว.ด.ป. เกิด</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">อายุ</th>
-                                                    <th className="border border-gray-400 p-2.5 text-center font-bold text-black">ที่อยู่</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ลำดับ</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">รหัสนักศึกษา</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ชื่อ - นามสกุล</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">เลขประจำตัวประชาชน</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ว.ด.ป. เกิด</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">อายุ</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ที่อยู่</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -215,13 +223,13 @@ export default function PrintStudentsPage() {
                                                     const actualNumber = startIndex + idx + 1;
                                                     return (
                                                         <tr key={s.id || idx} className="hover:bg-gray-50/50">
-                                                            <td className="border border-gray-400 p-2 text-center">{actualNumber}</td>
-                                                            <td className="border border-gray-400 p-2 text-center font-mono">{s.studentId || '-'}</td>
-                                                            <td className="border border-gray-400 p-2 font-semibold">{s.name}</td>
-                                                            <td className="border border-gray-400 p-2 text-center font-mono">{s.idCard || '-'}</td>
-                                                            <td className="border border-gray-400 p-2 text-center">{s.birthDate || '-'}</td>
-                                                            <td className="border border-gray-400 p-2 text-center">{calculateAge(s.birthDate)}</td>
-                                                            <td className="border border-gray-400 p-2 text-xs">{s.address || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{actualNumber}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center font-mono">{s.studentId || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 font-semibold">{s.name}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center font-mono">{s.idCard || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{s.birthDate || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{calculateAge(s.birthDate)}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-[11px]">{s.address || '-'}</td>
                                                         </tr>
                                                     );
                                                 })}
@@ -230,7 +238,7 @@ export default function PrintStudentsPage() {
                                     </div>
                                     
                                     {isLastPage && (
-                                        <div className="mt-14 grid grid-cols-2 gap-8 text-center text-sm font-serif">
+                                        <div className="mt-8 grid grid-cols-2 gap-8 text-center text-xs font-serif pt-4">
                                             <div>
                                                 <p className="mb-4">ลงชื่อ...........................................................</p>
                                                 <p className="mb-1">(......................................................................................)</p>
@@ -238,8 +246,8 @@ export default function PrintStudentsPage() {
                                             </div>
                                             <div className="relative">
                                                 <p className="mb-4">ลงชื่อ...........................................................</p>
-                                                <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
-                                                    <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
+                                                <div className="absolute left-1/2 -translate-x-1/2 -top-8 pointer-events-none">
+                                                    <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-14 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                                 </div>
                                                 <p className="mb-1 font-medium relative z-10">(ดร.ประชากร บริบูรณ์)</p>
                                                 <p className="font-medium">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
