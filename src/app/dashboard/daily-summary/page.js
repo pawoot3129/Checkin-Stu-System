@@ -216,7 +216,7 @@ export default function DailySummaryPage() {
             </section>
             )}
 
-                         <footer className="mt-5 text-xl">
+             <footer className="mt-5 text-xl">
                 <div className="grid grid-cols-2 gap-10 pt-10">
                     <div className="mt-5 text-center">
                         <p className="mb-5">ลงชื่อ....................................................</p>
@@ -230,9 +230,14 @@ export default function DailySummaryPage() {
                     </div>
                 </div>
                 <div className="mt-5 text-center">
-                    <p className="mb-5">ลงชื่อ....................................................</p>
-                    <p>(ดร.ประชากร บริบูรณ์)</p>
-                    <p>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                    <div className="relative inline-block">
+                        <p className="mb-5">ลงชื่อ....................................................</p>
+                        <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
+                            <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
+                        </div>
+                    </div>
+                    <p className="font-medium">(ดร.ประชากร บริบูรณ์)</p>
+                    <p className="font-medium">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                 </div>
             </footer>
           </div>
