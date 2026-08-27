@@ -108,14 +108,14 @@ export default function PrintStudentsPage() {
                             onClick={() => setViewMode(viewMode === 'cover' ? 'list' : 'cover')}
                             className="bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
                         >
-                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อนักเรียน' : '📖 หน้าปกรายงาน'}</span>
+                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อนักเรียน' : '📖 หน้าปกระเบียน'}</span>
                         </button>
 
                         <button 
                             onClick={() => window.print()} 
                             className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
                         >
-                            <span>🖨️</span> สั่งพิมพ์{viewMode === 'cover' ? 'หน้าปก' : 'เอกสาร'}
+                            <span>🖨️</span> สั่งพิมพ์{viewMode === 'cover' ? 'หน้าปก' : 'ข้อมูลระเบียนนักเรียน'}
                         </button>
                     </div>
 
@@ -180,7 +180,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                             </div>
                         </div>
                     </div>
