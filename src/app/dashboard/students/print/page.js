@@ -82,28 +82,28 @@ export default function PrintStudentsPage() {
         <div className="min-h-screen bg-gray-950 text-gray-200 print:bg-white print:text-black">
             <style jsx global>{`
                 @media print {
-                    @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 10mm; }
+                    @page { size: A4 ${viewMode === 'cover' ? 'portrait' : 'landscape'}; margin: 6mm; }
                     .no-print { display: none !important; }
                     .print-cover-page { width: 100% !important; min-height: 271mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; }
                     .print-page { 
                         width: 100% !important;
-                        height: 271mm !important; 
-                        max-height: 271mm !important;
                         display: flex !important; 
                         flex-direction: column !important; 
                         justify-content: space-between !important; 
                         page-break-after: always; 
                         break-after: page; 
                         page-break-inside: avoid; 
+                        break-inside: avoid;
                         box-sizing: border-box;
                         margin: 0 !important;
                         padding: 0 !important;
+                        min-height: 94vh !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                 }
             `}</style>
             
-            {/* แถบควบคุมด้านบนสุด */}
+            {/* แถบควบคุมด้านบนสุด จัดระเบียบใหม่ ปุ่มย้อนกลับอยุมุมขวาบนสุด */}
             <div className="max-w-6xl mx-auto p-6 no-print">
                 <div className="flex flex-col lg:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
                     <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
@@ -175,15 +175,15 @@ export default function PrintStudentsPage() {
 
                         <div className="grid grid-cols-2 gap-8 text-center text-base pb-6">
                             <div>
-                                <p className="mb-4">ลงชื่อ...........................................................</p>
+                                <p className="mb-8">ลงชื่อ...........................................................</p>
                                 <p>(................................................................)<br/>ครูที่ปรึกษา</p>
                             </div>
                             <div className="relative">
-                                <p className="mb-4">ลงชื่อ...........................................................</p>
+                                <p className="mb-8">ลงชื่อ...........................................................</p>
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
                             </div>
                         </div>
                     </div>
