@@ -232,12 +232,12 @@ export default function PrintStudentsPage() {
                                     {isLastPage && (
                                         <div className="mt-14 grid grid-cols-2 gap-8 text-center text-sm font-serif">
                                             <div>
-                                                <p className="mb-6">ลงชื่อ...........................................................</p>
+                                                <p className="mb-4">ลงชื่อ...........................................................</p>
                                                 <p className="mb-1">(......................................................................................)</p>
                                                 <p className="font-medium">ครูที่ปรึกษา</p>
                                             </div>
                                             <div className="relative">
-                                                <p className="mb-6">ลงชื่อ...........................................................</p>
+                                                <p className="mb-4">ลงชื่อ...........................................................</p>
                                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                                 </div>
