@@ -94,10 +94,10 @@ export default function PrintStudentsPage() {
                         break-inside: avoid;
                         box-sizing: border-box;
                         margin: 0 !important;
-                        padding-bottom: 10mm !important;
+                        padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 3px 4px !important; font-size: 11px !important; }
+                    table th, table td { padding: 4px 6px !important; font-size: 12px !important; }
                 }
             `}</style>
             
@@ -181,7 +181,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
                             </div>
                         </div>
                     </div>
@@ -236,16 +236,16 @@ export default function PrintStudentsPage() {
                                     </div>
                                     
                                     {isLastPage && (
-                                        <div className="mt-6 grid grid-cols-2 gap-8 text-center text-xs font-serif pt-2">
+                                        <div className="mt-4 grid grid-cols-2 gap-8 text-center text-xs font-serif pt-1">
                                             <div>
-                                                <p className="mb-4">ลงชื่อ...........................................................</p>
+                                                <p className="mb-2">ลงชื่อ...........................................................</p>
                                                 <p className="mb-1">(......................................................................................)</p>
                                                 <p className="font-medium">ครูที่ปรึกษา</p>
                                             </div>
                                             <div className="relative">
-                                                <p className="mb-4">ลงชื่อ...........................................................</p>
-                                                <div className="absolute left-1/2 -translate-x-1/2 -top-16 pointer-events-none">
-                                                    <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-14 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
+                                                <p className="mb-2">ลงชื่อ...........................................................</p>
+                                                <div className="absolute left-1/2 -translate-x-1/2 -top-6 pointer-events-none">
+                                                    <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-12 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                                 </div>
                                                 <p className="mb-1 font-medium relative z-10">(ดร.ประชากร บริบูรณ์)</p>
                                                 <p className="font-medium">ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
