@@ -175,15 +175,15 @@ export default function PrintStudentsPage() {
 
                         <div className="grid grid-cols-2 gap-8 text-center text-base pb-6">
                             <div>
-                                <p className="mb-8">ลงชื่อ...........................................................</p>
+                                <p className="mb-4">ลงชื่อ...........................................................</p>
                                 <p>(................................................................)<br/>ครูที่ปรึกษา</p>
                             </div>
                             <div className="relative">
-                                <p className="mb-8">ลงชื่อ...........................................................</p>
+                                <p className="mb-4">ลงชื่อ...........................................................</p>
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
                             </div>
                         </div>
                     </div>
