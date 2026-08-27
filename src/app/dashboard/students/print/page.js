@@ -90,29 +90,31 @@ export default function PrintStudentsPage() {
                 }
             `}</style>
             
-            {/* แถบควบคุมด้านบนสุด จัดระเบียบใหม่ ปุ่มย้อนกลับอยุมุมขวาบนสุด */}
+            {/* แถบควบคุมด้านบนสุด */}
             <div className="max-w-6xl mx-auto p-6 no-print">
-                <div className="flex flex-col lg:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
-                    
-                    {/* ฝั่งซ้าย: ปุ่มสลับหน้าปก/หน้ารายชื่อ และ ปุ่มสั่งพิมพ์ */}
-                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                            <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">🖨️</span>
+                            {viewMode === 'cover' ? 'พรีวิวหน้าปกรายงาน' : 'พิมพ์ระเบียนประวัติ'}
+                        </h1>
+                        
                         <button 
                             onClick={() => setViewMode(viewMode === 'cover' ? 'list' : 'cover')}
-                            className="bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
+                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-1.5"
                         >
-                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อนักเรียน' : '📖 หน้าปกรายงาน'}</span>
+                            <span>{viewMode === 'cover' ? '📋 หน้ารายชื่อ' : '📖 หน้าปก'}</span>
                         </button>
 
                         <button 
                             onClick={() => window.print()} 
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-2"
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-5 py-2.5 rounded-xl font-bold text-white text-sm shadow-md transition cursor-pointer flex items-center gap-1.5"
                         >
                             <span>🖨️</span> สั่งพิมพ์{viewMode === 'cover' ? 'หน้าปก' : 'เอกสาร'}
                         </button>
                     </div>
 
-                    {/* ฝั่งขวา: ปีการศึกษา, เลือกห้องเรียน, และปุ่มย้อนกลับ */}
-                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                    <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-xl border border-gray-700">
                             <span className="text-xs text-gray-400">ปีการศึกษา:</span>
                             <input 
