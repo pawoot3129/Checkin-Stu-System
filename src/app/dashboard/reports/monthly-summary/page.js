@@ -505,7 +505,7 @@ export default function MonthlySummaryPage() {
                                         <div className="flex justify-center mt-6 px-4 text-center text-xs">
                                             <div className="w-64">
                                                 <p>ลงชื่อ......................................................</p>
-                                                <p className="mt-1">({reportData.advisor})</p>
+                                                <p className="mt-1">(......................................................)</p>
                                                 <p className="font-semibold">ครูที่ปรึกษา</p>
                                             </div>
                                         </div>
