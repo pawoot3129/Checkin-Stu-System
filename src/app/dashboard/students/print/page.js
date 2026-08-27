@@ -243,7 +243,7 @@ export default function PrintStudentsPage() {
                                             </div>
                                             <div className="relative">
                                                 <p className="mb-4">ลงชื่อ...........................................................</p>
-                                                <div className="absolute left-1/2 -translate-x-1/2 -top-8 pointer-events-none">
+                                                <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-14 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                                 </div>
                                                 <p className="mb-1 font-medium relative z-10">(ดร.ประชากร บริบูรณ์)</p>
