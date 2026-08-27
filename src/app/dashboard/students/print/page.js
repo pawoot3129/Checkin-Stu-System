@@ -107,10 +107,12 @@ export default function PrintStudentsPage() {
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
                     
-                    /* บังคับขนาดฟอนต์ตอนพิมพ์ให้ใหญ่ชัดเจน ไม่โดนเบราว์เซอร์ย่อ */
-                    table th, table td { 
-                        padding: 4px 6px !important; 
-                        font-size: 16px !important; 
+                    /* บังคับขยายฟอนต์และช่องตารางตอนพิมพ์ให้ใหญ่เต็มตา ชัดเจน */
+                    .print-page table th, 
+                    .print-page table td { 
+                        padding: 6px 8px !important; 
+                        font-size: 15px !important; 
+                        line-height: 1.3 !important;
                         -webkit-print-color-adjust: exact; 
                     }
                 }
@@ -219,16 +221,16 @@ export default function PrintStudentsPage() {
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-base">
+                                        <table className="w-full border-collapse text-lg">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ลำดับ</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">รหัสนักศึกษา</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ชื่อ - นามสกุล</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">เลขประจำตัวประชาชน</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ว.ด.ป. เกิด</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">อายุ</th>
-                                                    <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ที่อยู่</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ลำดับ</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">รหัสนักศึกษา</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ชื่อ - นามสกุล</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">เลขประจำตัวประชาชน</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ว.ด.ป. เกิด</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">อายุ</th>
+                                                    <th className="border border-gray-400 p-2 text-center font-bold text-black">ที่อยู่</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -236,13 +238,13 @@ export default function PrintStudentsPage() {
                                                     const actualNumber = studentPages.length === 1 ? idx + 1 : startIndex + idx + 1;
                                                     return (
                                                         <tr key={s.id || idx} className="hover:bg-gray-50/50">
-                                                            <td className="border border-gray-400 p-1 text-center">{actualNumber}</td>
-                                                            <td className="border border-gray-400 p-1 text-center font-mono">{s.studentId || '-'}</td>
-                                                            <td className="border border-gray-400 p-1 font-semibold">{s.name}</td>
-                                                            <td className="border border-gray-400 p-1 text-center font-mono">{s.idCard || '-'}</td>
-                                                            <td className="border border-gray-400 p-1 text-center">{s.birthDate || '-'}</td>
-                                                            <td className="border border-gray-400 p-1 text-center">{calculateAge(s.birthDate)}</td>
-                                                            <td className="border border-gray-400 p-1 text-[11px]">{s.address || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{actualNumber}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center font-mono">{s.studentId || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 font-semibold">{s.name}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center font-mono">{s.idCard || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{s.birthDate || '-'}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-center">{calculateAge(s.birthDate)}</td>
+                                                            <td className="border border-gray-400 p-1.5 text-xs">{s.address || '-'}</td>
                                                         </tr>
                                                     );
                                                 })}
