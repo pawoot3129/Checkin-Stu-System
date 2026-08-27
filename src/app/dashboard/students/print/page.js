@@ -51,7 +51,11 @@ export default function PrintStudentsPage() {
             if (!selectedClass) { setStudents([]); return; }
             const q = query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber"));
             const snap = await getDocs(q);
-            setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            // กรองเอานักเรียนที่สถานะไม่ใช่ "จำหน่าย" ออก
+            const filteredStudents = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(s => s.status !== "จำหน่าย");
+            setStudents(filteredStudents);
         };
         fetchStudents();
     }, [selectedClass]);
@@ -66,9 +70,9 @@ export default function PrintStudentsPage() {
     const maleCount = students.filter(s => s.gender === 'ชาย' || (s.name && (s.name.startsWith('นาย') || s.name.startsWith('ด.ช.')))).length;
     const femaleCount = totalCount - maleCount;
 
-    // ฟังก์ชันจัดหน้าฉลาด: ปรับเกณฑ์ไม่เกิน 27 คนให้อยู่หน้าเดียวจบ ไม่ให้เกิดหน้าสองที่มีเด็กน้อยเกินไป
+    // ฟังก์ชันจัดหน้าฉลาด: ห้องที่ไม่เกิน 28 คน ให้รวมจบในหน้าเดียวพร้อมลายเซ็นทันที
     const getStudentPages = (studentsList) => {
-        if (studentsList.length <= 27) {
+        if (studentsList.length <= 28) {
             return [studentsList]; 
         }
         const chunks = [];
@@ -102,7 +106,7 @@ export default function PrintStudentsPage() {
                         padding-bottom: 5mm !important;
                     }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table th, table td { padding: 4px 6px !important; font-size: 12px !important; }
+                    table th, table td { padding: 4px 6px !important; font-size: 12.5px !important; }
                 }
             `}</style>
             
@@ -186,7 +190,7 @@ export default function PrintStudentsPage() {
                                 <div className="absolute left-1/2 -translate-x-1/2 -top-10 pointer-events-none">
                                     <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="h-16 mx-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
                                 </div>
-                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                                <p className="relative z-10 font-medium">(ดร.ประชากร บริบูรณ์)<br/>ผู้อำนวยการวิทยาลัยฯ</p>
                             </div>
                         </div>
                     </div>
