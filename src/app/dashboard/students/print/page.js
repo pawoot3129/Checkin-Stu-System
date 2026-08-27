@@ -110,7 +110,7 @@ export default function PrintStudentsPage() {
                     /* บังคับขนาดฟอนต์ตอนพิมพ์ให้ใหญ่ชัดเจน ไม่โดนเบราว์เซอร์ย่อ */
                     table th, table td { 
                         padding: 4px 6px !important; 
-                        font-size: 14px !important; 
+                        font-size: 16px !important; 
                         -webkit-print-color-adjust: exact; 
                     }
                 }
@@ -219,7 +219,7 @@ export default function PrintStudentsPage() {
                                             </p>
                                         </div>
 
-                                        <table className="w-full border-collapse text-sm">
+                                        <table className="w-full border-collapse text-base">
                                             <thead>
                                                 <tr className="bg-gray-100 print:bg-gray-200">
                                                     <th className="border border-gray-400 p-1.5 text-center font-bold text-black">ลำดับ</th>
