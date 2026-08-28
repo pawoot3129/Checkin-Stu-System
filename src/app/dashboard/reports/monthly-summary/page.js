@@ -272,11 +272,22 @@ export default function MonthlySummaryPage() {
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
                     #non-printable { display: none !important; } 
                     #printable-area { display: block !important; color: black !important; background: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-                    .print-page { page-break-after: always; break-after: page; page-break-inside: avoid; }
+                    .print-page { 
+                        page-break-after: always; 
+                        break-after: page; 
+                        page-break-inside: avoid; 
+                        break-inside: avoid;
+                        height: 100vh;
+                        max-height: 175mm;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        box-sizing: border-box;
+                    }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
-                    table { width: 100% !important; font-size: 10px !important; border-collapse: collapse !important; }
-                    th, td { padding: 0.5px 1px !important; border: 1px solid black !important; vertical-align: middle !important; height: 20px !important; }
-                    @page { size: landscape; margin: 0.4cm; }
+                    table { width: 100% !important; font-size: 11px !important; border-collapse: collapse !important; }
+                    th, td { padding: 1px 3px !important; border: 1px solid black !important; vertical-align: middle !important; height: 21px !important; }
+                    @page { size: landscape; margin: 1in; }
                 }
             `}</style>
 
@@ -324,20 +335,20 @@ export default function MonthlySummaryPage() {
                         const startIndex = pageIndex * 20;
 
                         return (
-                            <div key={pageIndex} className="print-page mb-10 pb-6 border-b border-gray-300 last:border-none">
-                                <div>
-                                    <div className="flex items-center justify-center gap-6 mb-2 border-b pb-4">
-                                        <img src="/logo.png" className="w-16" alt="Logo" />
+                            <div key={pageIndex} className="print-page mb-6 pb-2">
+                                <div className="w-full">
+                                    <div className="flex items-center justify-center gap-6 mb-1 border-b pb-2">
+                                        <img src="/logo.png" className="w-12" alt="Logo" />
                                         <div className="text-center">
-                                            <h2 className="text-xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                                            <p className="text-md">รายงานสถิติการมาเรียน {reportData.monthName} ปีการศึกษา {selectedYear} ห้อง {selectedClass} {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</p>
+                                            <h2 className="text-lg font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                            <p className="text-sm">รายงานสถิติการมาเรียน {reportData.monthName} ปีการศึกษา {selectedYear} ห้อง {selectedClass} {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</p>
                                         </div>
                                     </div>
-                                    <div className="flex justify-end text-xs mb-4 font-semibold">
+                                    <div className="flex justify-end text-xs mb-2 font-semibold">
                                         <p>วันที่ออกรายงาน: {reportData.date}</p>
                                     </div>
 
-                                    <table className="w-full border-collapse border border-black text-center text-xs mb-4" style={{ tableLayout: 'auto' }}>
+                                    <table className="w-full border-collapse border border-black text-center text-xs mb-2" style={{ tableLayout: 'auto' }}>
                                         <thead>
                                             <tr className="bg-gray-200" style={{ height: '22px' }}>
                                                 <th rowSpan="2" className="border border-black p-1" style={{ width: '35px' }}>ลำดับ</th>
@@ -361,9 +372,9 @@ export default function MonthlySummaryPage() {
                                                 const actualIndex = startIndex + idx;
 
                                                 return (
-                                                    <tr key={s.id} style={{ height: '22px' }}>
-                                                        <td className="border border-black p-1" style={{ height: '22px', width: '35px' }}>{actualIndex + 1}</td>
-                                                        <td className="border border-black p-1 text-left" style={{ width: '150px', height: '22px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: '8px' }}>{s.name}</td>
+                                                    <tr key={s.id} style={{ height: '21px' }}>
+                                                        <td className="border border-black p-1" style={{ height: '21px', width: '35px' }}>{actualIndex + 1}</td>
+                                                        <td className="border border-black p-1 text-left" style={{ width: '150px', height: '21px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: '8px' }}>{s.name}</td>
                                                         {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(day => {
                                                             const statusObj = s.dailyStatus[day];
                                                             const isHoliday = !!reportData.holidayDaysMap[day];
@@ -374,7 +385,7 @@ export default function MonthlySummaryPage() {
                                                                     if (reportData.isFewStudents && holidayText.length > 5) {
                                                                         holidayText = holidayText.substring(0, 5) + '..';
                                                                     }
-                                                                    const fontSize = reportData.isFewStudents ? '9px' : (holidayText.length > 18 ? '9px' : holidayText.length > 10 ? '10.5px' : '12px');
+                                                                    const fontSize = reportData.isFewStudents ? '10px' : (holidayText.length > 18 ? '9px' : '10px');
 
                                                                     return (
                                                                         <td 
@@ -413,36 +424,36 @@ export default function MonthlySummaryPage() {
                                                             }
 
                                                             return (
-                                                                <td key={day} className="border border-black p-0.5 font-medium align-middle" style={{ height: '22px', width: '22px' }}>
+                                                                <td key={day} className="border border-black p-0.5 font-medium align-middle" style={{ height: '21px', width: '22px' }}>
                                                                     {statusObj && statusObj.type !== 'empty' ? (
                                                                         statusObj.type === 'มา' ? (
-                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาเต็ม' ? (
-                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#dc2626' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาครึ่งวัน' ? (
                                                                             <div className="flex flex-col items-center justify-center leading-none" style={{ height: '18px' }}>
-                                                                                <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#f97316', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#f97316', display: 'block' }}>{statusObj.text}</span>
                                                                                 <span style={{ fontSize: '9px', color: '#f97316', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'สาย' ? (
                                                                             <div className="flex flex-col items-center justify-center leading-none" style={{ height: '18px' }}>
-                                                                                <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#d97706', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#d97706', display: 'block' }}>{statusObj.text}</span>
                                                                                 <span style={{ fontSize: '9px', color: '#d97706', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'ขาด' ? (
-                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#b91c1c' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#b91c1c' }}>{statusObj.text}</span>
                                                                         ) : (
-                                                                            <span style={{ fontSize: statusObj.text === 'ทวิ' ? '7px' : '10px', fontWeight: 'bold' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: statusObj.text === 'ทวิ' ? '8px' : '10px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         )
                                                                     ) : ''}
                                                                 </td>
                                                             );
                                                         })}
-                                                        <td className="border border-black p-0.5 text-green-700 font-bold" style={{ width: '22px', height: '22px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
-                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '22px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
-                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '22px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
-                                                        <td className="border border-black p-0.5 text-orange-600 font-bold" style={{ width: '22px', height: '22px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
-                                                        <td className="border border-black p-0.5 text-amber-600 font-bold" style={{ width: '22px', height: '22px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
+                                                        <td className="border border-black p-0.5 text-green-700 font-bold" style={{ width: '22px', height: '21px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
+                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '21px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
+                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '21px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
+                                                        <td className="border border-black p-0.5 text-orange-600 font-bold" style={{ width: '22px', height: '21px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
+                                                        <td className="border border-black p-0.5 text-amber-600 font-bold" style={{ width: '22px', height: '21px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
                                                     </tr>
                                                 );
                                             })}
@@ -451,9 +462,9 @@ export default function MonthlySummaryPage() {
                                 </div>
 
                                 {isLastPage && (
-                                    <div className="mt-2">
-                                        <div className="font-bold text-xs mb-1">สรุปผล</div>
-                                        <table className="w-full border-collapse border border-black text-center text-xs mb-4" style={{ tableLayout: 'auto' }}>
+                                    <div className="mt-1 w-full">
+                                        <div className="font-bold text-xs mb-0.5">สรุปผล</div>
+                                        <table className="w-full border-collapse border border-black text-center text-xs mb-2" style={{ tableLayout: 'auto' }}>
                                             <thead>
                                                 <tr className="bg-gray-200" style={{ height: '20px' }}>
                                                     <th className="border border-black p-0.5 text-left pl-2" style={{ width: '185px' }}>วันที่</th>
@@ -484,7 +495,7 @@ export default function MonthlySummaryPage() {
                                                 <tr style={{ height: '20px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ลาเต็มวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0.5 text-red-600" style={{ width: '22px' }}>{reportData.summaryDayLeave ? '' : ''}{reportData.summaryDailyLeave[d]}</td>
+                                                        <td key={d} className="border border-black p-0.5 text-red-600" style={{ width: '22px' }}>{reportData.summaryDailyLeave[d]}</td>
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '20px' }}>
@@ -502,10 +513,10 @@ export default function MonthlySummaryPage() {
                                             </tbody>
                                         </table>
 
-                                        <div className="flex justify-center mt-6 px-4 text-center text-xs">
+                                        <div className="flex justify-center mt-2 px-4 text-center text-xs">
                                             <div className="w-64">
                                                 <p>ลงชื่อ......................................................</p>
-                                                <p className="mt-1">(......................................................)</p>
+                                                <p className="mt-0.5">(......................................................)</p>
                                                 <p className="font-semibold">ครูที่ปรึกษา</p>
                                             </div>
                                         </div>
