@@ -254,14 +254,22 @@ export default function MonthlySummaryPage() {
         }
     };
 
+    // ฟังก์ชันจัดหน้าแบบอัจฉริยะ (Smart Balanced Chunking)
+    // ถ้านักเรียนไม่เกิน 25 คน -> รวมจบในหน้าเดียว
+    // ถ้าเกิน 25 คน -> คำนวณหารเฉลี่ยจำนวนหน้าและจำนวนคนต่อหน้าให้ออกมาสมดุลที่สุด (เช่น 43 คน จะถูกแบ่งเป็น 2 หน้า หน้าละประมาณ 21-22 คนพอดีเป๊ะ)
     const chunkStudents = (students) => {
-        if (students.length <= 25) {
+        const total = students.length;
+        if (total <= 25) {
             return [students];
         }
+        
+        // คำนวณหาจำนวนหน้าที่เหมาะสม (ให้แต่ละหน้ามีจำนวนใกล้เคียงกัน ไม่เกิน 25 คนต่อหน้า)
+        const numPages = Math.ceil(total / 22);
+        const pageSize = Math.ceil(total / numPages);
+        
         const chunks = [];
-        const size = 20;
-        for (let i = 0; i < students.length; i += size) {
-            chunks.push(students.slice(i, i + size));
+        for (let i = 0; i < total; i += pageSize) {
+            chunks.push(students.slice(i, i + pageSize));
         }
         return chunks;
     };
@@ -286,7 +294,6 @@ export default function MonthlySummaryPage() {
                     #non-printable {
                         display: none !important;
                     }
-                    /* ลบพื้นหลังสีดำ เงา และขอบโค้งมนออกทั้งหมด ให้เป็นกระดาษขาวล้วน */
                     #printable-area {
                         display: block !important;
                         background: #ffffff !important;
@@ -374,7 +381,7 @@ export default function MonthlySummaryPage() {
                 <div id="printable-area" className="mt-10 bg-white p-6 rounded-3xl text-black shadow-2xl max-w-7xl mx-auto overflow-x-auto">
                     {studentPages.map((pageStudents, pageIndex) => {
                         const isLastPage = pageIndex === studentPages.length - 1;
-                        const startIndex = pageIndex * 20;
+                        const startIndex = pageIndex * pageStudents.length;
 
                         return (
                             <div key={pageIndex} className="print-page mb-6 pb-2">
