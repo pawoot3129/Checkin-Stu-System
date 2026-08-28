@@ -269,7 +269,6 @@ export default function MonthlySummaryPage() {
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print {
-                    /* รีเซ็ตค่าเริ่มต้นของทุกเบราว์เซอร์ให้เป็นมาตรฐานกลาง */
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
@@ -283,6 +282,7 @@ export default function MonthlySummaryPage() {
                     #non-printable {
                         display: none !important;
                     }
+                    /* ลบพื้นหลังสีดำและเงาออกทั้งหมด ให้เหลือแต่กระดาษขาวเพียวๆ */
                     #printable-area {
                         display: block !important;
                         background: #ffffff !important;
@@ -290,6 +290,8 @@ export default function MonthlySummaryPage() {
                         margin: 0 !important;
                         padding: 0 !important;
                         box-shadow: none !important;
+                        border: none !important;
+                        border-radius: 0 !important;
                     }
                     .print-page {
                         page-break-after: always;
@@ -298,6 +300,9 @@ export default function MonthlySummaryPage() {
                         break-inside: avoid;
                         box-sizing: border-box;
                         margin: 0 !important;
+                        padding: 0 !important;
+                        background: #ffffff !important;
+                        border: none !important;
                     }
                     .print-page:last-child {
                         page-break-after: auto;
@@ -309,14 +314,14 @@ export default function MonthlySummaryPage() {
                         border-collapse: collapse !important;
                     }
                     th, td {
-                        padding: 1px 2px !important;
+                        padding: 0.5px 2px !important;
                         border: 1px solid #000000 !important;
                         vertical-align: middle !important;
-                        height: 17px !important;
+                        height: 16px !important;
                     }
                     @page {
                         size: A4 landscape;
-                        margin: 10mm;
+                        margin: 8mm;
                     }
                 }
             `}</style>
@@ -359,7 +364,7 @@ export default function MonthlySummaryPage() {
             </div>
 
             {reportData && (
-                <div id="printable-area" className="mt-10 bg-white p-10 rounded-3xl text-black shadow-2xl max-w-7xl mx-auto overflow-x-auto">
+                <div id="printable-area" className="mt-10 bg-white p-6 rounded-3xl text-black shadow-2xl max-w-7xl mx-auto overflow-x-auto">
                     {studentPages.map((pageStudents, pageIndex) => {
                         const isLastPage = pageIndex === studentPages.length - 1;
                         const startIndex = pageIndex * 20;
@@ -374,19 +379,19 @@ export default function MonthlySummaryPage() {
                                             <p className="text-sm">รายงานสถิติการมาเรียน {reportData.monthName} ปีการศึกษา {selectedYear} ห้อง {selectedClass} {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</p>
                                         </div>
                                     </div>
-                                    <div className="flex justify-end text-xs mb-2 font-semibold">
+                                    <div className="flex justify-end text-xs mb-1 font-semibold">
                                         <p>วันที่ออกรายงาน: {reportData.date}</p>
                                     </div>
 
-                                    <table className="w-full border-collapse border border-black text-center text-xs mb-2" style={{ tableLayout: 'auto' }}>
+                                    <table className="w-full border-collapse border border-black text-center text-xs mb-1" style={{ tableLayout: 'auto' }}>
                                         <thead>
-                                            <tr className="bg-gray-200" style={{ height: '20px' }}>
+                                            <tr className="bg-gray-200" style={{ height: '18px' }}>
                                                 <th rowSpan="2" className="border border-black p-1" style={{ width: '35px' }}>ลำดับ</th>
                                                 <th rowSpan="2" className="border border-black p-1" style={{ width: '150px', whiteSpace: 'nowrap' }}>ชื่อ - สกุล</th>
                                                 <th colSpan={reportData.daysCount} className="border border-black p-1">วันที่</th>
                                                 <th colSpan="5" className="border border-black p-1">รวม</th>
                                             </tr>
-                                            <tr className="bg-gray-100" style={{ height: '18px' }}>
+                                            <tr className="bg-gray-100" style={{ height: '16px' }}>
                                                 {Array.from({ length: reportData.daysCount }, (_, i) => (
                                                     <th key={i + 1} className="border border-black p-0.5" style={{ width: '22px' }}>{i + 1}</th>
                                                 ))}
@@ -402,9 +407,9 @@ export default function MonthlySummaryPage() {
                                                 const actualIndex = startIndex + idx;
 
                                                 return (
-                                                    <tr key={s.id} style={{ height: '18px' }}>
-                                                        <td className="border border-black p-1" style={{ height: '18px', width: '35px' }}>{actualIndex + 1}</td>
-                                                        <td className="border border-black p-1 text-left" style={{ width: '150px', height: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: '8px' }}>{s.name}</td>
+                                                    <tr key={s.id} style={{ height: '16px' }}>
+                                                        <td className="border border-black p-1" style={{ height: '16px', width: '35px' }}>{actualIndex + 1}</td>
+                                                        <td className="border border-black p-1 text-left" style={{ width: '150px', height: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: '8px' }}>{s.name}</td>
                                                         {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(day => {
                                                             const statusObj = s.dailyStatus[day];
                                                             const isHoliday = !!reportData.holidayDaysMap[day];
@@ -454,36 +459,36 @@ export default function MonthlySummaryPage() {
                                                             }
 
                                                             return (
-                                                                <td key={day} className="border border-black p-0.5 font-medium align-middle" style={{ height: '18px', width: '22px' }}>
+                                                                <td key={day} className="border border-black p-0.5 font-medium align-middle" style={{ height: '16px', width: '22px' }}>
                                                                     {statusObj && statusObj.type !== 'empty' ? (
                                                                         statusObj.type === 'มา' ? (
-                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาเต็ม' ? (
-                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#dc2626' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาครึ่งวัน' ? (
-                                                                            <div className="flex flex-col items-center justify-center leading-none" style={{ height: '16px' }}>
-                                                                                <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#f97316', display: 'block' }}>{statusObj.text}</span>
-                                                                                <span style={{ fontSize: '9px', color: '#f97316', display: 'block', marginTop: '-2px' }}>✓</span>
+                                                                            <div className="flex flex-col items-center justify-center leading-none" style={{ height: '14px' }}>
+                                                                                <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#f97316', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '8px', color: '#f97316', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'สาย' ? (
-                                                                            <div className="flex flex-col items-center justify-center leading-none" style={{ height: '16px' }}>
-                                                                                <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#d97706', display: 'block' }}>{statusObj.text}</span>
-                                                                                <span style={{ fontSize: '9px', color: '#d97706', display: 'block', marginTop: '-2px' }}>✓</span>
+                                                                            <div className="flex flex-col items-center justify-center leading-none" style={{ height: '14px' }}>
+                                                                                <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#d97706', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '8px', color: '#d97706', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'ขาด' ? (
-                                                                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#b91c1c' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#b91c1c' }}>{statusObj.text}</span>
                                                                         ) : (
-                                                                            <span style={{ fontSize: statusObj.text === 'ทวิ' ? '8px' : '10px', fontWeight: 'bold' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: statusObj.text === 'ทวิ' ? '7px' : '9px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         )
                                                                     ) : ''}
                                                                 </td>
                                                             );
                                                         })}
-                                                        <td className="border border-black p-0.5 text-green-700 font-bold" style={{ width: '22px', height: '18px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
-                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '18px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
-                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '18px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
-                                                        <td className="border border-black p-0.5 text-orange-600 font-bold" style={{ width: '22px', height: '18px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
-                                                        <td className="border border-black p-0.5 text-amber-600 font-bold" style={{ width: '22px', height: '18px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
+                                                        <td className="border border-black p-0.5 text-green-700 font-bold" style={{ width: '22px', height: '16px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
+                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '16px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
+                                                        <td className="border border-black p-0.5 text-red-600 font-bold" style={{ width: '22px', height: '16px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
+                                                        <td className="border border-black p-0.5 text-orange-600 font-bold" style={{ width: '22px', height: '16px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
+                                                        <td className="border border-black p-0.5 text-amber-600 font-bold" style={{ width: '22px', height: '16px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
                                                     </tr>
                                                 );
                                             })}
@@ -496,7 +501,7 @@ export default function MonthlySummaryPage() {
                                         <div className="font-bold text-xs mb-0.5">สรุปผล</div>
                                         <table className="w-full border-collapse border border-black text-center text-xs mb-1" style={{ tableLayout: 'auto' }}>
                                             <thead>
-                                                <tr className="bg-gray-200" style={{ height: '18px' }}>
+                                                <tr className="bg-gray-200" style={{ height: '16px' }}>
                                                     <th className="border border-black p-0.5 text-left pl-2" style={{ width: '185px' }}>วันที่</th>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <th key={d} className="border border-black p-0.5" style={{ width: '22px' }}>{d}</th>
@@ -504,37 +509,37 @@ export default function MonthlySummaryPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียน ทั้งหมด</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5" style={{ width: '22px' }}>{reportData.summaryDailyTotal[d]}</td>
                                                     ))}
                                                 </tr>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่มา</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5" style={{ width: '22px' }}>{reportData.summaryDailyPresent[d]}</td>
                                                     ))}
                                                 </tr>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ขาด</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5 text-red-600" style={{ width: '22px' }}>{reportData.summaryDailyAbsent[d]}</td>
                                                     ))}
                                                 </tr>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ลาเต็มวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5 text-red-600" style={{ width: '22px' }}>{reportData.summaryDailyLeave[d]}</td>
                                                     ))}
                                                 </tr>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ลาครึ่งวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5 text-orange-600" style={{ width: '22px' }}>{reportData.summaryDailyHalfLeave[d]}</td>
                                                     ))}
                                                 </tr>
-                                                <tr style={{ height: '18px' }}>
+                                                <tr style={{ height: '16px' }}>
                                                     <td className="border border-black p-0.5 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่สาย</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
                                                         <td key={d} className="border border-black p-0.5 text-amber-600" style={{ width: '22px' }}>{reportData.summaryDailyLate[d]}</td>
