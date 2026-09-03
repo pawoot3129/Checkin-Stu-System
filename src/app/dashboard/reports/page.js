@@ -16,7 +16,6 @@ const reportOptions = [
         path: "/dashboard/reports/monthly-summary",
         status: "พร้อมใช้งาน",
         gradient: "from-blue-600 to-purple-600"
-                        
     },
     {
         title: "รายงานสรุปผลรายกิจกรรม",
@@ -31,6 +30,13 @@ const reportOptions = [
         path: "/dashboard/reports/semester-summary",
         status: "พร้อมใช้งาน",
         gradient: "from-amber-500 to-orange-600"
+    },
+    {
+        title: "ประเมินคุณลักษณะอันพึงประสงค์",
+        description: "บันทึกคะแนนประเมินพฤติกรรม 5 ด้าน พร้อมระบบคำนวณและพิมพ์รายงานสรุปประจำห้อง",
+        path: "/dashboard/reports/desirable-characteristics",
+        status: "พร้อมใช้งาน",
+        gradient: "from-purple-500 to-pink-600"
     }
 ];
 
