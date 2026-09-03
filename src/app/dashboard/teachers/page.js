@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs, query, where, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -10,20 +11,29 @@ export default function TeacherManagement() {
     const router = useRouter();
     const [teachers, setTeachers] = useState([]);
     const [classrooms, setClassrooms] = useState([]);
-    const [formData, setFormData] = useState({ id: null, name: '', email: '', password: '', assignedClasses: [] });
+    const [formData, setFormData] = useState({ id: null, name: '', email: '', password: '', role: 'teacher', assignedClasses: [] });
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
-        const init = async () => {
-            const user = auth.currentUser;
-            if (!user) { router.push('/'); return; }
-            const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
-            if (snap.empty || snap.docs[0].data().role !== 'admin') {
-                toast.error("สำหรับผู้ดูแลระบบเท่านั้น");
-                router.push('/dashboard');
-            } else { fetchTeachers(); fetchClassrooms(); }
-        };
-        init();
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
+                    if (snap.empty || snap.docs[0].data().role !== 'admin') {
+                        toast.error("สำหรับผู้ดูแลระบบเท่านั้น");
+                        router.push('/dashboard');
+                    } else { 
+                        fetchTeachers(); 
+                        fetchClassrooms(); 
+                    }
+                } catch (err) {
+                    console.error("Auth check error:", err);
+                }
+            } else { 
+                router.push('/'); 
+            }
+        });
+        return () => unsubscribe();
     }, [router]);
 
     const fetchTeachers = async () => {
@@ -55,6 +65,7 @@ export default function TeacherManagement() {
             if (isEditing) {
                 await updateDoc(doc(db, 'users', formData.id), {
                     name: formData.name,
+                    role: formData.role || 'teacher',
                     assignedClasses: formData.assignedClasses || []
                 });
                 toast.success("แก้ไขข้อมูลสำเร็จ");
@@ -63,7 +74,7 @@ export default function TeacherManagement() {
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
                     name: formData.name, 
                     email: formData.email, 
-                    role: 'teacher', 
+                    role: formData.role || 'teacher', 
                     assignedClasses: formData.assignedClasses || []
                 });
                 toast.success("เพิ่มข้อมูลครูสำเร็จ");
@@ -79,6 +90,7 @@ export default function TeacherManagement() {
             name: teacher.name || '',
             email: teacher.email || '',
             password: '',
+            role: teacher.role || 'teacher',
             assignedClasses: teacher.assignedClasses || []
         });
         setIsEditing(true);
@@ -86,7 +98,7 @@ export default function TeacherManagement() {
     };
 
     const resetForm = () => {
-        setFormData({ id: null, name: '', email: '', password: '', assignedClasses: [] });
+        setFormData({ id: null, name: '', email: '', password: '', role: 'teacher', assignedClasses: [] });
         setIsEditing(false);
     };
 
@@ -104,15 +116,22 @@ export default function TeacherManagement() {
         <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
             <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold">{isEditing ? 'แก้ไขข้อมูลครู' : 'จัดการบัญชีผู้ใช้งาน'}</h1>
+                <h1 className="text-3xl font-bold">{isEditing ? 'แก้ไขข้อมูลผู้ใช้งาน' : 'จัดการบัญชีผู้ใช้งาน'}</h1>
                 <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl transition">← กลับ</button>
             </header>
 
             <form onSubmit={handleSubmit} className="bg-gray-900 p-8 rounded-3xl border border-gray-800 mb-8 max-w-4xl mx-auto shadow-xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <input type="text" placeholder="ชื่อ-นามสกุล" className="p-3 bg-gray-950 rounded-xl border border-gray-700 text-white" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                     {!isEditing && <input type="email" placeholder="อีเมล" className="p-3 bg-gray-950 rounded-xl border border-gray-700 text-white" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />}
                     {!isEditing && <input type="password" placeholder="รหัสผ่าน" className="p-3 bg-gray-950 rounded-xl border border-gray-700 text-white" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />}
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1 font-semibold uppercase">กำหนดสิทธิ์ (Role)</label>
+                        <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-700 text-white font-medium">
+                            <option value="teacher">Teacher (ครูผู้สอน/ที่ปรึกษา)</option>
+                            <option value="admin">Admin (ผู้ดูแลระบบ)</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <p className="text-sm text-gray-400 mb-3">ห้องเรียนที่รับผิดชอบ (เลือกได้หลายห้อง):</p>
@@ -135,6 +154,7 @@ export default function TeacherManagement() {
                             <tr className="text-gray-400 border-b border-gray-800">
                                 <th className="p-4">ชื่อ</th>
                                 <th className="p-4">อีเมล</th>
+                                <th className="p-4">สิทธิ์</th>
                                 <th className="p-4">ห้องที่รับผิดชอบ</th>
                                 <th className="p-4 text-center">จัดการ</th>
                             </tr>
@@ -144,6 +164,11 @@ export default function TeacherManagement() {
                                 <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-950 transition">
                                     <td className="p-4 font-medium">{t.name}</td>
                                     <td className="p-4 text-gray-400">{t.email}</td>
+                                    <td className="p-4">
+                                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${t.role === 'admin' ? 'bg-purple-900/50 text-purple-300 border border-purple-700' : 'bg-blue-900/50 text-blue-300 border border-blue-700'}`}>
+                                            {t.role || 'teacher'}
+                                        </span>
+                                    </td>
                                     <td className="p-4 text-sm text-gray-300">{t.assignedClasses?.join(', ') || '-'}</td>
                                     <td className="p-4 flex justify-center gap-2">
                                         <button type="button" onClick={() => startEdit(t)} className="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">แก้ไข</button>
