@@ -7,7 +7,6 @@ import { auth, db } from '../../../../lib/firebase';
 import { collection, getDocs, query, where, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
-const academicYears = ['2569', '2568'];
 const semesters = ['1/2569', '2/2569', '1/2568', '2/2568'];
 
 export default function DesirableCharacteristicsPage() {
@@ -21,7 +20,6 @@ export default function DesirableCharacteristicsPage() {
     const [activeTab, setActiveTab] = useState('evaluation'); // 'evaluation' หรือ 'summary'
     const [isLoading, setIsLoading] = useState(false);
 
-    // คะแนนประเมิน 10 ข้อ (ค่าเริ่มต้นคือ 3 ทั้งหมด)
     const [scores, setScores] = useState({
         q1_1: 3, q1_2: 3,
         q2_1: 3, q2_2: 3,
@@ -30,7 +28,6 @@ export default function DesirableCharacteristicsPage() {
         q5_1: 3, q5_2: 3
     });
 
-    // บันทึกคะแนนเก็บแยกตาม studentId
     const [evaluationsData, setEvaluationsData] = useState({});
 
     useEffect(() => {
@@ -66,7 +63,6 @@ export default function DesirableCharacteristicsPage() {
         return () => unsubscribe();
     }, [router]);
 
-    // โหลดรายชื่อนักเรียนและคะแนนเดิมเมื่อเปลี่ยนห้องหรือเทอม
     useEffect(() => {
         if (!selectedClass) return;
         fetchStudentsAndData();
@@ -91,7 +87,6 @@ export default function DesirableCharacteristicsPage() {
                 setSelectedStudentId(studentList[0].id);
             }
 
-            // โหลดข้อมูลการประเมินจาก Firestore
             const evalSnap = await getDocs(query(collection(db, "desirable_evaluations"), where("classId", "==", selectedClass), where("semester", "==", selectedSemester)));
             const evalMap = {};
             evalSnap.forEach(d => {
@@ -108,7 +103,6 @@ export default function DesirableCharacteristicsPage() {
         }
     };
 
-    // อัปเดตคะแนนเมื่อเลือกนักเรียนคนใหม่
     useEffect(() => {
         if (selectedStudentId && evaluationsData[selectedStudentId]) {
             setScores(evaluationsData[selectedStudentId]);
@@ -127,7 +121,6 @@ export default function DesirableCharacteristicsPage() {
         setScores(prev => ({ ...prev, [key]: Number(val) }));
     };
 
-    // คำนวณคะแนนรวมและระดับคุณภาพ
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     const getQualityLevel = (score) => {
         if (score >= 23) return 'ดีเยี่ยม';
@@ -136,7 +129,6 @@ export default function DesirableCharacteristicsPage() {
     };
     const qualityLevel = getQualityLevel(totalScore);
 
-    // บันทึกคะแนนลง Firestore
     const handleSave = async () => {
         if (!selectedStudentId) return;
         setIsLoading(true);
@@ -162,12 +154,11 @@ export default function DesirableCharacteristicsPage() {
         }
     };
 
-    // คำนวณข้อมูลหน้าสรุปภาพรวมห้อง
     const totalStudentsCount = students.length;
     const evaluatedStudentsCount = Object.keys(evaluationsData).length;
     const goodOrHigherCount = Object.values(evaluationsData).filter(s => {
         const sum = Object.values(s).reduce((a, b) => a + b, 0);
-        return sum >= 15; // ดีขึ้นไป (15 คะแนนขึ้นไป)
+        return sum >= 15;
     }).length;
     const percentageGood = totalStudentsCount > 0 ? ((goodOrHigherCount / totalStudentsCount) * 100).toFixed(2) : '0.00';
 
@@ -180,8 +171,13 @@ export default function DesirableCharacteristicsPage() {
                 @media print {
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
                     #non-printable { display: none !important; }
-                    #printable-area { display: block !important; color: black !important; background: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-                    .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1.5cm; }
+                    .printable-individual, .printable-summary { display: none !important; }
+                    
+                    /* ควบคุมการแสดงผลตามหน้าต่างที่เลือกพิมพ์ */
+                    body.print-mode-individual .printable-individual { display: block !important; }
+                    body.print-mode-summary .printable-summary { display: block !important; }
+
+                    .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1.5cm; background: white; color: black; width: 100%; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
             `}</style>
@@ -195,7 +191,6 @@ export default function DesirableCharacteristicsPage() {
                     <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button>
                 </header>
 
-                {/* ตัวกรองห้องและเทอม */}
                 <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
@@ -211,7 +206,6 @@ export default function DesirableCharacteristicsPage() {
                     </div>
                 </div>
 
-                {/* แท็บเมนู */}
                 <div className="flex gap-4 mb-6">
                     <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
                         📝 บันทึกคะแนนรายบุคคล
@@ -223,7 +217,6 @@ export default function DesirableCharacteristicsPage() {
 
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* รายชื่อนักเรียนด้านซ้าย */}
                         <div className="bg-gray-900 p-4 rounded-3xl border border-gray-800 h-[650px] overflow-y-auto">
                             <h3 className="font-bold mb-4 text-sm text-gray-400 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
                             <div className="space-y-2">
@@ -245,7 +238,6 @@ export default function DesirableCharacteristicsPage() {
                             </div>
                         </div>
 
-                        {/* ฟอร์มประเมินด้านขวา */}
                         <div className="lg:col-span-3 bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
                             {currentStudent ? (
                                 <div>
@@ -254,14 +246,16 @@ export default function DesirableCharacteristicsPage() {
                                             <h2 className="text-xl font-bold">{currentStudent.name}</h2>
                                             <p className="text-xs text-gray-400 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
                                         </div>
-                                        <button onClick={() => window.print()} className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+                                        <button onClick={() => {
+                                            document.body.className = 'print-mode-individual';
+                                            window.print();
+                                            document.body.className = '';
+                                        }} className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
                                             🖨️ พิมพ์แบบประเมินนี้
                                         </button>
                                     </div>
 
-                                    {/* ตารางให้คะแนน */}
                                     <div className="space-y-6 text-sm">
-                                        {/* ข้อ 1 */}
                                         <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
                                             <p className="font-bold text-indigo-400 mb-2">1. มีวินัย</p>
                                             <div className="space-y-3">
@@ -280,7 +274,6 @@ export default function DesirableCharacteristicsPage() {
                                             </div>
                                         </div>
 
-                                        {/* ข้อ 2 */}
                                         <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
                                             <p className="font-bold text-indigo-400 mb-2">2. ความรับผิดชอบ</p>
                                             <div className="space-y-3">
@@ -299,7 +292,6 @@ export default function DesirableCharacteristicsPage() {
                                             </div>
                                         </div>
 
-                                        {/* ข้อ 3 */}
                                         <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
                                             <p className="font-bold text-indigo-400 mb-2">3. ความซื่อสัตย์</p>
                                             <div className="space-y-3">
@@ -318,7 +310,6 @@ export default function DesirableCharacteristicsPage() {
                                             </div>
                                         </div>
 
-                                        {/* ข้อ 4 */}
                                         <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
                                             <p className="font-bold text-indigo-400 mb-2">4. ความสนใจใฝ่เรียนรู้</p>
                                             <div className="space-y-3">
@@ -337,7 +328,6 @@ export default function DesirableCharacteristicsPage() {
                                             </div>
                                         </div>
 
-                                        {/* ข้อ 5 */}
                                         <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
                                             <p className="font-bold text-indigo-400 mb-2">5. มีจิตสาธารณะ</p>
                                             <div className="space-y-3">
@@ -357,7 +347,6 @@ export default function DesirableCharacteristicsPage() {
                                         </div>
                                     </div>
 
-                                    {/* แถบสรุปคะแนนและปุ่มบันทึก */}
                                     <div className="mt-8 p-6 bg-indigo-950/40 border border-indigo-900/50 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
                                         <div className="flex items-center gap-6">
                                             <div>
@@ -382,14 +371,17 @@ export default function DesirableCharacteristicsPage() {
                         </div>
                     </div>
                 ) : (
-                    /* หน้าสรุปผลประจำห้อง */
                     <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
                             <div>
                                 <h2 className="text-xl font-bold">สรุปผลการประเมินคุณลักษณะอันพึงประสงค์</h2>
                                 <p className="text-xs text-gray-400 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
                             </div>
-                            <button onClick={() => window.print()} className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                            <button onClick={() => {
+                                document.body.className = 'print-mode-summary';
+                                window.print();
+                                document.body.className = '';
+                            }} className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2">
                                 🖨️ พิมพ์ใบสรุปผลประจำห้อง
                             </button>
                         </div>
@@ -418,9 +410,9 @@ export default function DesirableCharacteristicsPage() {
                 )}
             </div>
 
-            {/* ส่วนสำหรับพิมพ์เอกสารอย่างเป็นทางการ (ซ่อนตอนอยู่บนเว็บ แสดงเฉพาะตอนกดสั่งพิมพ์) */}
+            {/* ส่วนที่ 1: พิมพ์แบบประเมินรายบุคคล */}
             {currentStudent && (
-                <div id="printable-area" className="hidden">
+                <div className="printable-individual hidden">
                     <div className="print-page">
                         <h2 className="text-center font-bold text-lg mb-1">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน</h2>
                         <p className="text-center text-sm mb-4">ประจำภาคเรียนที่ {selectedSemester}</p>
@@ -467,6 +459,44 @@ export default function DesirableCharacteristicsPage() {
                     </div>
                 </div>
             )}
+
+            {/* ส่วนที่ 2: พิมพ์ใบสรุปผลประจำห้อง (ตามฟอร์มในรูป Excel ที่ 2 เป๊ะๆ) */}
+            <div className="printable-summary hidden">
+                <div className="print-page">
+                    <h2 className="text-center font-bold text-lg mb-1">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h2>
+                    <p className="text-center text-sm mb-6">ภาคเรียนที่ {selectedSemester}</p>
+                    
+                    <div className="flex justify-between text-sm mb-4 font-semibold">
+                        <p>ห้อง: {selectedClass}</p>
+                        <p>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                    </div>
+
+                    <table className="w-full border-collapse border border-black text-xs text-center mb-16">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="border border-black p-3">จำนวนผู้เรียนที่เข้ารับการประเมินคุณลักษณะที่พึงประสงค์</th>
+                                <th className="border border-black p-3">จำนวนผู้เรียนที่มีผลการประเมินคุณลักษณะที่พึงประสงค์ ระดับ ดี ขึ้นไป</th>
+                                <th className="border border-black p-3 w-24">ร้อยละ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="border border-black p-4 font-bold text-base">{evaluatedStudentsCount}</td>
+                                <td className="border border-black p-4 font-bold text-base">{goodOrHigherCount}</td>
+                                <td className="border border-black p-4 font-bold text-base">{percentageGood}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div className="flex justify-end text-center text-sm mt-20">
+                        <div className="w-64">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">({userProfile?.name || '......................................................'})</p>
+                            <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
