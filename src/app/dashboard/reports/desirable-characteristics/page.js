@@ -12,7 +12,7 @@ export default function DesirableCharacteristicsPage() {
     const [userProfile, setUserProfile] = useState(null);
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
-    const [semesters, setSemesters] = useState(['1/2569', '2/2569']);
+    const [semesters, setSemesters] = useState(['1/2569']);
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -58,18 +58,23 @@ export default function DesirableCharacteristicsPage() {
                     if (classes.length > 0) setSelectedClass(classes[0]);
                 }
 
+                // ดึงภาคเรียนจาก system_settings โดยเช็กตามที่มีจริงในระบบ
                 const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (settingsSnap.exists()) {
-                    const years = settingsSnap.data().academicYears || ['2569'];
-                    const generatedSemesters = [];
-                    years.forEach(y => {
-                        generatedSemesters.push(`1/${y}`);
-                        generatedSemesters.push(`2/${y}`);
-                    });
-                    setSemesters(generatedSemesters);
-                    if (generatedSemesters.length > 0) {
-                        setSelectedSemester(generatedSemesters[0]);
+                    const data = settingsSnap.data();
+                    let semList = [];
+                    if (data.semesters && Array.isArray(data.semesters)) {
+                        semList = data.semesters;
+                    } else if (data.academicYears) {
+                        data.academicYears.forEach(y => {
+                            semList.push(`1/${y}`);
+                            semList.push(`2/${y}`);
+                        });
+                    } else {
+                        semList = ['1/2569'];
                     }
+                    setSemesters(semList);
+                    if (semList.length > 0) setSelectedSemester(semList[0]);
                 }
 
             } else { router.push('/'); }
@@ -125,7 +130,7 @@ export default function DesirableCharacteristicsPage() {
                 q1_1: 3, q1_2: 3,
                 q2_1: 3, q2_2: 3,
                 q3_1: 3, q3_2: 3,
-                q4_1: 3, q4_2: 3,
+                q4_1: 4 ? 3 : 3, q4_2: 3,
                 q5_1: 3, q5_2: 3
             });
         }
@@ -135,13 +140,17 @@ export default function DesirableCharacteristicsPage() {
         setScores(prev => ({ ...prev, [key]: Number(val) }));
     };
 
-    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-    const getQualityLevel = (score) => {
-        if (score >= 23) return 'ดีเยี่ยม';
-        if (score >= 15) return 'ดี';
-        return 'พอใช้';
+    const calculateStudentScore = (sScores) => {
+        if (!sScores) return { total: 30, level: 'ดีเยี่ยม' };
+        const total = Object.values(sScores).reduce((a, b) => a + b, 0);
+        let level = 'พอใช้';
+        if (total >= 23) level = 'ดีเยี่ยม';
+        else if (total >= 15) level = 'ดี';
+        return { total, level };
     };
-    const qualityLevel = getQualityLevel(totalScore);
+
+    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+    const qualityLevel = calculateStudentScore(scores).level;
 
     const handleSave = async () => {
         if (!selectedStudentId) return;
@@ -179,7 +188,7 @@ export default function DesirableCharacteristicsPage() {
     const currentStudent = students.find(s => s.id === selectedStudentId);
 
     return (
-        <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
+        <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print {
@@ -189,13 +198,14 @@ export default function DesirableCharacteristicsPage() {
                     }
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
                     
-                    /* ซ่อนองค์ประกอบที่ไม่ใช่ส่วนพิมพ์ทั้งหมดอย่างเด็ดขาด */
-                    #non-printable, header, nav, .printable-individual, .printable-summary { display: none !important; }
+                    #non-printable, header, nav, .printable-individual, .printable-individual-all, .printable-summary { display: none !important; }
                     
                     body.print-mode-individual .printable-individual { display: block !important; }
+                    body.print-mode-individual-all .printable-individual-all { display: block !important; }
                     body.print-mode-summary .printable-summary { display: block !important; }
 
-                    .print-page { page-break-after: avoid; break-after: avoid; box-sizing: border-box; padding: 1cm; background: white; color: black; width: 100%; }
+                    .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1cm; background: white; color: black; width: 100%; }
+                    .print-page:last-child { page-break-after: auto; break-after: auto; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
             `}</style>
@@ -203,40 +213,53 @@ export default function DesirableCharacteristicsPage() {
             <div id="non-printable" className="max-w-6xl mx-auto">
                 <header className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">ประเมินคุณลักษณะอันพึงประสงค์</h1>
-                        <p className="text-slate-500 text-sm mt-1">เครื่องมือสำหรับครูที่ปรึกษา บันทึกและพิมพ์แบบประเมินรายบุคคลและสรุปผล</p>
+                        <h1 className="text-3xl font-bold text-white">ประเมินคุณลักษณะอันพึงประสงค์</h1>
+                        <p className="text-gray-400 text-sm mt-1">เครื่องมือสำหรับครูที่ปรึกษา บันทึกและพิมพ์แบบประเมินรายบุคคลและสรุปผล</p>
                     </div>
-                    <button onClick={() => router.back()} className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2 rounded-xl font-semibold transition">← กลับ</button>
+                    <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-xl font-semibold transition">← กลับ</button>
                 </header>
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs text-slate-500 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
-                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium">
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
+                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white font-medium">
                             {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs text-slate-500 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
-                        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium">
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
+                        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white font-medium">
                             {semesters.map(sem => <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>)}
                         </select>
                     </div>
                 </div>
 
-                <div className="flex gap-4 mb-6">
-                    <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                        📝 บันทึกคะแนนรายบุคคล
-                    </button>
-                    <button onClick={() => setActiveTab('summary')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                        📊 สรุปผลการประเมินประจำห้อง
-                    </button>
+                <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+                    <div className="flex gap-4">
+                        <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                            📝 บันทึกคะแนนรายบุคคล
+                        </button>
+                        <button onClick={() => setActiveTab('summary')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                            📊 สรุปผลการประเมินประจำห้อง
+                        </button>
+                    </div>
+
+                    {activeTab === 'evaluation' && students.length > 0 && (
+                        <button onClick={() => {
+                            document.body.className = 'print-mode-individual-all';
+                            window.print();
+                            document.body.className = '';
+                        }} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition">
+                            🖨️ พิมพ์แบบประเมินทั้งหมดในห้อง ({students.length} คน)
+                        </button>
+                    )}
                 </div>
 
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto">
-                            <h3 className="font-bold mb-4 text-sm text-slate-400 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
+                        {/* บล็อกรายชื่อนักเรียน (สีขาว) */}
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto text-slate-900">
+                            <h3 className="font-bold mb-4 text-sm text-slate-500 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
                             <div className="space-y-2">
                                 {students.map((s, idx) => {
                                     const isEval = !!evaluationsData[s.id];
@@ -244,10 +267,10 @@ export default function DesirableCharacteristicsPage() {
                                         <button
                                             key={s.id}
                                             onClick={() => setSelectedStudentId(s.id)}
-                                            className={`w-full text-left p-3 rounded-xl transition-all flex justify-between items-center ${selectedStudentId === s.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-700'}`}
+                                            className={`w-full text-left p-3 rounded-xl transition-all flex justify-between items-center ${selectedStudentId === s.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'}`}
                                         >
                                             <span className="text-sm truncate font-medium">{idx + 1}. {s.name}</span>
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${isEval ? 'bg-green-100 text-green-700 font-semibold' : 'bg-slate-200 text-slate-500'}`}>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${isEval ? 'bg-green-100 text-green-700 font-semibold' : 'bg-slate-200 text-slate-600'}`}>
                                                 {isEval ? 'ประเมินแล้ว' : 'ยังไม่ประเมิน'}
                                             </span>
                                         </button>
@@ -256,7 +279,8 @@ export default function DesirableCharacteristicsPage() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-3 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
+                        {/* บล็อกฟอร์มประเมินตรงกลาง (สีขาว) */}
+                        <div className="lg:col-span-3 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                             {currentStudent ? (
                                 <div>
                                     <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
@@ -389,7 +413,7 @@ export default function DesirableCharacteristicsPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">สรุปผลการประเมินคุณลักษณะอันพึงประสงค์</h2>
@@ -428,6 +452,7 @@ export default function DesirableCharacteristicsPage() {
                 )}
             </div>
 
+            {/* พิมพ์รายบุคคล (คนปัจจุบัน) */}
             {currentStudent && (
                 <div className="printable-individual hidden">
                     <div className="print-page">
@@ -477,6 +502,63 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             )}
 
+            {/* พิมพ์รายบุคคลทั้งหมดในห้อง (รวดเดียวทุกคน) */}
+            <div className="printable-individual-all hidden">
+                {students.map((stu) => {
+                    const stuScores = evaluationsData[stu.id] || {
+                        q1_1: 3, q1_2: 3, q2_1: 3, q2_2: 3, q3_1: 3, q3_2: 3, q4_1: 3, q4_2: 3, q5_1: 3, q5_2: 3
+                    };
+                    const res = calculateStudentScore(stuScores);
+                    return (
+                        <div key={stu.id} className="print-page">
+                            <h2 className="text-center font-bold text-lg mb-1">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน</h2>
+                            <p className="text-center text-sm mb-4">ประจำภาคเรียนที่ {selectedSemester}</p>
+                            <div className="flex justify-between text-sm mb-2 font-semibold">
+                                <p>ชื่อ - สกุล: {stu.name}</p>
+                                <p>ระดับชั้น: ปวช. / ปวส. | ห้อง: {selectedClass}</p>
+                            </div>
+                            <table className="w-full border-collapse border border-black text-xs mb-4">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="border border-black p-2 text-left">คุณลักษณะอันพึงประสงค์และตัวชี้วัด</th>
+                                        <th className="border border-black p-2 w-20">ระดับคุณภาพ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td className="border border-black p-1 font-bold bg-gray-50" colSpan="2">1. มีวินัย</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">1.1 แต่งกายสุภาพเรียบร้อยถูกต้องตามกฎระเบียบของโรงเรียน</td><td className="border border-black p-1 text-center font-bold">{stuScores.q1_1}</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">1.2 เข้าร่วมกิจกรรมหน้าเสาธงตรงเวลา</td><td className="border border-black p-1 text-center font-bold">{stuScores.q1_2}</td></tr>
+                                    <tr><td className="border border-black p-1 font-bold bg-gray-50" colSpan="2">2. ความรับผิดชอบ</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">2.1 ปฏิบัติงานร่วมกับผู้อื่นได้ ให้ความร่วมมือในการทำงานตามหน้าที่</td><td className="border border-black p-1 text-center font-bold">{stuScores.q2_1}</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">2.2 ปฏิบัติหน้าที่ที่ได้รับมอบหมายจนเสร็จเรียบร้อย</td><td className="border border-black p-1 text-center font-bold">{stuScores.q2_2}</td></tr>
+                                    <tr><td className="border border-black p-1 font-bold bg-gray-50" colSpan="2">3. ความซื่อสัตย์</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">3.1 ไม่ถือเอาสิ่งของของผู้อื่นมาเป็นของตนเอง ไม่ลักขโมย</td><td className="border border-black p-1 text-center font-bold">{stuScores.q3_1}</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">3.2 ปฏิบัติตน โดยคำนึงถึงความถูกต้อง ไม่เอาเปรียบ</td><td className="border border-black p-1 text-center font-bold">{stuScores.q3_2}</td></tr>
+                                    <tr><td className="border border-black p-1 font-bold bg-gray-50" colSpan="2">4. ความสนใจใฝ่เรียนรู้</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">4.1 ตั้งใจ เพียรพยายามในการเรียน สนใจเข้าร่วมกิจกรรม</td><td className="border border-black p-1 text-center font-bold">{stuScores.q4_1}</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">4.2 แสวงหา ศึกษา ค้นคว้าความรู้จากแหล่งเรียนรู้ต่าง ๆ</td><td className="border border-black p-1 text-center font-bold">{stuScores.q4_2}</td></tr>
+                                    <tr><td className="border border-black p-1 font-bold bg-gray-50" colSpan="2">5. มีจิตสาธารณะ</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">5.1 มีน้ำใจช่วยเหลือผู้อื่น เห็นแก่ประโยชน์ส่วนรวมมากกว่าส่วนตน</td><td className="border border-black p-1 text-center font-bold">{stuScores.q5_1}</td></tr>
+                                    <tr><td className="border border-black p-1 pl-4">5.2 เข้าร่วมกิจกรรมที่เป็นประโยชน์ต่อโรงเรียน ชุมชนและสังคม</td><td className="border border-black p-1 text-center font-bold">{stuScores.q5_2}</td></tr>
+                                </tbody>
+                            </table>
+                            <div className="flex justify-between font-bold text-sm mb-10 border p-2 border-black">
+                                <p>รวมคะแนนที่ได้: {res.total} คะแนน</p>
+                                <p>ระดับคุณภาพ: {res.level}</p>
+                            </div>
+                            <div className="flex justify-end text-center text-sm mt-12">
+                                <div className="w-64">
+                                    <p>ลงชื่อ......................................................</p>
+                                    <p className="mt-1">({userProfile?.name || '......................................................'})</p>
+                                    <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* พิมพ์สรุปผลประจำห้อง */}
             <div className="printable-summary hidden">
                 <div className="print-page">
                     <h2 className="text-center font-bold text-lg mb-1">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h2>
