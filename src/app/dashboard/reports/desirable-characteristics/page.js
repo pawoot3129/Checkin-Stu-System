@@ -7,13 +7,12 @@ import { auth, db } from '../../../../lib/firebase';
 import { collection, getDocs, query, where, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
-const semesters = ['1/2569', '2/2569', '1/2568', '2/2568'];
-
 export default function DesirableCharacteristicsPage() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState(null);
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
+    const [semesters, setSemesters] = useState(['1/2569', '2/2569']);
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -58,6 +57,21 @@ export default function DesirableCharacteristicsPage() {
                     setClassrooms([...new Set(classes)]);
                     if (classes.length > 0) setSelectedClass(classes[0]);
                 }
+
+                const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
+                if (settingsSnap.exists()) {
+                    const years = settingsSnap.data().academicYears || ['2569'];
+                    const generatedSemesters = [];
+                    years.forEach(y => {
+                        generatedSemesters.push(`1/${y}`);
+                        generatedSemesters.push(`2/${y}`);
+                    });
+                    setSemesters(generatedSemesters);
+                    if (generatedSemesters.length > 0) {
+                        setSelectedSemester(generatedSemesters[0]);
+                    }
+                }
+
             } else { router.push('/'); }
         });
         return () => unsubscribe();
@@ -165,19 +179,23 @@ export default function DesirableCharacteristicsPage() {
     const currentStudent = students.find(s => s.id === selectedStudentId);
 
     return (
-        <div className="min-h-screen bg-gray-950 p-6 text-white">
+        <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print {
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
-                    #non-printable { display: none !important; }
-                    .printable-individual, .printable-summary { display: none !important; }
                     
-                    /* ควบคุมการแสดงผลตามหน้าต่างที่เลือกพิมพ์ */
+                    /* ซ่อนองค์ประกอบที่ไม่ใช่ส่วนพิมพ์ทั้งหมดอย่างเด็ดขาด */
+                    #non-printable, header, nav, .printable-individual, .printable-summary { display: none !important; }
+                    
                     body.print-mode-individual .printable-individual { display: block !important; }
                     body.print-mode-summary .printable-summary { display: block !important; }
 
-                    .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1.5cm; background: white; color: black; width: 100%; }
+                    .print-page { page-break-after: avoid; break-after: avoid; box-sizing: border-box; padding: 1cm; background: white; color: black; width: 100%; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
             `}</style>
@@ -185,40 +203,40 @@ export default function DesirableCharacteristicsPage() {
             <div id="non-printable" className="max-w-6xl mx-auto">
                 <header className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold">ประเมินคุณลักษณะอันพึงประสงค์</h1>
-                        <p className="text-gray-400 text-sm mt-1">เครื่องมือสำหรับครูที่ปรึกษา บันทึกและพิมพ์แบบประเมินรายบุคคลและสรุปผล</p>
+                        <h1 className="text-3xl font-bold text-slate-900">ประเมินคุณลักษณะอันพึงประสงค์</h1>
+                        <p className="text-slate-500 text-sm mt-1">เครื่องมือสำหรับครูที่ปรึกษา บันทึกและพิมพ์แบบประเมินรายบุคคลและสรุปผล</p>
                     </div>
-                    <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button>
+                    <button onClick={() => router.back()} className="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2 rounded-xl font-semibold transition">← กลับ</button>
                 </header>
 
-                <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
-                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white">
+                        <label className="block text-xs text-slate-500 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
+                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium">
                             {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
-                        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white">
+                        <label className="block text-xs text-slate-500 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
+                        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 font-medium">
                             {semesters.map(sem => <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>)}
                         </select>
                     </div>
                 </div>
 
                 <div className="flex gap-4 mb-6">
-                    <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                    <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
                         📝 บันทึกคะแนนรายบุคคล
                     </button>
-                    <button onClick={() => setActiveTab('summary')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                    <button onClick={() => setActiveTab('summary')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
                         📊 สรุปผลการประเมินประจำห้อง
                     </button>
                 </div>
 
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div className="bg-gray-900 p-4 rounded-3xl border border-gray-800 h-[650px] overflow-y-auto">
-                            <h3 className="font-bold mb-4 text-sm text-gray-400 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto">
+                            <h3 className="font-bold mb-4 text-sm text-slate-400 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
                             <div className="space-y-2">
                                 {students.map((s, idx) => {
                                     const isEval = !!evaluationsData[s.id];
@@ -226,10 +244,10 @@ export default function DesirableCharacteristicsPage() {
                                         <button
                                             key={s.id}
                                             onClick={() => setSelectedStudentId(s.id)}
-                                            className={`w-full text-left p-3 rounded-xl transition-all flex justify-between items-center ${selectedStudentId === s.id ? 'bg-indigo-600 text-white' : 'bg-gray-950 hover:bg-gray-800 text-gray-300'}`}
+                                            className={`w-full text-left p-3 rounded-xl transition-all flex justify-between items-center ${selectedStudentId === s.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-slate-700'}`}
                                         >
-                                            <span className="text-sm truncate">{idx + 1}. {s.name}</span>
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${isEval ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                                            <span className="text-sm truncate font-medium">{idx + 1}. {s.name}</span>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${isEval ? 'bg-green-100 text-green-700 font-semibold' : 'bg-slate-200 text-slate-500'}`}>
                                                 {isEval ? 'ประเมินแล้ว' : 'ยังไม่ประเมิน'}
                                             </span>
                                         </button>
@@ -238,108 +256,108 @@ export default function DesirableCharacteristicsPage() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-3 bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
+                        <div className="lg:col-span-3 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
                             {currentStudent ? (
                                 <div>
-                                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+                                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                                         <div>
-                                            <h2 className="text-xl font-bold">{currentStudent.name}</h2>
-                                            <p className="text-xs text-gray-400 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
+                                            <h2 className="text-xl font-bold text-slate-900">{currentStudent.name}</h2>
+                                            <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
                                         </div>
                                         <button onClick={() => {
                                             document.body.className = 'print-mode-individual';
                                             window.print();
                                             document.body.className = '';
-                                        }} className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+                                        }} className="bg-slate-900 text-white hover:bg-slate-800 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow transition">
                                             🖨️ พิมพ์แบบประเมินนี้
                                         </button>
                                     </div>
 
                                     <div className="space-y-6 text-sm">
-                                        <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
-                                            <p className="font-bold text-indigo-400 mb-2">1. มีวินัย</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                            <p className="font-bold text-indigo-600 mb-2">1. มีวินัย</p>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">1.1 แต่งกายสุภาพเรียบร้อยถูกต้องตามกฎระเบียบของโรงเรียน</span>
-                                                    <select value={scores.q1_1} onChange={e => handleScoreChange('q1_1', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">1.1 แต่งกายสุภาพเรียบร้อยถูกต้องตามกฎระเบียบของโรงเรียน</span>
+                                                    <select value={scores.q1_1} onChange={e => handleScoreChange('q1_1', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">1.2 เข้าร่วมกิจกรรมหน้าเสาธงตรงเวลา</span>
-                                                    <select value={scores.q1_2} onChange={e => handleScoreChange('q1_2', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">1.2 เข้าร่วมกิจกรรมหน้าเสาธงตรงเวลา</span>
+                                                    <select value={scores.q1_2} onChange={e => handleScoreChange('q1_2', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
-                                            <p className="font-bold text-indigo-400 mb-2">2. ความรับผิดชอบ</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                            <p className="font-bold text-indigo-600 mb-2">2. ความรับผิดชอบ</p>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">2.1 ปฏิบัติงานร่วมกับผู้อื่นได้ ให้ความร่วมมือในการทำงานตามหน้าที่ที่ได้รับมอบหมาย</span>
-                                                    <select value={scores.q2_1} onChange={e => handleScoreChange('q2_1', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">2.1 ปฏิบัติงานร่วมกับผู้อื่นได้ ให้ความร่วมมือในการทำงานตามหน้าที่ที่ได้รับมอบหมาย</span>
+                                                    <select value={scores.q2_1} onChange={e => handleScoreChange('q2_1', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">2.2 ปฏิบัติหน้าที่ที่ได้รับมอบหมายจนเสร็จเรียบร้อย</span>
-                                                    <select value={scores.q2_2} onChange={e => handleScoreChange('q2_2', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">2.2 ปฏิบัติหน้าที่ที่ได้รับมอบหมายจนเสร็จเรียบร้อย</span>
+                                                    <select value={scores.q2_2} onChange={e => handleScoreChange('q2_2', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
-                                            <p className="font-bold text-indigo-400 mb-2">3. ความซื่อสัตย์</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                            <p className="font-bold text-indigo-600 mb-2">3. ความซื่อสัตย์</p>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">3.1 ไม่ถือเอาสิ่งของของผู้อื่นมาเป็นของตนเอง ไม่ลักขโมย</span>
-                                                    <select value={scores.q3_1} onChange={e => handleScoreChange('q3_1', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">3.1 ไม่ถือเอาสิ่งของของผู้อื่นมาเป็นของตนเอง ไม่ลักขโมย</span>
+                                                    <select value={scores.q3_1} onChange={e => handleScoreChange('q3_1', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">3.2 ปฏิบัติตน โดยคำนึงถึงความถูกต้อง ยุติธรรม ไม่เอาเปรียบหรือคดโกง</span>
-                                                    <select value={scores.q3_2} onChange={e => handleScoreChange('q3_2', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">3.2 ปฏิบัติตน โดยคำนึงถึงความถูกต้อง ยุติธรรม ไม่เอาเปรียบหรือคดโกง</span>
+                                                    <select value={scores.q3_2} onChange={e => handleScoreChange('q3_2', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
-                                            <p className="font-bold text-indigo-400 mb-2">4. ความสนใจใฝ่เรียนรู้</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                            <p className="font-bold text-indigo-600 mb-2">4. ความสนใจใฝ่เรียนรู้</p>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">4.1 ตั้งใจ เพียรพยายามในการเรียน สนใจเข้าร่วมกิจกรรมการเรียนรู้ต่าง ๆ</span>
-                                                    <select value={scores.q4_1} onChange={e => handleScoreChange('q4_1', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">4.1 ตั้งใจ เพียรพยายามในการเรียน สนใจเข้าร่วมกิจกรรมการเรียนรู้ต่าง ๆ</span>
+                                                    <select value={scores.q4_1} onChange={e => handleScoreChange('q4_1', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">4.2 แสวงหา ศึกษา ค้นคว้าความรู้จากแหล่งเรียนรู้ต่าง ๆ</span>
-                                                    <select value={scores.q4_2} onChange={e => handleScoreChange('q4_2', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">4.2 แสวงหา ศึกษา ค้นคว้าความรู้จากแหล่งเรียนรู้ต่าง ๆ</span>
+                                                    <select value={scores.q4_2} onChange={e => handleScoreChange('q4_2', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800">
-                                            <p className="font-bold text-indigo-400 mb-2">5. มีจิตสาธารณะ</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                            <p className="font-bold text-indigo-600 mb-2">5. มีจิตสาธารณะ</p>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">5.1 มีน้ำใจเสียสละช่วยเหลือผู้อื่น เห็นแก่ประโยชน์ส่วนรวมมากกว่าส่วนตน</span>
-                                                    <select value={scores.q5_1} onChange={e => handleScoreChange('q5_1', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">5.1 มีน้ำใจเสียสละช่วยเหลือผู้อื่น เห็นแก่ประโยชน์ส่วนรวมมากกว่าส่วนตน</span>
+                                                    <select value={scores.q5_1} onChange={e => handleScoreChange('q5_1', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300">5.2 เข้าร่วมกิจกรรมที่เป็นประโยชน์ต่อโรงเรียน ชุมชนและสังคม</span>
-                                                    <select value={scores.q5_2} onChange={e => handleScoreChange('q5_2', e.target.value)} className="bg-gray-900 border border-gray-700 p-2 rounded-xl font-bold w-20 text-center">
+                                                    <span className="text-slate-700 font-medium">5.2 เข้าร่วมกิจกรรมที่เป็นประโยชน์ต่อโรงเรียน ชุมชนและสังคม</span>
+                                                    <select value={scores.q5_2} onChange={e => handleScoreChange('q5_2', e.target.value)} className="bg-white border border-slate-300 p-2 rounded-xl font-bold w-20 text-center text-slate-900">
                                                         <option value={3}>3</option><option value={2}>2</option><option value={1}>1</option>
                                                     </select>
                                                 </div>
@@ -347,61 +365,61 @@ export default function DesirableCharacteristicsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 p-6 bg-indigo-950/40 border border-indigo-900/50 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div className="mt-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
                                         <div className="flex items-center gap-6">
                                             <div>
-                                                <p className="text-xs text-gray-400 uppercase">รวมคะแนนที่ได้ (เต็ม 30)</p>
-                                                <p className="text-2xl font-bold text-white">{totalScore} คะแนน</p>
+                                                <p className="text-xs text-slate-500 uppercase font-semibold">รวมคะแนนที่ได้ (เต็ม 30)</p>
+                                                <p className="text-2xl font-bold text-slate-900">{totalScore} คะแนน</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-400 uppercase">ระดับคุณภาพ</p>
-                                                <p className={`text-xl font-bold px-3 py-0.5 rounded-lg ${qualityLevel === 'ดีเยี่ยม' ? 'bg-green-500/20 text-green-400' : qualityLevel === 'ดี' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                                <p className="text-xs text-slate-500 uppercase font-semibold">ระดับคุณภาพ</p>
+                                                <p className={`text-xl font-bold px-3 py-0.5 rounded-lg ${qualityLevel === 'ดีเยี่ยม' ? 'bg-green-100 text-green-700' : qualityLevel === 'ดี' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
                                                     {qualityLevel}
                                                 </p>
                                             </div>
                                         </div>
-                                        <button onClick={handleSave} disabled={isLoading} className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:scale-[1.02]">
+                                        <button onClick={handleSave} disabled={isLoading} className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:scale-[1.02]">
                                             {isLoading ? 'กำลังบันทึก...' : '💾 บันทึกผลการประเมิน'}
                                         </button>
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-center text-gray-500 py-20">กรุณาเลือกรายชื่อนักเรียนด้านซ้าย</p>
+                                <p className="text-center text-slate-400 py-20">กรุณาเลือกรายชื่อนักเรียนด้านซ้าย</p>
                             )}
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
-                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                             <div>
-                                <h2 className="text-xl font-bold">สรุปผลการประเมินคุณลักษณะอันพึงประสงค์</h2>
-                                <p className="text-xs text-gray-400 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
+                                <h2 className="text-xl font-bold text-slate-900">สรุปผลการประเมินคุณลักษณะอันพึงประสงค์</h2>
+                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
                             </div>
                             <button onClick={() => {
                                 document.body.className = 'print-mode-summary';
                                 window.print();
                                 document.body.className = '';
-                            }} className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-xl font-bold flex items-center gap-2">
+                            }} className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow transition">
                                 🖨️ พิมพ์ใบสรุปผลประจำห้อง
                             </button>
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse border border-gray-700 text-center text-sm">
+                            <table className="w-full border-collapse border border-slate-200 text-center text-sm">
                                 <thead>
-                                    <tr className="bg-gray-800">
-                                        <th className="border border-gray-700 p-3">จำนวนนักเรียนทั้งหมด (คน)</th>
-                                        <th className="border border-gray-700 p-3">จำนวนนักเรียนที่เข้ารับการประเมิน (คน)</th>
-                                        <th className="border border-gray-700 p-3">จำนวนนักเรียนที่มีผลการประเมินระดับ "ดี" ขึ้นไป (คน)</th>
-                                        <th className="border border-gray-700 p-3">ร้อยละ</th>
+                                    <tr className="bg-slate-100 text-slate-700">
+                                        <th className="border border-slate-200 p-3">จำนวนนักเรียนทั้งหมด (คน)</th>
+                                        <th className="border border-slate-200 p-3">จำนวนนักเรียนที่เข้ารับการประเมิน (คน)</th>
+                                        <th className="border border-slate-200 p-3">จำนวนนักเรียนที่มีผลการประเมินระดับ "ดี" ขึ้นไป (คน)</th>
+                                        <th className="border border-slate-200 p-3">ร้อยละ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td className="border border-gray-700 p-4 font-bold text-lg">{totalStudentsCount}</td>
-                                        <td className="border border-gray-700 p-4 font-bold text-lg text-indigo-400">{evaluatedStudentsCount}</td>
-                                        <td className="border border-gray-700 p-4 font-bold text-lg text-green-400">{goodOrHigherCount}</td>
-                                        <td className="border border-gray-700 p-4 font-bold text-lg text-amber-400">{percentageGood}%</td>
+                                    <tr className="text-slate-900 font-medium">
+                                        <td className="border border-slate-200 p-4 text-lg">{totalStudentsCount}</td>
+                                        <td className="border border-slate-200 p-4 text-lg text-indigo-600 font-bold">{evaluatedStudentsCount}</td>
+                                        <td className="border border-slate-200 p-4 text-lg text-green-600 font-bold">{goodOrHigherCount}</td>
+                                        <td className="border border-slate-200 p-4 text-lg text-amber-600 font-bold">{percentageGood}%</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -410,7 +428,6 @@ export default function DesirableCharacteristicsPage() {
                 )}
             </div>
 
-            {/* ส่วนที่ 1: พิมพ์แบบประเมินรายบุคคล */}
             {currentStudent && (
                 <div className="printable-individual hidden">
                     <div className="print-page">
@@ -460,7 +477,6 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             )}
 
-            {/* ส่วนที่ 2: พิมพ์ใบสรุปผลประจำห้อง (ตามฟอร์มในรูป Excel ที่ 2 เป๊ะๆ) */}
             <div className="printable-summary hidden">
                 <div className="print-page">
                     <h2 className="text-center font-bold text-lg mb-1">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h2>
@@ -481,9 +497,9 @@ export default function DesirableCharacteristicsPage() {
                         </thead>
                         <tbody>
                             <tr>
-                                <td className="border border-black p-4 font-bold text-base">{evaluatedStudentsCount}</td>
-                                <td className="border border-black p-4 font-bold text-base">{goodOrHigherCount}</td>
-                                <td className="border border-black p-4 font-bold text-base">{percentageGood}%</td>
+                                <td className="border border-black p-4 font-bold base">{evaluatedStudentsCount}</td>
+                                <td className="border border-black p-4 font-bold base">{goodOrHigherCount}</td>
+                                <td className="border border-black p-4 font-bold base">{percentageGood}%</td>
                             </tr>
                         </tbody>
                     </table>
