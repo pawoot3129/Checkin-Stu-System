@@ -215,7 +215,6 @@ export default function DesirableCharacteristicsPage() {
 
     const currentStudent = Array.isArray(students) ? students.find(s => s.id === selectedStudentId) : null;
 
-    // แปลงรูปแบบ "1/2569" ให้แสดงผลเป็น "ภาคเรียนที่ 1 ปีการศึกษา 2569" สวยงามเป็นทางการ
     const formatSemesterText = (sem) => {
         if (!sem) return '';
         const parts = sem.split('/');
