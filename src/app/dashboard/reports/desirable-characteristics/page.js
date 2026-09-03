@@ -16,7 +16,7 @@ export default function DesirableCharacteristicsPage() {
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
-    const [activeTab, setActiveTab] = useState('evaluation');
+    const [activeTab, setActiveTab] = useState('evaluation'); // 'evaluation', 'summary', 'table-report'
     const [isLoading, setIsLoading] = useState(false);
 
     const [scores, setScores] = useState({
@@ -174,7 +174,6 @@ export default function DesirableCharacteristicsPage() {
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     const qualityLevel = calculateStudentScore(scores).level;
 
-    // แก้ไขจุดสร้าง docId โดยการแทนที่เครื่องหมาย / ทั้งหมดด้วยขีดล่าง _
     const handleSave = async () => {
         if (!selectedStudentId || !selectedClass) return;
         setIsLoading(true);
@@ -227,11 +226,12 @@ export default function DesirableCharacteristicsPage() {
                     }
                     body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
                     
-                    #non-printable, header, nav, .printable-individual, .printable-individual-all, .printable-summary { display: none !important; }
+                    #non-printable, header, nav, .printable-individual, .printable-individual-all, .printable-summary, .printable-table-report { display: none !important; }
                     
                     body.print-mode-individual .printable-individual { display: block !important; }
                     body.print-mode-individual-all .printable-individual-all { display: block !important; }
                     body.print-mode-summary .printable-summary { display: block !important; }
+                    body.print-mode-table-report .printable-table-report { display: block !important; }
 
                     .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1cm; background: white; color: black; width: 100%; }
                     .print-page:last-child { page-break-after: auto; break-after: auto; }
@@ -263,13 +263,17 @@ export default function DesirableCharacteristicsPage() {
                     </div>
                 </div>
 
+                {/* แถบเมนูด้านบน */}
                 <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-                    <div className="flex gap-4">
-                        <button onClick={() => setActiveTab('evaluation')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                    <div className="flex flex-wrap gap-3">
+                        <button onClick={() => setActiveTab('evaluation')} className={`px-5 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
                             📝 บันทึกคะแนนรายบุคคล
                         </button>
-                        <button onClick={() => setActiveTab('summary')} className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
-                            📊 สรุปผลการประเมินประจำห้อง
+                        <button onClick={() => setActiveTab('summary')} className={`px-5 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                            📊 สรุปผลประจำห้อง
+                        </button>
+                        <button onClick={() => setActiveTab('table-report')} className={`px-5 py-3 rounded-xl font-bold transition-all ${activeTab === 'table-report' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
+                            📋 รายงานผลรวมทั้งห้อง
                         </button>
                     </div>
 
@@ -279,11 +283,12 @@ export default function DesirableCharacteristicsPage() {
                             window.print();
                             document.body.className = '';
                         }} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition">
-                            🖨️ พิมพ์แบบประเมินทั้งหมดในห้อง ({students.length} คน)
+                            🖨️ พิมพ์แบบประเมินทั้งหมด ({students.length} คน)
                         </button>
                     )}
                 </div>
 
+                {/* แท็บ 1: บันทึกรายบุคคล */}
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto text-slate-900">
@@ -439,7 +444,8 @@ export default function DesirableCharacteristicsPage() {
                             )}
                         </div>
                     </div>
-                ) : (
+                ) : activeTab === 'summary' ? (
+                    /* แท็บ 2: สรุปผลประจำห้อง */
                     <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                             <div>
@@ -476,10 +482,62 @@ export default function DesirableCharacteristicsPage() {
                             </table>
                         </div>
                     </div>
+                ) : (
+                    /* แท็บ 3: รายงานผลรวมทั้งห้อง (ตามบรีฟใหม่) */
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900">รายงานผลการประเมินนักเรียนรวมทั้งห้อง</h2>
+                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester} ({students.length} คน)</p>
+                            </div>
+                            <button onClick={() => {
+                                document.body.className = 'print-mode-table-report';
+                                window.print();
+                                document.body.className = '';
+                            }} className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow transition">
+                                🖨️ พิมพ์รายงานผลรวมทั้งห้อง
+                            </button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse border border-slate-200 text-center text-sm">
+                                <thead>
+                                    <tr className="bg-slate-100 text-slate-700">
+                                        <th className="border border-slate-200 p-3 w-16">ลำดับที่</th>
+                                        <th className="border border-slate-200 p-3 text-left">ชื่อ - สกุล</th>
+                                        <th className="border border-slate-200 p-3 w-40">คะแนนประเมินที่ได้ (30)</th>
+                                        <th className="border border-slate-200 p-3 w-40">ผลระดับคุณภาพ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {students.map((stu, index) => {
+                                        const stuScores = evaluationsData[stu.id];
+                                        const res = calculateStudentScore(stuScores);
+                                        return (
+                                            <tr key={stu.id} className="text-slate-900 hover:bg-slate-50">
+                                                <td className="border border-slate-200 p-3 font-semibold">{index + 1}</td>
+                                                <td className="border border-slate-200 p-3 text-left font-medium">{stu.name}</td>
+                                                <td className="border border-slate-200 p-3 font-bold text-indigo-600">
+                                                    {stuScores ? `${res.total} คะแนน` : <span className="text-amber-500 text-xs font-normal">ยังไม่ประเมิน</span>}
+                                                </td>
+                                                <td className="border border-slate-200 p-3 font-bold">
+                                                    {stuScores ? (
+                                                        <span className={`px-3 py-1 rounded-full text-xs ${res.level === 'ดีเยี่ยม' ? 'bg-green-100 text-green-700' : res.level === 'ดี' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                            {res.level}
+                                                        </span>
+                                                    ) : '-'}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 )}
             </div>
 
-            {/* พิมพ์รายบุคคล (คนปัจจุบัน) พร้อมโลโก้และวันที่พิมพ์ */}
+            {/* พิมพ์รายบุคคล (คนปัจจุบัน) */}
             {currentStudent && (
                 <div className="printable-individual hidden">
                     <div className="print-page">
@@ -539,7 +597,7 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             )}
 
-            {/* พิมพ์รายบุคคลทั้งหมดในห้อง พร้อมโลโก้และวันที่พิมพ์ */}
+            {/* พิมพ์รายบุคคลทั้งหมดในห้อง */}
             <div className="printable-individual-all hidden">
                 {Array.isArray(students) && students.map((stu) => {
                     const stuScores = evaluationsData[stu.id] || {
@@ -605,7 +663,7 @@ export default function DesirableCharacteristicsPage() {
                 })}
             </div>
 
-            {/* พิมพ์สรุปผลประจำห้อง พร้อมโลโก้และวันที่พิมพ์ */}
+            {/* พิมพ์สรุปผลประจำห้อง */}
             <div className="printable-summary hidden">
                 <div className="print-page">
                     <div className="flex items-center justify-between border-b pb-2 mb-4">
@@ -644,6 +702,62 @@ export default function DesirableCharacteristicsPage() {
                     </table>
 
                     <div className="flex justify-end text-center text-xs mt-20">
+                        <div className="w-56">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">({userProfile?.name || '......................................................'})</p>
+                            <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* พิมพ์รายงานผลรวมทั้งห้อง (ตารางรายชื่อ คะแนน และผลระดับคุณภาพ) */}
+            <div className="printable-table-report hidden">
+                <div className="print-page">
+                    <div className="flex items-center justify-between border-b pb-2 mb-4">
+                        <div className="flex items-center gap-3">
+                            <img src="/logo.png" className="w-12" alt="Logo" />
+                            <div>
+                                <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                <h3 className="font-bold text-xs">รายงานผลการประเมินคุณลักษณะอันพึงประสงค์ของผู้เรียน (รวมทั้งห้อง)</h3>
+                            </div>
+                        </div>
+                        <div className="text-right text-xs font-semibold">
+                            <p>วันที่พิมพ์: {printDateStr}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs mb-4 font-semibold">
+                        <p>ห้อง: {selectedClass}</p>
+                        <p>ประจำภาคเรียนที่ {selectedSemester}</p>
+                    </div>
+
+                    <table className="w-full border-collapse border border-black text-xs text-center mb-12">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="border border-black p-2 w-16">ลำดับที่</th>
+                                <th className="border border-black p-2 text-left">ชื่อ - สกุล</th>
+                                <th className="border border-black p-2 w-32">คะแนนประเมินที่ได้ (30)</th>
+                                <th className="border border-black p-2 w-32">ผลระดับคุณภาพ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.map((stu, index) => {
+                                const stuScores = evaluationsData[stu.id];
+                                const res = calculateStudentScore(stuScores);
+                                return (
+                                    <tr key={stu.id}>
+                                        <td className="border border-black p-2 font-medium">{index + 1}</td>
+                                        <td className="border border-black p-2 text-left font-medium">{stu.name}</td>
+                                        <td className="border border-black p-2 font-bold">{stuScores ? `${res.total}` : '-'}</td>
+                                        <td className="border border-black p-2 font-bold">{stuScores ? res.level : '-'}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+
+                    <div className="flex justify-end text-center text-xs mt-16">
                         <div className="w-56">
                             <p>ลงชื่อ......................................................</p>
                             <p className="mt-1">({userProfile?.name || '......................................................'})</p>
