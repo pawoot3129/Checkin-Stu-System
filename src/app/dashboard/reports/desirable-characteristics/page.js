@@ -29,7 +29,6 @@ export default function DesirableCharacteristicsPage() {
 
     const [evaluationsData, setEvaluationsData] = useState({});
 
-    // วันที่ปัจจุบันสำหรับแสดงในเอกสารพิมพ์
     const printDateStr = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
     useEffect(() => {
@@ -84,7 +83,7 @@ export default function DesirableCharacteristicsPage() {
 
                         if (semList.length > 0) {
                             setSemesters(semList);
-                            setSelectedSemester(semList[0]);
+                            setSelectedSemester(String(semList[0]));
                         }
                     }
                 } catch (err) {
@@ -121,7 +120,13 @@ export default function DesirableCharacteristicsPage() {
                 setSelectedStudentId(studentList[0].id);
             }
 
-            const evalSnap = await getDocs(query(collection(db, "desirable_evaluations"), where("classId", "==", selectedClass), where("semester", "==", String(selectedSemester))));
+            const cleanSemester = String(selectedSemester).trim();
+            const evalSnap = await getDocs(query(
+                collection(db, "desirable_evaluations"), 
+                where("classId", "==", selectedClass), 
+                where("semester", "==", cleanSemester)
+            ));
+            
             const evalMap = {};
             evalSnap.forEach(d => {
                 const data = d.data();
@@ -169,15 +174,21 @@ export default function DesirableCharacteristicsPage() {
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     const qualityLevel = calculateStudentScore(scores).level;
 
+    // แก้ไขจุดสร้าง docId ให้แปลงเป็น String ปลอดภัย 100%
     const handleSave = async () => {
-        if (!selectedStudentId) return;
+        if (!selectedStudentId || !selectedClass) return;
         setIsLoading(true);
         try {
-            const docId = `${selectedClass}_${selectedSemester}_${selectedStudentId}`;
+            const cleanClass = String(selectedClass).trim();
+            const cleanSemester = String(selectedSemester).trim();
+            const cleanStudentId = String(selectedStudentId).trim();
+
+            const docId = `${cleanClass}_${cleanSemester}_${cleanStudentId}`;
+            
             await setDoc(doc(db, "desirable_evaluations", docId), {
-                classId: selectedClass,
-                semester: String(selectedSemester),
-                studentId: selectedStudentId,
+                classId: cleanClass,
+                semester: cleanSemester,
+                studentId: cleanStudentId,
                 scores,
                 totalScore,
                 qualityLevel,
@@ -187,7 +198,7 @@ export default function DesirableCharacteristicsPage() {
             setEvaluationsData(prev => ({ ...prev, [selectedStudentId]: scores }));
             toast.success("บันทึกผลการประเมินสำเร็จ");
         } catch (e) {
-            console.error(e);
+            console.error("Save error:", e);
             toast.error("บันทึกไม่สำเร็จ");
         } finally {
             setIsLoading(false);
