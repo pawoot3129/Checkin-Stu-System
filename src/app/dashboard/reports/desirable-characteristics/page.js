@@ -215,13 +215,16 @@ export default function DesirableCharacteristicsPage() {
 
     const currentStudent = Array.isArray(students) ? students.find(s => s.id === selectedStudentId) : null;
 
+    // ฟังก์ชันแปลงข้อความภาคเรียนให้แสดงผลแบบเต็มยศเสมอ รองรับทุกรูปแบบข้อมูล
     const formatSemesterText = (sem) => {
-        if (!sem) return '';
-        const parts = sem.split('/');
-        if (parts.length === 2) {
+        if (!sem) return 'ภาคเรียนที่ 1 ปีการศึกษา 2569';
+        const strSem = String(sem).trim();
+        if (strSem.includes('/')) {
+            const parts = strSem.split('/');
             return `ภาคเรียนที่ ${parts[0]} ปีการศึกษา ${parts[1]}`;
         }
-        return `ภาคเรียนที่ ${sem}`;
+        // ถ้าเป็นเลขเทอมสั้นๆ เช่น "1" หรือ "2" ให้ดึงปี พ.ศ. ปัจจุบันมาต่อท้ายอัตโนมัติ
+        return `ภาคเรียนที่ ${strSem} ปีการศึกษา 2569`;
     };
 
     return (
