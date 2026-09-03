@@ -12,7 +12,7 @@ export default function DesirableCharacteristicsPage() {
     const [userProfile, setUserProfile] = useState(null);
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
-    const [semesters, setSemesters] = useState(['1/2569', '2/2569']);
+    const [semesters, setSemesters] = useState(['1/2569']);
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -28,6 +28,9 @@ export default function DesirableCharacteristicsPage() {
     });
 
     const [evaluationsData, setEvaluationsData] = useState({});
+
+    // วันที่ปัจจุบันสำหรับแสดงในเอกสารพิมพ์
+    const printDateStr = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -63,14 +66,22 @@ export default function DesirableCharacteristicsPage() {
                     if (settingsSnap.exists()) {
                         const data = settingsSnap.data();
                         let semList = [];
+                        
                         if (data && Array.isArray(data.semesters) && data.semesters.length > 0) {
-                            semList = data.semesters.map(s => String(s));
+                            semList = data.semesters.map(s => {
+                                if (typeof s === 'object' && s !== null) {
+                                    return String(s.name || s.semester || s.id || JSON.stringify(s));
+                                }
+                                return String(s);
+                            });
                         } else if (data && Array.isArray(data.academicYears) && data.academicYears.length > 0) {
                             data.academicYears.forEach(y => {
-                                semList.push(`1/${y}`);
-                                semList.push(`2/${y}`);
+                                const yrStr = typeof y === 'object' && y !== null ? String(y.year || y.name || JSON.stringify(y)) : String(y);
+                                semList.push(`1/${yrStr}`);
+                                semList.push(`2/${yrStr}`);
                             });
                         }
+
                         if (semList.length > 0) {
                             setSemesters(semList);
                             setSelectedSemester(semList[0]);
@@ -457,20 +468,31 @@ export default function DesirableCharacteristicsPage() {
                 )}
             </div>
 
+            {/* พิมพ์รายบุคคล (คนปัจจุบัน) พร้อมโลโก้และวันที่พิมพ์ */}
             {currentStudent && (
                 <div className="printable-individual hidden">
                     <div className="print-page">
-                        <h2 className="text-center font-bold text-lg mb-1">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน</h2>
-                        <p className="text-center text-sm mb-4">ประจำภาคเรียนที่ {selectedSemester}</p>
-                        <div className="flex justify-between text-sm mb-2 font-semibold">
+                        <div className="flex items-center justify-between border-b pb-2 mb-3">
+                            <div className="flex items-center gap-3">
+                                <img src="/logo.png" className="w-10" alt="Logo" />
+                                <div>
+                                    <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                    <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน ภาคเรียนที่ {selectedSemester}</p>
+                                </div>
+                            </div>
+                            <div className="text-right text-[10px] font-semibold">
+                                <p>วันที่พิมพ์: {printDateStr}</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-between text-xs mb-2 font-semibold">
                             <p>ชื่อ - สกุล: {currentStudent.name}</p>
                             <p>ระดับชั้น: ปวช. / ปวส. | ห้อง: {selectedClass}</p>
                         </div>
-                        <table className="w-full border-collapse border border-black text-xs mb-4">
+                        <table className="w-full border-collapse border border-black text-xs mb-3">
                             <thead>
                                 <tr className="bg-gray-100">
-                                    <th className="border border-black p-2 text-left">คุณลักษณะอันพึงประสงค์และตัวชี้วัด</th>
-                                    <th className="border border-black p-2 w-20">ระดับคุณภาพ</th>
+                                    <th className="border border-black p-1.5 text-left">คุณลักษณะอันพึงประสงค์และตัวชี้วัด</th>
+                                    <th className="border border-black p-1.5 w-16 text-center">คะแนน</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -491,12 +513,12 @@ export default function DesirableCharacteristicsPage() {
                                 <tr><td className="border border-black p-1 pl-4">5.2 เข้าร่วมกิจกรรมที่เป็นประโยชน์ต่อโรงเรียน ชุมชนและสังคม</td><td className="border border-black p-1 text-center font-bold">{scores.q5_2}</td></tr>
                             </tbody>
                         </table>
-                        <div className="flex justify-between font-bold text-sm mb-10 border p-2 border-black">
-                            <p>รวมคะแนนที่ได้: {totalScore} คะแนน</p>
+                        <div className="flex justify-between font-bold text-xs mb-6 border p-2 border-black">
+                            <p>รวมคะแนนที่ได้: {totalScore} คะแนน (เต็ม 30)</p>
                             <p>ระดับคุณภาพ: {qualityLevel}</p>
                         </div>
-                        <div className="flex justify-end text-center text-sm mt-12">
-                            <div className="w-64">
+                        <div className="flex justify-end text-center text-xs mt-8">
+                            <div className="w-56">
                                 <p>ลงชื่อ......................................................</p>
                                 <p className="mt-1">({userProfile?.name || '......................................................'})</p>
                                 <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
@@ -506,6 +528,7 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             )}
 
+            {/* พิมพ์รายบุคคลทั้งหมดในห้อง พร้อมโลโก้และวันที่พิมพ์ */}
             <div className="printable-individual-all hidden">
                 {Array.isArray(students) && students.map((stu) => {
                     const stuScores = evaluationsData[stu.id] || {
@@ -514,17 +537,27 @@ export default function DesirableCharacteristicsPage() {
                     const res = calculateStudentScore(stuScores);
                     return (
                         <div key={stu.id} className="print-page">
-                            <h2 className="text-center font-bold text-lg mb-1">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน</h2>
-                            <p className="text-center text-sm mb-4">ประจำภาคเรียนที่ {selectedSemester}</p>
-                            <div className="flex justify-between text-sm mb-2 font-semibold">
+                            <div className="flex items-center justify-between border-b pb-2 mb-3">
+                                <div className="flex items-center gap-3">
+                                    <img src="/logo.png" className="w-10" alt="Logo" />
+                                    <div>
+                                        <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                        <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน ภาคเรียนที่ {selectedSemester}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-[10px] font-semibold">
+                                    <p>วันที่พิมพ์: {printDateStr}</p>
+                                </div>
+                            </div>
+                            <div className="flex justify-between text-xs mb-3 font-semibold">
                                 <p>ชื่อ - สกุล: {stu.name}</p>
                                 <p>ระดับชั้น: ปวช. / ปวส. | ห้อง: {selectedClass}</p>
                             </div>
-                            <table className="w-full border-collapse border border-black text-xs mb-4">
+                            <table className="w-full border-collapse border border-black text-xs mb-3">
                                 <thead>
                                     <tr className="bg-gray-100">
-                                        <th className="border border-black p-2 text-left">คุณลักษณะอันพึงประสงค์และตัวชี้วัด</th>
-                                        <th className="border border-black p-2 w-20">ระดับคุณภาพ</th>
+                                        <th className="border border-black p-1.5 text-left">คุณลักษณะอันพึงประสงค์และตัวชี้วัด</th>
+                                        <th className="border border-black p-1.5 w-16 text-center">คะแนน</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -545,12 +578,12 @@ export default function DesirableCharacteristicsPage() {
                                     <tr><td className="border border-black p-1 pl-4">5.2 เข้าร่วมกิจกรรมที่เป็นประโยชน์ต่อโรงเรียน ชุมชนและสังคม</td><td className="border border-black p-1 text-center font-bold">{stuScores.q5_2}</td></tr>
                                 </tbody>
                             </table>
-                            <div className="flex justify-between font-bold text-sm mb-10 border p-2 border-black">
-                                <p>รวมคะแนนที่ได้: {res.total} คะแนน</p>
+                            <div className="flex justify-between font-bold text-xs mb-6 border p-2 border-black">
+                                <p>รวมคะแนนที่ได้: {res.total} คะแนน (เต็ม 30)</p>
                                 <p>ระดับคุณภาพ: {res.level}</p>
                             </div>
-                            <div className="flex justify-end text-center text-sm mt-12">
-                                <div className="w-64">
+                            <div className="flex justify-end text-center text-xs mt-8">
+                                <div className="w-56">
                                     <p>ลงชื่อ......................................................</p>
                                     <p className="mt-1">({userProfile?.name || '......................................................'})</p>
                                     <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
@@ -561,14 +594,25 @@ export default function DesirableCharacteristicsPage() {
                 })}
             </div>
 
+            {/* พิมพ์สรุปผลประจำห้อง พร้อมโลโก้และวันที่พิมพ์ */}
             <div className="printable-summary hidden">
                 <div className="print-page">
-                    <h2 className="text-center font-bold text-lg mb-1">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h2>
-                    <p className="text-center text-sm mb-6">ภาคเรียนที่ {selectedSemester}</p>
+                    <div className="flex items-center justify-between border-b pb-2 mb-4">
+                        <div className="flex items-center gap-3">
+                            <img src="/logo.png" className="w-12" alt="Logo" />
+                            <div>
+                                <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                <h3 className="font-bold text-xs">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h3>
+                            </div>
+                        </div>
+                        <div className="text-right text-xs font-semibold">
+                            <p>วันที่พิมพ์: {printDateStr}</p>
+                        </div>
+                    </div>
                     
-                    <div className="flex justify-between text-sm mb-4 font-semibold">
+                    <div className="flex justify-between text-xs mb-4 font-semibold">
                         <p>ห้อง: {selectedClass}</p>
-                        <p>วิทยาลัยเทคโนโลยีพณิชยการสิชล</p>
+                        <p>ประจำภาคเรียนที่ {selectedSemester}</p>
                     </div>
 
                     <table className="w-full border-collapse border border-black text-xs text-center mb-16">
@@ -581,15 +625,15 @@ export default function DesirableCharacteristicsPage() {
                         </thead>
                         <tbody>
                             <tr>
-                                <td className="border border-black p-4 font-bold base">{evaluatedStudentsCount}</td>
-                                <td className="border border-black p-4 font-bold base">{goodOrHigherCount}</td>
-                                <td className="border border-black p-4 font-bold base">{percentageGood}%</td>
+                                <td className="border border-black p-4 font-bold text-sm">{evaluatedStudentsCount}</td>
+                                <td className="border border-black p-4 font-bold text-sm">{goodOrHigherCount}</td>
+                                <td className="border border-black p-4 font-bold text-sm">{percentageGood}%</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <div className="flex justify-end text-center text-sm mt-20">
-                        <div className="w-64">
+                    <div className="flex justify-end text-center text-xs mt-20">
+                        <div className="w-56">
                             <p>ลงชื่อ......................................................</p>
                             <p className="mt-1">({userProfile?.name || '......................................................'})</p>
                             <p className="font-semibold mt-1">ผู้ประเมิน / ครูที่ปรึกษา</p>
