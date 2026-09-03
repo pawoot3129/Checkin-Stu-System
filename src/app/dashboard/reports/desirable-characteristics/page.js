@@ -16,7 +16,7 @@ export default function DesirableCharacteristicsPage() {
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
-    const [activeTab, setActiveTab] = useState('evaluation'); // 'evaluation' หรือ 'summary'
+    const [activeTab, setActiveTab] = useState('evaluation');
     const [isLoading, setIsLoading] = useState(false);
 
     const [scores, setScores] = useState({
@@ -58,23 +58,26 @@ export default function DesirableCharacteristicsPage() {
                     if (classes.length > 0) setSelectedClass(classes[0]);
                 }
 
-                // ดึงภาคเรียนจาก system_settings โดยเช็กตามที่มีจริงในระบบ
-                const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
-                if (settingsSnap.exists()) {
-                    const data = settingsSnap.data();
-                    let semList = [];
-                    if (data.semesters && Array.isArray(data.semesters)) {
-                        semList = data.semesters;
-                    } else if (data.academicYears) {
-                        data.academicYears.forEach(y => {
-                            semList.push(`1/${y}`);
-                            semList.push(`2/${y}`);
-                        });
-                    } else {
-                        semList = ['1/2569'];
+                try {
+                    const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
+                    if (settingsSnap.exists()) {
+                        const data = settingsSnap.data();
+                        let semList = [];
+                        if (data.semesters && Array.isArray(data.semesters) && data.semesters.length > 0) {
+                            semList = data.semesters;
+                        } else if (data.academicYears && Array.isArray(data.academicYears)) {
+                            data.academicYears.forEach(y => {
+                                semList.push(`1/${y}`);
+                                semList.push(`2/${y}`);
+                            });
+                        }
+                        if (semList.length > 0) {
+                            setSemesters(semList);
+                            setSelectedSemester(semList[0]);
+                        }
                     }
-                    setSemesters(semList);
-                    if (semList.length > 0) setSelectedSemester(semList[0]);
+                } catch (err) {
+                    console.error("Error loading settings:", err);
                 }
 
             } else { router.push('/'); }
@@ -110,7 +113,9 @@ export default function DesirableCharacteristicsPage() {
             const evalMap = {};
             evalSnap.forEach(d => {
                 const data = d.data();
-                evalMap[data.studentId] = data.scores;
+                if (data && data.studentId) {
+                    evalMap[data.studentId] = data.scores;
+                }
             });
             setEvaluationsData(evalMap);
 
@@ -130,11 +135,11 @@ export default function DesirableCharacteristicsPage() {
                 q1_1: 3, q1_2: 3,
                 q2_1: 3, q2_2: 3,
                 q3_1: 3, q3_2: 3,
-                q4_1: 4 ? 3 : 3, q4_2: 3,
+                q4_1: 3, q4_2: 3,
                 q5_1: 3, q5_2: 3
             });
         }
-    }, [selectedStudentId]);
+    }, [selectedStudentId, evaluationsData]);
 
     const handleScoreChange = (key, val) => {
         setScores(prev => ({ ...prev, [key]: Number(val) }));
@@ -180,6 +185,7 @@ export default function DesirableCharacteristicsPage() {
     const totalStudentsCount = students.length;
     const evaluatedStudentsCount = Object.keys(evaluationsData).length;
     const goodOrHigherCount = Object.values(evaluationsData).filter(s => {
+        if (!s) return false;
         const sum = Object.values(s).reduce((a, b) => a + b, 0);
         return sum >= 15;
     }).length;
@@ -223,13 +229,13 @@ export default function DesirableCharacteristicsPage() {
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ห้องเรียนที่รับผิดชอบ</label>
                         <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white font-medium">
-                            {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
+                            {Array.isArray(classrooms) && classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
                         <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white font-medium">
-                            {semesters.map(sem => <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>)}
+                            {Array.isArray(semesters) && semesters.map(sem => <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>)}
                         </select>
                     </div>
                 </div>
@@ -244,7 +250,7 @@ export default function DesirableCharacteristicsPage() {
                         </button>
                     </div>
 
-                    {activeTab === 'evaluation' && students.length > 0 && (
+                    {activeTab === 'evaluation' && Array.isArray(students) && students.length > 0 && (
                         <button onClick={() => {
                             document.body.className = 'print-mode-individual-all';
                             window.print();
@@ -257,11 +263,10 @@ export default function DesirableCharacteristicsPage() {
 
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* บล็อกรายชื่อนักเรียน (สีขาว) */}
                         <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto text-slate-900">
-                            <h3 className="font-bold mb-4 text-sm text-slate-500 uppercase tracking-wider">รายชื่อนักเรียน ({students.length} คน)</h3>
+                            <h3 className="font-bold mb-4 text-sm text-slate-500 uppercase tracking-wider">รายชื่อนักเรียน ({Array.isArray(students) ? students.length : 0} คน)</h3>
                             <div className="space-y-2">
-                                {students.map((s, idx) => {
+                                {Array.isArray(students) && students.map((s, idx) => {
                                     const isEval = !!evaluationsData[s.id];
                                     return (
                                         <button
@@ -279,7 +284,6 @@ export default function DesirableCharacteristicsPage() {
                             </div>
                         </div>
 
-                        {/* บล็อกฟอร์มประเมินตรงกลาง (สีขาว) */}
                         <div className="lg:col-span-3 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                             {currentStudent ? (
                                 <div>
@@ -452,7 +456,6 @@ export default function DesirableCharacteristicsPage() {
                 )}
             </div>
 
-            {/* พิมพ์รายบุคคล (คนปัจจุบัน) */}
             {currentStudent && (
                 <div className="printable-individual hidden">
                     <div className="print-page">
@@ -502,9 +505,8 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             )}
 
-            {/* พิมพ์รายบุคคลทั้งหมดในห้อง (รวดเดียวทุกคน) */}
             <div className="printable-individual-all hidden">
-                {students.map((stu) => {
+                {Array.isArray(students) && students.map((stu) => {
                     const stuScores = evaluationsData[stu.id] || {
                         q1_1: 3, q1_2: 3, q2_1: 3, q2_2: 3, q3_1: 3, q3_2: 3, q4_1: 3, q4_2: 3, q5_1: 3, q5_2: 3
                     };
@@ -558,7 +560,6 @@ export default function DesirableCharacteristicsPage() {
                 })}
             </div>
 
-            {/* พิมพ์สรุปผลประจำห้อง */}
             <div className="printable-summary hidden">
                 <div className="print-page">
                     <h2 className="text-center font-bold text-lg mb-1">สรุปผลการประเมินคุณลักษณะที่พึงประสงค์ของผู้เรียน</h2>
