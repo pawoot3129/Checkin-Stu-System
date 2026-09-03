@@ -16,7 +16,7 @@ export default function DesirableCharacteristicsPage() {
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
-    const [activeTab, setActiveTab] = useState('evaluation'); // 'evaluation', 'summary', 'table-report'
+    const [activeTab, setActiveTab] = useState('evaluation');
     const [isLoading, setIsLoading] = useState(false);
 
     const [scores, setScores] = useState({
@@ -215,6 +215,16 @@ export default function DesirableCharacteristicsPage() {
 
     const currentStudent = Array.isArray(students) ? students.find(s => s.id === selectedStudentId) : null;
 
+    // แปลงรูปแบบ "1/2569" ให้แสดงผลเป็น "ภาคเรียนที่ 1 ปีการศึกษา 2569" สวยงามเป็นทางการ
+    const formatSemesterText = (sem) => {
+        if (!sem) return '';
+        const parts = sem.split('/');
+        if (parts.length === 2) {
+            return `ภาคเรียนที่ ${parts[0]} ปีการศึกษา ${parts[1]}`;
+        }
+        return `ภาคเรียนที่ ${sem}`;
+    };
+
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
@@ -258,12 +268,11 @@ export default function DesirableCharacteristicsPage() {
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ภาคเรียน / ปีการศึกษา</label>
                         <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white font-medium">
-                            {Array.isArray(semesters) && semesters.map(sem => <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>)}
+                            {Array.isArray(semesters) && semesters.map(sem => <option key={sem} value={sem}>{formatSemesterText(sem)}</option>)}
                         </select>
                     </div>
                 </div>
 
-                {/* แถบเมนูด้านบน */}
                 <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
                     <div className="flex flex-wrap gap-3">
                         <button onClick={() => setActiveTab('evaluation')} className={`px-5 py-3 rounded-xl font-bold transition-all ${activeTab === 'evaluation' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
@@ -288,7 +297,6 @@ export default function DesirableCharacteristicsPage() {
                     )}
                 </div>
 
-                {/* แท็บ 1: บันทึกรายบุคคล */}
                 {activeTab === 'evaluation' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm h-[650px] overflow-y-auto text-slate-900">
@@ -318,7 +326,7 @@ export default function DesirableCharacteristicsPage() {
                                     <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                                         <div>
                                             <h2 className="text-xl font-bold text-slate-900">{currentStudent.name}</h2>
-                                            <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
+                                            <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | {formatSemesterText(selectedSemester)}</p>
                                         </div>
                                         <button onClick={() => {
                                             document.body.className = 'print-mode-individual';
@@ -445,12 +453,11 @@ export default function DesirableCharacteristicsPage() {
                         </div>
                     </div>
                 ) : activeTab === 'summary' ? (
-                    /* แท็บ 2: สรุปผลประจำห้อง */
                     <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">สรุปผลการประเมินคุณลักษณะอันพึงประสงค์</h2>
-                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester}</p>
+                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | {formatSemesterText(selectedSemester)}</p>
                             </div>
                             <button onClick={() => {
                                 document.body.className = 'print-mode-summary';
@@ -483,12 +490,11 @@ export default function DesirableCharacteristicsPage() {
                         </div>
                     </div>
                 ) : (
-                    /* แท็บ 3: รายงานผลรวมทั้งห้อง (ตามบรีฟใหม่) */
                     <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-slate-900">
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">รายงานผลการประเมินนักเรียนรวมทั้งห้อง</h2>
-                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | ภาคเรียน: {selectedSemester} ({students.length} คน)</p>
+                                <p className="text-xs text-slate-500 mt-1">ห้อง: {selectedClass} | {formatSemesterText(selectedSemester)} ({students.length} คน)</p>
                             </div>
                             <button onClick={() => {
                                 document.body.className = 'print-mode-table-report';
@@ -546,7 +552,7 @@ export default function DesirableCharacteristicsPage() {
                                 <img src="/logo.png" className="w-10" alt="Logo" />
                                 <div>
                                     <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                                    <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน ภาคเรียนที่ {selectedSemester}</p>
+                                    <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน {formatSemesterText(selectedSemester)}</p>
                                 </div>
                             </div>
                             <div className="text-right text-[10px] font-semibold">
@@ -611,7 +617,7 @@ export default function DesirableCharacteristicsPage() {
                                     <img src="/logo.png" className="w-10" alt="Logo" />
                                     <div>
                                         <h2 className="font-bold text-sm">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                                        <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน ภาคเรียนที่ {selectedSemester}</p>
+                                        <p className="text-[10px]">แบบประเมินด้านคุณลักษณะอันพึงประสงค์ของผู้เรียน {formatSemesterText(selectedSemester)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right text-[10px] font-semibold">
@@ -681,7 +687,7 @@ export default function DesirableCharacteristicsPage() {
                     
                     <div className="flex justify-between text-xs mb-4 font-semibold">
                         <p>ห้อง: {selectedClass}</p>
-                        <p>ประจำภาคเรียนที่ {selectedSemester}</p>
+                        <p>{formatSemesterText(selectedSemester)}</p>
                     </div>
 
                     <table className="w-full border-collapse border border-black text-xs text-center mb-16">
@@ -711,7 +717,7 @@ export default function DesirableCharacteristicsPage() {
                 </div>
             </div>
 
-            {/* พิมพ์รายงานผลรวมทั้งห้อง (ตารางรายชื่อ คะแนน และผลระดับคุณภาพ) */}
+            {/* พิมพ์รายงานผลรวมทั้งห้อง */}
             <div className="printable-table-report hidden">
                 <div className="print-page">
                     <div className="flex items-center justify-between border-b pb-2 mb-4">
@@ -729,7 +735,7 @@ export default function DesirableCharacteristicsPage() {
                     
                     <div className="flex justify-between text-xs mb-4 font-semibold">
                         <p>ห้อง: {selectedClass}</p>
-                        <p>ประจำภาคเรียนที่ {selectedSemester}</p>
+                        <p>{formatSemesterText(selectedSemester)}</p>
                     </div>
 
                     <table className="w-full border-collapse border border-black text-xs text-center mb-12">
