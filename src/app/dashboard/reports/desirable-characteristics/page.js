@@ -12,7 +12,7 @@ export default function DesirableCharacteristicsPage() {
     const [userProfile, setUserProfile] = useState(null);
     const [classrooms, setClassrooms] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
-    const [semesters, setSemesters] = useState(['1/2569']);
+    const [semesters, setSemesters] = useState(['1/2569', '2/2569']);
     const [selectedSemester, setSelectedSemester] = useState('1/2569');
     const [students, setStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -32,40 +32,40 @@ export default function DesirableCharacteristicsPage() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
-                if (!snap.empty) {
-                    const prof = snap.docs[0].data();
-                    setUserProfile(prof);
+                try {
+                    const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
+                    if (!snap.empty) {
+                        const prof = snap.docs[0].data();
+                        setUserProfile(prof);
 
-                    const classSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
-                    const existingClassesMap = new Set(
-                        classSnap.docs.map(d => {
-                            const data = d.data();
-                            return data.department ? `${data.className} ${data.department}` : data.className;
-                        })
-                    );
+                        const classSnap = await getDocs(query(collection(db, "classrooms"), orderBy("className")));
+                        const existingClassesMap = new Set(
+                            classSnap.docs.map(d => {
+                                const data = d.data();
+                                return data.department ? `${data.className} ${data.department}` : data.className;
+                            })
+                        );
 
-                    let classes = [];
-                    if (prof.role === 'admin') {
-                        classes = Array.from(existingClassesMap);
-                    } else {
-                        const assigned = prof.assignedClasses || [];
-                        classes = assigned.filter(c => existingClassesMap.has(c));
+                        let classes = [];
+                        if (prof.role === 'admin') {
+                            classes = Array.from(existingClassesMap);
+                        } else {
+                            const assigned = prof.assignedClasses || [];
+                            classes = assigned.filter(c => existingClassesMap.has(c));
+                        }
+
+                        classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                        setClassrooms(classes);
+                        if (classes.length > 0) setSelectedClass(classes[0]);
                     }
 
-                    classes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-                    setClassrooms([...new Set(classes)]);
-                    if (classes.length > 0) setSelectedClass(classes[0]);
-                }
-
-                try {
                     const settingsSnap = await getDoc(doc(db, "system_settings", "main_config"));
                     if (settingsSnap.exists()) {
                         const data = settingsSnap.data();
                         let semList = [];
-                        if (data.semesters && Array.isArray(data.semesters) && data.semesters.length > 0) {
-                            semList = data.semesters;
-                        } else if (data.academicYears && Array.isArray(data.academicYears)) {
+                        if (data && Array.isArray(data.semesters) && data.semesters.length > 0) {
+                            semList = data.semesters.map(s => String(s));
+                        } else if (data && Array.isArray(data.academicYears) && data.academicYears.length > 0) {
                             data.academicYears.forEach(y => {
                                 semList.push(`1/${y}`);
                                 semList.push(`2/${y}`);
@@ -77,10 +77,11 @@ export default function DesirableCharacteristicsPage() {
                         }
                     }
                 } catch (err) {
-                    console.error("Error loading settings:", err);
+                    console.error("Initialization error:", err);
                 }
-
-            } else { router.push('/'); }
+            } else { 
+                router.push('/'); 
+            }
         });
         return () => unsubscribe();
     }, [router]);
@@ -109,11 +110,11 @@ export default function DesirableCharacteristicsPage() {
                 setSelectedStudentId(studentList[0].id);
             }
 
-            const evalSnap = await getDocs(query(collection(db, "desirable_evaluations"), where("classId", "==", selectedClass), where("semester", "==", selectedSemester)));
+            const evalSnap = await getDocs(query(collection(db, "desirable_evaluations"), where("classId", "==", selectedClass), where("semester", "==", String(selectedSemester))));
             const evalMap = {};
             evalSnap.forEach(d => {
                 const data = d.data();
-                if (data && data.studentId) {
+                if (data && data.studentId && data.scores) {
                     evalMap[data.studentId] = data.scores;
                 }
             });
@@ -164,7 +165,7 @@ export default function DesirableCharacteristicsPage() {
             const docId = `${selectedClass}_${selectedSemester}_${selectedStudentId}`;
             await setDoc(doc(db, "desirable_evaluations", docId), {
                 classId: selectedClass,
-                semester: selectedSemester,
+                semester: String(selectedSemester),
                 studentId: selectedStudentId,
                 scores,
                 totalScore,
@@ -182,7 +183,7 @@ export default function DesirableCharacteristicsPage() {
         }
     };
 
-    const totalStudentsCount = students.length;
+    const totalStudentsCount = Array.isArray(students) ? students.length : 0;
     const evaluatedStudentsCount = Object.keys(evaluationsData).length;
     const goodOrHigherCount = Object.values(evaluationsData).filter(s => {
         if (!s) return false;
@@ -191,7 +192,7 @@ export default function DesirableCharacteristicsPage() {
     }).length;
     const percentageGood = totalStudentsCount > 0 ? ((goodOrHigherCount / totalStudentsCount) * 100).toFixed(2) : '0.00';
 
-    const currentStudent = students.find(s => s.id === selectedStudentId);
+    const currentStudent = Array.isArray(students) ? students.find(s => s.id === selectedStudentId) : null;
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
