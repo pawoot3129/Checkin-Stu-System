@@ -174,20 +174,20 @@ export default function DesirableCharacteristicsPage() {
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     const qualityLevel = calculateStudentScore(scores).level;
 
-    // แก้ไขจุดสร้าง docId โดยการแทนที่เครื่องหมาย / หรือช่องว่างด้วยขีดล่าง _ เพื่อป้องกันพาร์ท Firestore พัง
+    // แก้ไขจุดสร้าง docId โดยการแทนที่เครื่องหมาย / ทั้งหมดด้วยขีดล่าง _
     const handleSave = async () => {
         if (!selectedStudentId || !selectedClass) return;
         setIsLoading(true);
         try {
-            const cleanClass = String(selectedClass).trim();
-            const cleanSemester = String(selectedSemester).trim().replace(/\//g, '-');
+            const cleanClass = String(selectedClass).trim().replace(/\//g, '_');
+            const cleanSemester = String(selectedSemester).trim().replace(/\//g, '_');
             const cleanStudentId = String(selectedStudentId).trim();
 
             const docId = `${cleanClass}_${cleanSemester}_${cleanStudentId}`;
             
             await setDoc(doc(db, "desirable_evaluations", docId), {
-                classId: cleanClass,
-                semester: String(selectedSemester),
+                classId: String(selectedClass).trim(),
+                semester: String(selectedSemester).trim(),
                 studentId: cleanStudentId,
                 scores,
                 totalScore,
