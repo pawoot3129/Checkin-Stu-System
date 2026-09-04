@@ -68,6 +68,7 @@ export default function FailedStudentsReportPage() {
         setSelectedSemester(semestersForYear[0]);
     };
 
+    // ฟังก์ชันประมวลผลแบบรวดเร็ว โดยจำลองลอจิกการคำนวณเดียวกับหน้าสรุปปลายภาคแต่ดึงแบบกลุ่มห้อง
     const generateFailedReport = async () => {
         setIsLoading(true);
         try {
@@ -93,11 +94,17 @@ export default function FailedStudentsReportPage() {
 
             let allFailedStudents = [];
 
+            // วนลูปตามห้องเพื่อดึงข้อมูลอย่างรวดเร็ว
             for (const className of targetClasses) {
                 const studs = await getDocs(query(collection(db, "students"), where("classId", "==", className)));
                 const studentList = studs.docs
                     .map(d => ({ id: d.id, ...d.data() }))
-                    .filter(s => s.status !== "จำหน่าย");
+                    .filter(s => s.status !== "จำหน่าย")
+                    .sort((a, b) => {
+                        const numA = Number(a.studentNumber || a.number || a.no || a.code || 0);
+                        const numB = Number(b.studentNumber || b.number || b.no || b.code || 0);
+                        return numA - numB;
+                    });
 
                 if (studentList.length === 0) continue;
 
@@ -134,7 +141,6 @@ export default function FailedStudentsReportPage() {
                     let mainHasFailed = false;
                     let subTotalCount = 0;
                     let subFailedCount = 0;
-                    let failedDetails = [];
 
                     const stRecsAll = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
 
@@ -150,13 +156,8 @@ export default function FailedStudentsReportPage() {
 
                         if (uniqueDates.length === 0) {
                             hasIncomplete = true;
-                            if (isMain) {
-                                mainHasFailed = true;
-                                failedDetails.push(`ตก${actName} (ไม่มีข้อมูลเช็คชื่อ)`);
-                            } else {
-                                subFailedCount++;
-                                failedDetails.push(`ตก${actName}`);
-                            }
+                            if (isMain) mainHasFailed = true;
+                            else subFailedCount++;
                             return;
                         }
 
@@ -194,37 +195,32 @@ export default function FailedStudentsReportPage() {
                         const isPassed = percent >= minP;
 
                         if (!isPassed) {
-                            if (isMain) {
-                                mainHasFailed = true;
-                                failedDetails.push(`ตกกิจกรรมหลัก: ${actName}`);
-                            } else {
-                                subFailedCount++;
-                                failedDetails.push(`ตกกิจกรรมย่อย: ${actName}`);
-                            }
+                            if (isMain) mainHasFailed = true;
+                            else subFailedCount++;
                         }
                     });
 
                     const allowedSubFail = Math.ceil(subTotalCount * 0.10);
                     const subPassedCriteria = subFailedCount <= allowedSubFail;
 
+                    // เช็คผลสรุป (ถ้าได้ มผ ให้ดึงขึ้นมาแสดงทันที)
                     if (semesterActivities.length === 0 || hasIncomplete || mainHasFailed || !subPassedCriteria) {
-                        let reasonType = [];
-                        if (mainHasFailed) reasonType.push("ไม่ผ่านกิจกรรมหลัก");
-                        if (!subPassedCriteria) reasonType.push("ไม่ผ่านกิจกรรมย่อยเกินเกณฑ์");
+                        let reasons = [];
+                        if (mainHasFailed) reasons.push("ไม่ผ่านกิจกรรมหลัก");
+                        if (!subPassedCriteria) reasons.push("ไม่ผ่านกิจกรรมย่อยเกินเกณฑ์");
 
                         allFailedStudents.push({
                             id: st.id,
                             name: st.name,
                             className: className,
-                            department: st.department || '-',
-                            reason: reasonType.join(", ") || "ไม่ผ่านเกณฑ์ประเมิน"
+                            reason: reasons.join(", ") || "ไม่ผ่านเกณฑ์ประเมิน"
                         });
                     }
                 });
             }
 
             setReportData(allFailedStudents);
-            toast.success(`ค้นพบนักศึกษาไม่ผ่านเกณฑ์ทั้งหมด ${allFailedStudents.length} คน`);
+            toast.success(`ตรวจสอบเสร็จสิ้น พบผู้ไม่ผ่าน ${allFailedStudents.length} คน`);
         } catch (e) {
             console.error(e);
             toast.error("เกิดข้อผิดพลาดในการประมวลผล");
@@ -298,7 +294,7 @@ export default function FailedStudentsReportPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <button onClick={generateFailedReport} disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all">
-                            {isLoading ? 'กำลังประมวลผล...' : '🔍 ตรวจสอบรายชื่อผู้ไม่ผ่าน'}
+                            {isLoading ? 'กำลังประมวลผลด่วน...' : '🔍 ตรวจสอบรายชื่อผู้ไม่ผ่าน'}
                         </button>
                         <button onClick={() => window.print()} disabled={!reportData || reportData.length === 0} className={`py-4 rounded-xl font-bold transition-all ${reportData && reportData.length > 0 ? 'bg-white text-black hover:bg-gray-200' : 'bg-gray-800 text-gray-500'}`}>
                             🖨️ พิมพ์รายงาน
@@ -328,8 +324,7 @@ export default function FailedStudentsReportPage() {
                             <tr className="bg-gray-200">
                                 <th className="border border-black p-2 w-16">ลำดับ</th>
                                 <th className="border border-black p-2 text-left">ชื่อ - สกุล</th>
-                                <th className="border border-black p-2 w-32">ระดับชั้น / ห้อง</th>
-                                <th className="border border-black p-2 w-32">แผนกวิชา</th>
+                                <th className="border border-black p-2 w-40">ระดับชั้น / ห้อง</th>
                                 <th className="border border-black p-2 text-left">หมายเหตุ (ไม่ผ่าน)</th>
                             </tr>
                         </thead>
@@ -340,13 +335,12 @@ export default function FailedStudentsReportPage() {
                                         <td className="border border-black p-2">{idx + 1}</td>
                                         <td className="border border-black p-2 text-left font-medium">{s.name}</td>
                                         <td className="border border-black p-2">{s.className}</td>
-                                        <td className="border border-black p-2">{s.department}</td>
                                         <td className="border border-black p-2 text-left text-red-600 font-semibold">{s.reason}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="border border-black p-6 text-gray-500 font-semibold">🎉 ไม่พบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ (ผ่านกิจกรรมทั้งหมด)</td>
+                                    <td colSpan="4" className="border border-black p-6 text-gray-500 font-semibold">🎉 ไม่พบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ (ผ่านกิจกรรมทั้งหมด)</td>
                                 </tr>
                             )}
                         </tbody>
