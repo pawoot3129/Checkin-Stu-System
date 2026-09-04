@@ -302,10 +302,10 @@ export default function SemesterSummaryPage() {
                         box-shadow: none !important;
                         border: none !important;
                     }
-                    table { table-layout: fixed !important; width: 100% !important; font-size: 8px !important; border-collapse: collapse !important; }
-                    th, td { padding: 2px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
+                    table { table-layout: fixed !important; width: 100% !important; font-size: 10px !important; border-collapse: collapse !important; }
+                    th, td { padding: 4px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
                     th { background-color: #f3f4f6 !important; }
-                    @page { size: landscape; margin: 0.5cm; }
+                    @page { size: landscape; margin: 1cm; }
                 }
             `}</style>
 
