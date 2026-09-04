@@ -254,19 +254,13 @@ export default function MonthlySummaryPage() {
         }
     };
 
-    // ฟังก์ชันจัดหน้าแบบอัจฉริยะ (Smart Balanced Chunking)
-    // ถ้านักเรียนไม่เกิน 25 คน -> รวมจบในหน้าเดียว
-    // ถ้าเกิน 25 คน -> คำนวณหารเฉลี่ยจำนวนหน้าและจำนวนคนต่อหน้าให้ออกมาสมดุลที่สุด (เช่น 43 คน จะถูกแบ่งเป็น 2 หน้า หน้าละประมาณ 21-22 คนพอดีเป๊ะ)
     const chunkStudents = (students) => {
         const total = students.length;
         if (total <= 25) {
             return [students];
         }
-        
-        // คำนวณหาจำนวนหน้าที่เหมาะสม (ให้แต่ละหน้ามีจำนวนใกล้เคียงกัน ไม่เกิน 25 คนต่อหน้า)
         const numPages = Math.ceil(total / 22);
         const pageSize = Math.ceil(total / numPages);
-        
         const chunks = [];
         for (let i = 0; i < total; i += pageSize) {
             chunks.push(students.slice(i, i + pageSize));
@@ -281,9 +275,13 @@ export default function MonthlySummaryPage() {
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print {
+                    /* ล้างค่าสีพื้นหลังและบังคับเป็นขาว-ดำสะอาดตาเพื่อประหยัดหมึก */
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        background: transparent !important;
+                        color: #000000 !important;
+                        box-shadow: none !important;
                     }
                     html, body {
                         background: #ffffff !important;
@@ -332,6 +330,10 @@ export default function MonthlySummaryPage() {
                         border: 1px solid #000000 !important;
                         vertical-align: middle !important;
                         height: 16px !important;
+                        color: #000000 !important;
+                    }
+                    th {
+                        background-color: #f3f4f6 !important;
                     }
                     @page {
                         size: A4 landscape;
@@ -440,10 +442,10 @@ export default function MonthlySummaryPage() {
                                                                         <td 
                                                                             key={day} 
                                                                             rowSpan={pageStudents.length} 
-                                                                            className="border border-black p-0 font-medium align-middle relative bg-red-50"
-                                                                            style={{ backgroundColor: '#fff5f5', overflow: 'hidden', width: '20px' }}
+                                                                            className="border border-black p-0 font-medium align-middle relative"
+                                                                            style={{ backgroundColor: '#ffffff', overflow: 'hidden', width: '20px' }}
                                                                         >
-                                                                            <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '2px', backgroundColor: '#dc2626', transform: 'translateX(-50%)', zIndex: 1 }}></div>
+                                                                            <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '2px', backgroundColor: '#000000', transform: 'translateX(-50%)', zIndex: 1 }}></div>
                                                                             <div style={{ 
                                                                                 position: 'absolute', 
                                                                                 inset: '1px 0.5px',
@@ -458,7 +460,6 @@ export default function MonthlySummaryPage() {
                                                                                 alignItems: 'center',
                                                                                 justifyContent: 'center',
                                                                                 letterSpacing: '0.5px',
-                                                                                boxShadow: '0 0 2px rgba(0,0,0,0.15)',
                                                                                 overflow: 'hidden',
                                                                                 textOverflow: 'ellipsis',
                                                                                 whiteSpace: 'nowrap'
@@ -478,19 +479,19 @@ export default function MonthlySummaryPage() {
                                                                         statusObj.type === 'มา' ? (
                                                                             <span style={{ fontSize: '9.5px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาเต็ม' ? (
-                                                                            <span style={{ fontSize: '9.5px', fontWeight: 'bold', color: '#dc2626' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '9.5px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         ) : statusObj.type === 'ลาครึ่งวัน' ? (
                                                                             <div className="flex flex-col items-center justify-center leading-none" style={{ height: '14px' }}>
-                                                                                <span style={{ fontSize: '7.5px', fontWeight: 'bold', color: '#f97316', display: 'block' }}>{statusObj.text}</span>
-                                                                                <span style={{ fontSize: '7.5px', color: '#f97316', display: 'block', marginTop: '-2px' }}>✓</span>
+                                                                                <span style={{ fontSize: '7.5px', fontWeight: 'bold', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '7.5px', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'สาย' ? (
                                                                             <div className="flex flex-col items-center justify-center leading-none" style={{ height: '14px' }}>
-                                                                                <span style={{ fontSize: '7.5px', fontWeight: 'bold', color: '#d97706', display: 'block' }}>{statusObj.text}</span>
-                                                                                <span style={{ fontSize: '7.5px', color: '#d97706', display: 'block', marginTop: '-2px' }}>✓</span>
+                                                                                <span style={{ fontSize: '7.5px', fontWeight: 'bold', display: 'block' }}>{statusObj.text}</span>
+                                                                                <span style={{ fontSize: '7.5px', display: 'block', marginTop: '-2px' }}>✓</span>
                                                                             </div>
                                                                         ) : statusObj.type === 'ขาด' ? (
-                                                                            <span style={{ fontSize: '9.5px', fontWeight: 'bold', color: '#b91c1c' }}>{statusObj.text}</span>
+                                                                            <span style={{ fontSize: '9.5px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         ) : (
                                                                             <span style={{ fontSize: statusObj.text === 'ทวิ' ? '6.5px' : '8.5px', fontWeight: 'bold' }}>{statusObj.text}</span>
                                                                         )
@@ -498,11 +499,11 @@ export default function MonthlySummaryPage() {
                                                                 </td>
                                                             );
                                                         })}
-                                                        <td className="border border-black p-0 text-green-700 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
-                                                        <td className="border border-black p-0 text-red-600 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
-                                                        <td className="border border-black p-0 text-red-600 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
-                                                        <td className="border border-black p-0 text-orange-600 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
-                                                        <td className="border border-black p-0 text-amber-600 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
+                                                        <td className="border border-black p-0 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countPresent > 0 ? s.countPresent : ''}</td>
+                                                        <td className="border border-black p-0 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countEx > 0 ? s.countEx : ''}</td>
+                                                        <td className="border border-black p-0 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countLeave > 0 ? s.countLeave : ''}</td>
+                                                        <td className="border border-black p-0 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countHalfLeave > 0 ? s.countHalfLeave : ''}</td>
+                                                        <td className="border border-black p-0 font-bold" style={{ width: '20px', height: '16px', fontSize: '9px' }}>{s.countLate > 0 ? s.countLate : ''}</td>
                                                     </tr>
                                                 );
                                             })}
@@ -538,25 +539,25 @@ export default function MonthlySummaryPage() {
                                                 <tr style={{ height: '15px' }}>
                                                     <td className="border border-black p-0 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ขาด</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0 text-red-600" style={{ width: '20px' }}>{reportData.summaryDailyAbsent[d]}</td>
+                                                        <td key={d} className="border border-black p-0" style={{ width: '20px' }}>{reportData.summaryDailyAbsent[d]}</td>
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '15px' }}>
                                                     <td className="border border-black p-0 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ลาเต็มวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0 text-red-600" style={{ width: '20px' }}>{reportData.summaryDailyLeave[d]}</td>
+                                                        <td key={d} className="border border-black p-0" style={{ width: '20px' }}>{reportData.summaryDailyLeave[d]}</td>
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '15px' }}>
                                                     <td className="border border-black p-0 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่ลาครึ่งวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0 text-orange-600" style={{ width: '20px' }}>{reportData.summaryDailyHalfLeave[d]}</td>
+                                                        <td key={d} className="border border-black p-0" style={{ width: '20px' }}>{reportData.summaryDailyHalfLeave[d]}</td>
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '15px' }}>
                                                     <td className="border border-black p-0 text-left pl-2 font-semibold" style={{ width: '185px' }}>จำนวนนักเรียนที่สาย</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0 text-amber-600" style={{ width: '20px' }}>{reportData.summaryDailyLate[d]}</td>
+                                                        <td key={d} className="border border-black p-0" style={{ width: '20px' }}>{reportData.summaryDailyLate[d]}</td>
                                                     ))}
                                                 </tr>
                                             </tbody>
