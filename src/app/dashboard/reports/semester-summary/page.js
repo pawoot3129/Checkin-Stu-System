@@ -412,7 +412,7 @@ export default function SemesterSummaryPage() {
                         <div className="flex-1 px-2 flex flex-col items-center">
                             <div className="relative w-full flex justify-center items-center">
                                 <p>ลงชื่อ......................................................</p>
-                                <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="absolute -top-10 w-24 object-contain pointer-events-none" />
+                                <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="absolute -top-8 w-24 object-contain pointer-events-none" />
                             </div>
                             <p className="mt-0.5">(ดร.ประชากร บริบูรณ์)</p>
                             <p className="font-semibold">ผู้อำนวยการ</p>
