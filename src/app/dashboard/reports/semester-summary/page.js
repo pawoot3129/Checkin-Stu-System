@@ -273,23 +273,6 @@ export default function SemesterSummaryPage() {
     const mainActs = reportData?.activities.filter(a => mainActivityNames.includes(a.activityName)) || [];
     const subActs = reportData?.activities.filter(a => !mainActivityNames.includes(a.activityName)) || [];
 
-    // ฟังก์ชันแบ่งหน้าอัจฉริยะ (ถ้าเด็ก <= 28 คน ให้อยู่หน้าเดียวจบ, ถ้ามากกว่าให้หารหน้าละประมาณ 24 คน)
-    const chunkStudents = (students) => {
-        const total = students.length;
-        if (total <= 28) {
-            return [students];
-        }
-        const numPages = Math.ceil(total / 24);
-        const pageSize = Math.ceil(total / numPages);
-        const chunks = [];
-        for (let i = 0; i < total; i += pageSize) {
-            chunks.push(students.slice(i, i + pageSize));
-        }
-        return chunks;
-    };
-
-    const studentPages = reportData ? chunkStudents(reportData.students) : [];
-
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
             <Toaster position="top-center" />
@@ -307,6 +290,7 @@ export default function SemesterSummaryPage() {
                         color: #000000 !important;
                         margin: 0 !important;
                         padding: 0 !important;
+                        height: 100% !important;
                     }
                     #non-printable { display: none !important; } 
                     #printable-area { 
@@ -315,19 +299,16 @@ export default function SemesterSummaryPage() {
                         background: #ffffff !important; 
                         width: 100% !important; 
                         margin: 0 !important; 
-                        padding: 0 !important;
+                        padding: 5mm !important;
                         box-shadow: none !important;
                         border: none !important;
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
                     }
-                    .print-page {
-                        box-sizing: border-box;
-                        padding: 0.5cm !important;
-                        width: 100% !important;
-                    }
-                    table { table-layout: fixed !important; width: 100% !important; font-size: 9.5px !important; border-collapse: collapse !important; }
-                    th, td { padding: 3px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
+                    table { table-layout: fixed !important; width: 100% !important; font-size: 9px !important; border-collapse: collapse !important; }
+                    th, td { padding: 2.5px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
                     th { background-color: #f3f4f6 !important; }
-                    @page { size: landscape; margin: 1cm; }
+                    @page { size: landscape; margin: 0.5cm; }
                 }
             `}</style>
 
@@ -363,94 +344,81 @@ export default function SemesterSummaryPage() {
 
             {reportData && (
                 <div id="printable-area" className="mt-10 bg-white p-10 rounded-3xl text-black shadow-2xl max-w-5xl mx-auto">
-                    {studentPages.map((pageStudents, pageIndex) => {
-                        const isLastPage = pageIndex === studentPages.length - 1;
-                        const startIndex = studentPages.slice(0, pageIndex).reduce((acc, curr) => acc + curr.length, 0);
+                    <div className="flex items-center justify-center gap-6 mb-3 border-b pb-3">
+                        <img src="/logo.png" className="w-14" alt="Logo" />
+                        <div className="text-center">
+                            <h2 className="text-lg font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                            <p className="text-xs">รายงานสรุปผลการเข้าร่วมกิจกรรม ภาคเรียนที่ {selectedSemester}/{selectedYear}</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-between mb-2 font-bold text-xs">
+                        <p>ห้อง: {selectedClass}</p>
+                        <p>วันที่ออกรายงาน: {reportData.date}</p>
+                    </div>
 
-                        return (
-                            <div key={pageIndex} className="print-page mb-6 pb-6">
-                                <div className="flex items-center justify-center gap-6 mb-3 border-b pb-3">
-                                    <img src="/logo.png" className="w-14" alt="Logo" />
-                                    <div className="text-center">
-                                        <h2 className="text-lg font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                                        <p className="text-xs">รายงานสรุปผลการเข้าร่วมกิจกรรม ภาคเรียนที่ {selectedSemester}/{selectedYear} {studentPages.length > 1 ? `(หน้า ${pageIndex + 1}/${studentPages.length})` : ''}</p>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between mb-2 font-bold text-xs">
-                                    <p>ห้อง: {selectedClass}</p>
-                                    <p>วันที่ออกรายงาน: {reportData.date}</p>
-                                </div>
-
-                                <table className="w-full border-collapse border border-black text-center text-xs mb-3" style={{ tableLayout: 'fixed' }}>
-                                    <thead className="bg-gray-200">
-                                        <tr>
-                                            <th rowSpan="2" className="p-1.5 border border-black" style={{ width: '40px' }}>เลขที่</th>
-                                            <th rowSpan="2" className="p-1.5 border border-black">ชื่อ-นามสกุล</th>
-                                            {mainActs.length > 0 && (
-                                                <th colSpan={mainActs.length} className="p-1.5 border border-black">กิจกรรมหลัก</th>
-                                            )}
-                                            {subActs.length > 0 && (
-                                                <th colSpan={subActs.length} className="p-1.5 border border-black">กิจกรรมย่อย</th>
-                                            )}
-                                            <th rowSpan="2" className="p-1.5 border border-black" style={{ width: '50px' }}>สรุป</th>
-                                        </tr>
-                                        <tr>
-                                            {mainActs.map(a => <th key={a.id} className="p-1 border border-black text-[10px]">{a.activityName}</th>)}
-                                            {subActs.map(a => <th key={a.id} className="p-1 border border-black text-[10px]">{a.activityName}</th>)}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {pageStudents.map((s, index) => (
-                                            <tr key={s.id}>
-                                                <td className="p-1.5 border border-black">{startIndex + index + 1}</td>
-                                                <td className="p-1.5 border border-black text-left">{s.name}</td>
-                                                {reportData.activities.map(a => (
-                                                    <td key={a.id} className="p-1.5 border border-black font-bold" style={{color: s.results[a.id] === 'มผ' ? 'red' : 'black'}}>
-                                                        {s.results[a.id]}
-                                                    </td>
-                                                ))}
-                                                <td className="p-1.5 border border-black font-bold" style={{color: s.overall === 'มผ' ? 'red' : 'black'}}>{s.overall}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {isLastPage && (
-                                    <div>
-                                        <div className="text-[11px] p-2 bg-gray-50 border rounded-lg mb-3">
-                                            <strong>หมายเหตุเกณฑ์ประเมิน:</strong>
-                                            <ul className="list-disc ml-4">
-                                                <li>ผลการเข้าร่วมแต่ละกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"</li>
-                                                <li><strong>กิจกรรมหลัก:</strong> ทั้ง 4 กิจกรรม (เข้าแถว, เครื่องแต่งกาย, จริยธรรม, การออม) ห้ามมีผลประเมินเป็น "มผ" เด็ดขาด ต้องผ่านทั้งหมด</li>
-                                                <li><strong>กิจกรรมย่อย:</strong> อนุญาตให้มีผลการประเมินไม่ผ่าน (มผ) ได้ไม่เกิน 10% ของจำนวนกิจกรรมย่อยทั้งหมด</li>
-                                            </ul>
-                                        </div>
-
-                                        <div className="flex flex-row justify-between items-end px-4 text-center text-xs mt-4">
-                                            <div className="flex-1 px-2">
-                                                <p>ลงชื่อ......................................................</p>
-                                                <p className="mt-1">({reportData.advisor})</p>
-                                                <p className="font-semibold">ครูที่ปรึกษา</p>
-                                            </div>
-                                            <div className="flex-1 px-2">
-                                                <p>ลงชื่อ......................................................</p>
-                                                <p className="mt-1">(นายภวุฒิ มันเหมาะ)</p>
-                                                <p className="font-semibold">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
-                                            </div>
-                                            <div className="flex-1 px-2 flex flex-col items-center">
-                                                <div className="relative w-full flex justify-center items-center">
-                                                    <p>ลงชื่อ......................................................</p>
-                                                    <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="absolute -top-10 w-24 object-contain pointer-events-none" />
-                                                </div>
-                                                <p className="mt-1">(ดร.ประชากร บริบูรณ์)</p>
-                                                <p className="font-semibold">ผู้อำนวยการ</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <table className="w-full border-collapse border border-black text-center text-xs mb-3" style={{ tableLayout: 'fixed' }}>
+                        <thead className="bg-gray-200">
+                            <tr>
+                                <th rowSpan="2" className="p-1.5 border border-black" style={{ width: '40px' }}>เลขที่</th>
+                                <th rowSpan="2" className="p-1.5 border border-black">ชื่อ-นามสกุล</th>
+                                {mainActs.length > 0 && (
+                                    <th colSpan={mainActs.length} className="p-1.5 border border-black">กิจกรรมหลัก</th>
                                 )}
+                                {subActs.length > 0 && (
+                                    <th colSpan={subActs.length} className="p-1.5 border border-black">กิจกรรมย่อย</th>
+                                )}
+                                <th rowSpan="2" className="p-1.5 border border-black" style={{ width: '50px' }}>สรุป</th>
+                            </tr>
+                            <tr>
+                                {mainActs.map(a => <th key={a.id} className="p-1 border border-black text-[10px]">{a.activityName}</th>)}
+                                {subActs.map(a => <th key={a.id} className="p-1 border border-black text-[10px]">{a.activityName}</th>)}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {reportData.students.map((s, index) => (
+                                <tr key={s.id}>
+                                    <td className="p-1.5 border border-black">{index + 1}</td>
+                                    <td className="p-1.5 border border-black text-left">{s.name}</td>
+                                    {reportData.activities.map(a => (
+                                        <td key={a.id} className="p-1.5 border border-black font-bold" style={{color: s.results[a.id] === 'มผ' ? 'red' : 'black'}}>
+                                            {s.results[a.id]}
+                                        </td>
+                                    ))}
+                                    <td className="p-1.5 border border-black font-bold" style={{color: s.overall === 'มผ' ? 'red' : 'black'}}>{s.overall}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="text-[11px] p-2 bg-gray-50 border rounded-lg mb-3">
+                        <strong>หมายเหตุเกณฑ์ประเมิน:</strong>
+                        <ul className="list-disc ml-4">
+                            <li>ผลการเข้าร่วมแต่ละกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"</li>
+                            <li><strong>กิจกรรมหลัก:</strong> ทั้ง 4 กิจกรรม (เข้าแถว, เครื่องแต่งกาย, จริยธรรม, การออม) ห้ามมีผลประเมินเป็น "มผ" เด็ดขาด ต้องผ่านทั้งหมด</li>
+                            <li><strong>กิจกรรมย่อย:</strong> อนุญาตให้มีผลการประเมินไม่ผ่าน (มผ) ได้ไม่เกิน 10% ของจำนวนกิจกรรมย่อยทั้งหมด</li>
+                        </ul>
+                    </div>
+
+                    <div className="flex flex-row justify-between items-end px-4 text-center text-xs mt-4">
+                        <div className="flex-1 px-2">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">({reportData.advisor})</p>
+                            <p className="font-semibold">ครูที่ปรึกษา</p>
+                        </div>
+                        <div className="flex-1 px-2">
+                            <p>ลงชื่อ......................................................</p>
+                            <p className="mt-1">(นายภวุฒิ มันเหมาะ)</p>
+                            <p className="font-semibold">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
+                        </div>
+                        <div className="flex-1 px-2 flex flex-col items-center">
+                            <div className="relative w-full flex justify-center items-center">
+                                <p>ลงชื่อ......................................................</p>
+                                <img src="/ลายเซ็น-ผอ-Nobg.png" alt="ลายเซ็น ผอ." className="absolute -top-10 w-24 object-contain pointer-events-none" />
                             </div>
-                        );
-                    })}
+                            <p className="mt-1">(ดร.ประชากร บริบูรณ์)</p>
+                            <p className="font-semibold">ผู้อำนวยการ</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
