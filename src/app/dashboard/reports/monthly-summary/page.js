@@ -321,7 +321,7 @@ export default function MonthlySummaryPage() {
                     }
                     table {
                         width: 100% !important;
-                        font-size: 11 px !important; /* ปรับขนาดฟอนต์หลักที่นี่ */
+                        font-size: 10 px !important; /* ปรับขนาดฟอนต์หลักที่นี่ */
                         border-collapse: collapse !important;
                     }
                     th, td {
@@ -330,7 +330,7 @@ export default function MonthlySummaryPage() {
                         vertical-align: middle !important;
                         height: 18px !important;
                         color: #000000 !important;
-                        font-size: 11 px !important; /*บังคับฟอนต์ทุกช่องให้ใหญ่ขึ้น 10.5px */
+                        font-size: 10 px !important; /*บังคับฟอนต์ทุกช่องให้ใหญ่ขึ้น 10.5px */
                     }
                     th {
                         background-color: #f3f4f6 !important;
