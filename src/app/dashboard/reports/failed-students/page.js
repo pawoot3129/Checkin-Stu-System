@@ -255,7 +255,7 @@ export default function FailedStudentsReportPage() {
                         padding: 1cm !important;
                     }
                     table { border-collapse: collapse !important; width: 100% !important; font-size: 13px !important; }
-                    th, td { border: 1px solid #000000 !important; padding: 6px 8px !important; color: #000000 !important; white-space: nowrap !important; }
+                    th, td { border: 1px solid #000000 !important; padding: 6px 8px !important; color: #000000 !important; }
                     th { background-color: #f3f4f6 !important; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
@@ -330,24 +330,24 @@ export default function FailedStudentsReportPage() {
                                 reportData.map((s, idx) => (
                                     <tr key={s.id}>
                                         <td className="border border-black p-2">{idx + 1}</td>
-                                        <td className="border border-black p-2 text-left font-medium truncate px-3">{s.name}</td>
-                                        <td className="border border-black p-2 truncate">{s.className}</td>
-                                        <td className="border border-black p-2 text-left text-red-600 font-semibold truncate px-3">{s.reason}</td>
+                                        <td className="border border-black p-2 text-left font-medium px-3">{s.name}</td>
+                                        <td className="border border-black p-2">{s.className}</td>
+                                        <td className="border border-black p-2 text-left text-red-600 font-semibold px-3">{s.reason}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
                                     <td colSpan="4" className="border border-black p-6 text-gray-500 font-semibold">🎉 ไม่พบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ (ผ่านกิจกรรมทั้งหมด)</td>
-                                    </tr>
+                                </tr>
                             )}
                         </tbody>
                     </table>
 
                     <div className="flex justify-end text-center text-xs mt-12">
-                        <div className="w-56">
+                        <div className="w-64">
                             <p>ลงชื่อ......................................................</p>
-                            <p className="mt-1">({userProfile?.name || 'นายทะเบียน / ฝ่ายกิจการนักเรียน'})</p>
-                            <p className="font-semibold mt-1">ผู้ตรวจสอบรายงาน</p>
+                            <p className="mt-1 font-semibold">(นายภวุฒิ มันเหมาะ)</p>
+                            <p className="font-semibold">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
                         </div>
                     </div>
                 </div>
