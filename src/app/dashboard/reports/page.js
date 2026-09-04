@@ -37,6 +37,13 @@ const reportOptions = [
         path: "/dashboard/reports/desirable-characteristics",
         status: "พร้อมใช้งาน",
         gradient: "from-purple-500 to-pink-600"
+    },
+    {
+        title: "รายงานรายชื่อนักศึกษาไม่ผ่านกิจกรรม",
+        description: "ตรวจสอบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ประเมิน (มผ) ทั้งรายห้องและภาพรวมทั้งวิทยาลัย",
+        path: "/dashboard/reports/failed-students",
+        status: "พร้อมใช้งาน",
+        gradient: "from-red-500 to-orange-600"
     }
 ];
 
