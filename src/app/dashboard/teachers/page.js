@@ -47,7 +47,8 @@ export default function TeacherManagement() {
             const data = d.data();
             return data.department ? `${data.className} ${data.department}` : data.className;
         });
-        setClassrooms(classes.sort((a, b) => a.localeCompare(b, 'th')));
+        // กรองชื่อห้องให้ไม่ซ้ำกันและเรียงลำดับ
+        setClassrooms([...new Set(classes)].sort((a, b) => a.localeCompare(b, 'th')));
     };
 
     const toggleClass = (className) => {
@@ -55,19 +56,23 @@ export default function TeacherManagement() {
             const list = prev.assignedClasses.includes(className) 
                 ? prev.assignedClasses.filter(c => c !== className)
                 : [...prev.assignedClasses, className];
-            return { ...prev, assignedClasses: list };
+            // ใช้ Set เพื่อความมั่นใจว่าใน state จะไม่มีห้องซ้ำกัน
+            return { ...prev, assignedClasses: [...new Set(list)] };
         });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // ทำความสะอาดอาร์เรย์ห้องเรียนให้แน่ใจว่าไม่มีค่าซ้ำก่อนบันทึกลงฐานข้อมูล
+            const uniqueAssignedClasses = [...new Set(formData.assignedClasses || [])];
+
             if (isEditing) {
                 await updateDoc(doc(db, 'users', formData.id), {
                     name: formData.name,
                     email: formData.email,
                     role: formData.role || 'teacher',
-                    assignedClasses: formData.assignedClasses || []
+                    assignedClasses: uniqueAssignedClasses
                 });
                 toast.success("แก้ไขข้อมูลสำเร็จ");
             } else {
@@ -76,7 +81,7 @@ export default function TeacherManagement() {
                     name: formData.name, 
                     email: formData.email, 
                     role: formData.role || 'teacher', 
-                    assignedClasses: formData.assignedClasses || []
+                    assignedClasses: uniqueAssignedClasses
                 });
                 toast.success("เพิ่มข้อมูลครูสำเร็จ");
             }
@@ -86,13 +91,15 @@ export default function TeacherManagement() {
     };
 
     const startEdit = (teacher) => {
+        // กรองข้อมูลห้องของครูท่านนี้ให้ไม่ซ้ำกันตอนดึงมาแก้ไขด้วย
+        const cleanAssignedClasses = [...new Set(teacher.assignedClasses || [])];
         setFormData({
             id: teacher.id,
             name: teacher.name || '',
             email: teacher.email || '',
             password: '',
             role: teacher.role || 'teacher',
-            assignedClasses: teacher.assignedClasses || []
+            assignedClasses: cleanAssignedClasses
         });
         setIsEditing(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -172,22 +179,26 @@ export default function TeacherManagement() {
                             </tr>
                         </thead>
                         <tbody>
-                            {teachers.map(t => (
-                                <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-950 transition">
-                                    <td className="p-4 font-medium">{t.name}</td>
-                                    <td className="p-4 text-gray-400">{t.email}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${t.role === 'admin' ? 'bg-purple-900/50 text-purple-300 border border-purple-700' : 'bg-blue-900/50 text-blue-300 border border-blue-700'}`}>
-                                            {t.role || 'teacher'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-sm text-gray-300">{t.assignedClasses?.join(', ') || '-'}</td>
-                                    <td className="p-4 flex justify-center gap-2">
-                                        <button type="button" onClick={() => startEdit(t)} className="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">แก้ไข</button>
-                                        <button type="button" onClick={() => handleDelete(t.id)} className="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">ลบ</button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {teachers.map(t => {
+                                // กรองห้องซ้ำตอนแสดงผลตารางเพื่อความสะอาดเรียบร้อย
+                                const uniqueClassesDisplay = [...new Set(t.assignedClasses || [])];
+                                return (
+                                    <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-950 transition">
+                                        <td className="p-4 font-medium">{t.name}</td>
+                                        <td className="p-4 text-gray-400">{t.email}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${t.role === 'admin' ? 'bg-purple-900/50 text-purple-300 border border-purple-700' : 'bg-blue-900/50 text-blue-300 border border-blue-700'}`}>
+                                                {t.role || 'teacher'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-sm text-gray-300">{uniqueClassesDisplay.join(', ') || '-'}</td>
+                                        <td className="p-4 flex justify-center gap-2">
+                                            <button type="button" onClick={() => startEdit(t)} className="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">แก้ไข</button>
+                                            <button type="button" onClick={() => handleDelete(t.id)} className="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">ลบ</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
