@@ -77,9 +77,12 @@ export default function FailedStudentsReportPage() {
             const acts = await getDocs(query(collection(db, "activities"), where("academicYear", "==", selectedYear), where("semester", "==", selectedSemester)));
             const semesterActivities = acts.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            const targetClasses = selectedClass === 'all' ? classrooms : [selectedClass];
+            // กรองห้องทวิภาคีออกทันที ไม่ต้องนำมาตรวจสอบรายงาน
+            const targetClasses = (selectedClass === 'all' ? classrooms : [selectedClass])
+                .filter(className => !className.includes('ทวิภาคี'));
+
             if (targetClasses.length === 0) {
-                toast.error("ไม่พบห้องเรียนในระบบ");
+                toast.error("ไม่พบห้องเรียนที่ต้องตรวจสอบในระบบ");
                 setIsLoading(false);
                 return;
             }
@@ -130,10 +133,6 @@ export default function FailedStudentsReportPage() {
                     }
                 }
 
-                const classStatuses = allAtt.map(r => r.status);
-                const isClassDualOrInternship = className.includes('ทวิภาคี') || 
-                    (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
-
                 studentList.forEach(st => {
                     let hasIncomplete = false;
                     let mainHasFailed = false;
@@ -161,13 +160,10 @@ export default function FailedStudentsReportPage() {
 
                         const actRecs = stRecsAll.filter(r => r.activityId === act.id && String(r.status || '').trim() !== 'วันหยุด');
                         let penaltyScore = 0;
-                        let isStudentInternshipOrDual = isClassDualOrInternship;
                         let statsCheckCount = 0;
 
                         actRecs.forEach(r => {
                             let stName = String(r.status || '').trim();
-                            if (stName === 'ฝึกงาน' || stName === 'ทวิภาคี') isStudentInternshipOrDual = true;
-
                             if (stName === 'มา' || stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
                                 statsCheckCount++;
                                 penaltyScore += Number(weights['มา'] ?? 0);
@@ -185,8 +181,6 @@ export default function FailedStudentsReportPage() {
                                 penaltyScore += Number(weights['ขาด'] ?? 1);
                             }
                         });
-
-                        if (isStudentInternshipOrDual && statsCheckCount > 0) return;
 
                         const percent = statsCheckCount > 0 ? ((statsCheckCount - penaltyScore) / statsCheckCount) * 100 : 100;
                         const minP = act.minPercent || 80;
@@ -217,7 +211,7 @@ export default function FailedStudentsReportPage() {
             }
 
             setReportData(allFailedStudents);
-            toast.success(`ตรวจสอบเสร็จสิ้น พบผู้ไม่ผ่าน ${allFailedStudents.length} คน`);
+            toast.success(`ตรวจสอบเสร็จสิ้น พบผู้ไม่ผ่าน ${allFailedStudents.length} คน (ไม่รวมห้องทวิภาคี)`);
         } catch (e) {
             console.error(e);
             toast.error("เกิดข้อผิดพลาดในการประมวลผล");
@@ -284,8 +278,8 @@ export default function FailedStudentsReportPage() {
                         <div>
                             <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">เลือกห้องเรียน</label>
                             <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white">
-                                <option value="all">🌟 ทุกห้องเรียนในวิทยาลัย</option>
-                                {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
+                                <option value="all">🌟 ทุกห้องเรียนในวิทยาลัย (ไม่รวมทวิภาคี)</option>
+                                {classrooms.filter(c => !c.includes('ทวิภาคี')).map(c => <option key={c} value={c}>ห้อง {c}</option>)}
                             </select>
                         </div>
                     </div>
@@ -307,12 +301,12 @@ export default function FailedStudentsReportPage() {
                         <div className="text-center">
                             <h2 className="text-xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
                             <p className="text-sm font-semibold">รายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์การประเมินกิจกรรม (ผลการประเมิน มผ)</p>
-                            <p className="text-xs text-gray-600 mt-1">ภาคเรียนที่ {selectedSemester} ปีการศึกษา {selectedYear}</p>
+                            <p className="text-xs text-gray-600 mt-1">ภาคเรียนที่ {selectedSemester} ปีการศึกษา {selectedYear} (ไม่รวมห้องทวิภาคี)</p>
                         </div>
                     </div>
 
                     <div className="flex justify-between mb-4 font-bold text-sm">
-                        <p>เงื่อนไข: {selectedClass === 'all' ? 'ทุกห้องเรียน' : `ห้อง ${selectedClass}`}</p>
+                        <p>เงื่อนไข: {selectedClass === 'all' ? 'ทุกห้องเรียน (ยกเว้นทวิภาคี)' : `ห้อง ${selectedClass}`}</p>
                         <p>วันที่ออกรายงาน: {printDateStr}</p>
                     </div>
 
