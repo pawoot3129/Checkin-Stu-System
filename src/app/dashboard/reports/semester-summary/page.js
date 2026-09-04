@@ -273,13 +273,13 @@ export default function SemesterSummaryPage() {
     const mainActs = reportData?.activities.filter(a => mainActivityNames.includes(a.activityName)) || [];
     const subActs = reportData?.activities.filter(a => !mainActivityNames.includes(a.activityName)) || [];
 
-    // ฟังก์ชันแบ่งหน้าอัจฉริยะ (ถ้าเด็ก <= 27 คน ให้อยู่หน้าเดียวจบ, ถ้ามากกว่า 27 คน ให้หารแบ่งหน้าละไม่เกิน 24 คน)
+    // ฟังก์ชันแบ่งหน้าอัจฉริยะ (ถ้าเด็ก <= 25 คน ให้อยู่หน้าเดียวจบ, ถ้ามากกว่าให้หารหน้าละประมาณ 22 คน)
     const chunkStudents = (students) => {
         const total = students.length;
-        if (total <= 27) {
+        if (total <= 25) {
             return [students];
         }
-        const numPages = Math.ceil(total / 24);
+        const numPages = Math.ceil(total / 22);
         const pageSize = Math.ceil(total / numPages);
         const chunks = [];
         for (let i = 0; i < total; i += pageSize) {
