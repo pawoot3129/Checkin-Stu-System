@@ -93,7 +93,6 @@ export default function ActivitySummaryPage() {
 
             const studentIds = students.map(st => String(st.id).trim());
 
-            // แบ่ง studentIds เป็นกลุ่มย่อยกลุ่มละไม่เกิน 30 คน เพื่อใช้ query แบบ 'in' ของ Firestore
             const chunks = [];
             for (let i = 0; i < studentIds.length; i += 30) {
                 chunks.push(studentIds.slice(i, i + 30));
@@ -110,7 +109,6 @@ export default function ActivitySummaryPage() {
                 aSnap.docs.forEach(d => allAttendance.push(d.data()));
             }
 
-            // กรองวันที่เป็น "วันหยุด" ออกจากการคำนวณทั้งหมด
             const attendance = allAttendance.filter(r => String(r.status || '').trim() !== 'วันหยุด');
 
             const uniqueDates = [...new Set(attendance.map(r => r.date))];
@@ -203,10 +201,34 @@ export default function ActivitySummaryPage() {
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print { 
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        background: transparent !important;
+                        color: #000000 !important;
+                        box-shadow: none !important;
+                    }
+                    html, body {
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
                     #non-printable { display: none !important; } 
-                    #printable-area { display: block !important; color: black !important; background: white !important; width: 100% !important; padding: 10px !important; }
+                    #printable-area { 
+                        display: block !important; 
+                        color: #000000 !important; 
+                        background: #ffffff !important; 
+                        width: 100% !important; 
+                        padding: 10px !important; 
+                        margin: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
                     @page { size: A4 portrait; margin: 1cm; }
-                    table { font-size: 11px !important; }
+                    table { font-size: 11px !important; width: 100% !important; border-collapse: collapse !important; }
+                    th, td { border: 1px solid #000000 !important; color: #000000 !important; }
+                    th { background-color: #f3f4f6 !important; }
                 }
             `}</style>
 
