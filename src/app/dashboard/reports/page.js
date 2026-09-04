@@ -1,8 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../../../lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
-const reportOptions = [
+const baseReportOptions = [
     {
         title: "รายงานสรุปสถิติประจำวัน",
         description: "ดูภาพรวมแยกตามระดับชั้น/ห้องเรียนในวันที่เลือก",
@@ -37,7 +41,10 @@ const reportOptions = [
         path: "/dashboard/reports/desirable-characteristics",
         status: "พร้อมใช้งาน",
         gradient: "from-purple-500 to-pink-600"
-    },
+    }
+];
+
+const adminOnlyReportOptions = [
     {
         title: "รายงานรายชื่อนักศึกษาไม่ผ่านกิจกรรม",
         description: "ตรวจสอบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ประเมิน (มผ) ทั้งรายห้องและภาพรวมทั้งวิทยาลัย",
@@ -49,10 +56,37 @@ const reportOptions = [
 
 export default function ReportsHubPage() {
     const router = useRouter();
+    const [userRole, setUserRole] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const snap = await getDocs(query(collection(db, 'users'), where('email', '==', user.email)));
+                    if (!snap.empty) {
+                        const prof = snap.docs[0].data();
+                        setUserRole(prof.role || 'teacher');
+                    }
+                } catch (err) {
+                    console.error("Role check error:", err);
+                } finally {
+                    setIsLoading(false);
+                }
+            } else {
+                router.push('/');
+            }
+        });
+        return () => unsubscribe();
+    }, [router]);
+
+    // ถ้ายศเป็น admin จะรวมเมนูพิเศษเข้าไปด้วย ถ้ายศเป็นครูทั่วไปจะเห็นเฉพาะเมนูพื้นฐาน
+    const reportOptions = userRole === 'admin' 
+        ? [...baseReportOptions, ...adminOnlyReportOptions]
+        : baseReportOptions;
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 md:p-10">
-            {/* ครอบเนื้อหาด้วย max-w-5xl เพื่อให้แคบและอยู่กึ่งกลาง */}
             <div className="max-w-5xl mx-auto">
                 
                 {/* Header */}
@@ -73,30 +107,34 @@ export default function ReportsHubPage() {
                 </header>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {reportOptions.map((report) => (
-                        <div 
-                            key={report.path}
-                            className="group bg-gray-900 border border-gray-800 p-8 rounded-3xl hover:border-gray-600 transition-all duration-300 hover:shadow-2xl flex flex-col justify-between"
-                        >
-                            <div>
-                                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${report.gradient} mb-6 shadow-lg shadow-black/20`} />
-                                <span className="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 rounded-full mb-4">
-                                    {report.status}
-                                </span>
-                                <h2 className="text-xl font-bold text-white mb-3">{report.title}</h2>
-                                <p className="text-gray-400 text-sm leading-relaxed mb-8">{report.description}</p>
-                            </div>
-                            
-                            <button
-                                onClick={() => router.push(report.path)}
-                                className="w-full py-3 bg-gray-800 group-hover:bg-white group-hover:text-gray-950 text-white rounded-xl font-bold transition-all duration-300"
+                {isLoading ? (
+                    <div className="text-center py-20 text-gray-400">กำลังโหลดข้อมูล...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {reportOptions.map((report) => (
+                            <div 
+                                key={report.path}
+                                className="group bg-gray-900 border border-gray-800 p-8 rounded-3xl hover:border-gray-600 transition-all duration-300 hover:shadow-2xl flex flex-col justify-between"
                             >
-                                เลือกรายงาน
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                                <div>
+                                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${report.gradient} mb-6 shadow-lg shadow-black/20`} />
+                                    <span className="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 rounded-full mb-4">
+                                        {report.status}
+                                    </span>
+                                    <h2 className="text-xl font-bold text-white mb-3">{report.title}</h2>
+                                    <p className="text-gray-400 text-sm leading-relaxed mb-8">{report.description}</p>
+                                </div>
+                                
+                                <button
+                                    onClick={() => router.push(report.path)}
+                                    className="w-full py-3 bg-gray-800 group-hover:bg-white group-hover:text-gray-950 text-white rounded-xl font-bold transition-all duration-300"
+                                >
+                                    เลือกรายงาน
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
