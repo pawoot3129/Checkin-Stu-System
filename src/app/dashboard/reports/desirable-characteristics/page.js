@@ -215,7 +215,6 @@ export default function DesirableCharacteristicsPage() {
 
     const currentStudent = Array.isArray(students) ? students.find(s => s.id === selectedStudentId) : null;
 
-    // ฟังก์ชันแปลงข้อความภาคเรียนให้แสดงผลแบบเต็มยศเสมอ รองรับทุกรูปแบบข้อมูล
     const formatSemesterText = (sem) => {
         if (!sem) return 'ภาคเรียนที่ 1 ปีการศึกษา 2569';
         const strSem = String(sem).trim();
@@ -223,7 +222,6 @@ export default function DesirableCharacteristicsPage() {
             const parts = strSem.split('/');
             return `ภาคเรียนที่ ${parts[0]} ปีการศึกษา ${parts[1]}`;
         }
-        // ถ้าเป็นเลขเทอมสั้นๆ เช่น "1" หรือ "2" ให้ดึงปี พ.ศ. ปัจจุบันมาต่อท้ายอัตโนมัติ
         return `ภาคเรียนที่ ${strSem} ปีการศึกษา 2569`;
     };
 
@@ -235,8 +233,16 @@ export default function DesirableCharacteristicsPage() {
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        background: transparent !important;
+                        color: #000000 !important;
+                        box-shadow: none !important;
                     }
-                    body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
+                    html, body {
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
                     
                     #non-printable, header, nav, .printable-individual, .printable-individual-all, .printable-summary, .printable-table-report { display: none !important; }
                     
@@ -245,8 +251,22 @@ export default function DesirableCharacteristicsPage() {
                     body.print-mode-summary .printable-summary { display: block !important; }
                     body.print-mode-table-report .printable-table-report { display: block !important; }
 
-                    .print-page { page-break-after: always; break-after: page; box-sizing: border-box; padding: 1cm; background: white; color: black; width: 100%; }
-                    .print-page:last-child { page-break-after: auto; break-after: auto; }
+                    .print-page {
+                        page-break-after: always;
+                        break-after: page;
+                        box-sizing: border-box;
+                        padding: 1cm;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        width: 100%;
+                    }
+                    .print-page:last-child {
+                        page-break-after: auto;
+                        break-after: auto;
+                    }
+                    table { border-collapse: collapse !important; width: 100% !important; }
+                    th, td { border: 1px solid #000000 !important; color: #000000 !important; }
+                    th { background-color: #f3f4f6 !important; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
             `}</style>
