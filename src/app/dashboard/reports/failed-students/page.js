@@ -15,8 +15,8 @@ export default function FailedStudentsReportPage() {
     const [selectedYear, setSelectedYear] = useState('2569');
     const [selectedSemester, setSelectedSemester] = useState('1');
     const [classrooms, setClassrooms] = useState([]);
-    const [selectedClass, setSelectedClass] = useState('all'); // เพิ่มตัวเลือก "ทุกห้อง"
-    const [reportData, setReportData] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('all');
+    const [reportData, setReportData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const printDateStr = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -31,7 +31,6 @@ export default function FailedStudentsReportPage() {
                     const prof = snap.docs[0].data();
                     setUserProfile(prof);
 
-                    // ตรวจสอบสิทธิ์ Admin
                     if (prof.role !== 'admin') {
                         toast.error("สำหรับผู้ดูแลระบบเท่านั้น");
                         return router.push('/dashboard');
@@ -78,7 +77,6 @@ export default function FailedStudentsReportPage() {
             const acts = await getDocs(query(collection(db, "activities"), where("academicYear", "==", selectedYear), where("semester", "==", selectedSemester)));
             const semesterActivities = acts.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            // ดึงห้องที่จะประมวลผล (ถ้าเลือก 'all' ให้เอาทุกห้องในระบบ)
             const targetClasses = selectedClass === 'all' ? classrooms : [selectedClass];
             if (targetClasses.length === 0) {
                 toast.error("ไม่พบห้องเรียนในระบบ");
@@ -95,7 +93,7 @@ export default function FailedStudentsReportPage() {
 
             let allFailedStudents = [];
 
-            for className of targetClasses {
+            for (const className of targetClasses) {
                 const studs = await getDocs(query(collection(db, "students"), where("classId", "==", className)));
                 const studentList = studs.docs
                     .map(d => ({ id: d.id, ...d.data() }))
@@ -209,7 +207,6 @@ export default function FailedStudentsReportPage() {
                     const allowedSubFail = Math.ceil(subTotalCount * 0.10);
                     const subPassedCriteria = subFailedCount <= allowedSubFail;
 
-                    // ถ้าไม่ผ่านเกณฑ์ (ตกกิจกรรมหลัก หรือ กิจกรรมย่อยเกิน 10%)
                     if (semesterActivities.length === 0 || hasIncomplete || mainHasFailed || !subPassedCriteria) {
                         let reasonType = [];
                         if (mainHasFailed) reasonType.push("ไม่ผ่านกิจกรรมหลัก");
