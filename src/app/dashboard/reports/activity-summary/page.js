@@ -226,7 +226,7 @@ export default function ActivitySummaryPage() {
                         border: none !important;
                     }
                     @page { size: A4 portrait; margin: 1cm; }
-                    table { font-size: 11px !important; width: 100% !important; border-collapse: collapse !important; }
+                    table { font-size: 12px !important; width: 100% !important; border-collapse: collapse !important; }
                     th, td { border: 1px solid #000000 !important; color: #000000 !important; }
                     th { background-color: #f3f4f6 !important; }
                 }
