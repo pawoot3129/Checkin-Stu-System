@@ -330,7 +330,7 @@ export default function MonthlySummaryPage() {
                         vertical-align: middle !important;
                         height: 18px !important;
                         color: #000000 !important;
-                        font-size: 12.5px !important; /*บังคับฟอนต์ทุกช่องให้ใหญ่ขึ้น 12.5px */
+                        font-size: 11.5px !important; /*บังคับฟอนต์ทุกช่องให้ใหญ่ขึ้น 12.5px */
                     }
                     th {
                         background-color: #f3f4f6 !important;
