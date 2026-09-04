@@ -305,7 +305,7 @@ export default function SemesterSummaryPage() {
                         page-break-inside: avoid !important;
                         break-inside: avoid !important;
                     }
-                    table { table-layout: fixed !important; width: 100% !important; font-size: 9px !important; border-collapse: collapse !important; }
+                    table { table-layout: fixed !important; width: 100% !important; font-size: 12px !important; border-collapse: collapse !important; }
                     th, td { padding: 2.5px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
                     th { background-color: #f3f4f6 !important; }
                     @page { size: landscape; margin: 0.5cm; }
