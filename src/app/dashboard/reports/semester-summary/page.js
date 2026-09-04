@@ -273,13 +273,13 @@ export default function SemesterSummaryPage() {
     const mainActs = reportData?.activities.filter(a => mainActivityNames.includes(a.activityName)) || [];
     const subActs = reportData?.activities.filter(a => !mainActivityNames.includes(a.activityName)) || [];
 
-    // ฟังก์ชันแบ่งหน้าอัจฉริยะ (ถ้าเด็ก <= 25 คน ให้อยู่หน้าเดียวจบ, ถ้ามากกว่าให้หารหน้าละประมาณ 22 คน)
+    // ฟังก์ชันแบ่งหน้าอัจฉริยะ (ถ้าเด็ก <= 28 คน ให้อยู่หน้าเดียวจบ, ถ้ามากกว่าให้หารหน้าละประมาณ 24 คน)
     const chunkStudents = (students) => {
         const total = students.length;
-        if (total <= 25) {
+        if (total <= 28) {
             return [students];
         }
-        const numPages = Math.ceil(total / 22);
+        const numPages = Math.ceil(total / 24);
         const pageSize = Math.ceil(total / numPages);
         const chunks = [];
         for (let i = 0; i < total; i += pageSize) {
@@ -320,15 +320,12 @@ export default function SemesterSummaryPage() {
                         border: none !important;
                     }
                     .print-page {
-                        page-break-after: always;
-                        break-after: page;
+                        /* ปลดล็อกการบังคับขึ้นหน้าใหม่ ถ้ายาวพอดีหน้าจะไม่แยก */
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                         box-sizing: border-box;
                         padding: 0.5cm !important;
                         width: 100% !important;
-                    }
-                    .print-page:last-child {
-                        page-break-after: auto;
-                        break-after: auto;
                     }
                     table { table-layout: fixed !important; width: 100% !important; font-size: 9.5px !important; border-collapse: collapse !important; }
                     th, td { padding: 3px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
