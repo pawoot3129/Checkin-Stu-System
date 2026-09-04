@@ -320,9 +320,6 @@ export default function SemesterSummaryPage() {
                         border: none !important;
                     }
                     .print-page {
-                        /* ปลดล็อกการบังคับขึ้นหน้าใหม่ ถ้ายาวพอดีหน้าจะไม่แยก */
-                        break-inside: avoid;
-                        page-break-inside: avoid;
                         box-sizing: border-box;
                         padding: 0.5cm !important;
                         width: 100% !important;
