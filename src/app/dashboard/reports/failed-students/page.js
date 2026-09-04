@@ -68,7 +68,6 @@ export default function FailedStudentsReportPage() {
         setSelectedSemester(semestersForYear[0]);
     };
 
-    // ฟังก์ชันประมวลผลแบบรวดเร็ว โดยจำลองลอจิกการคำนวณเดียวกับหน้าสรุปปลายภาคแต่ดึงแบบกลุ่มห้อง
     const generateFailedReport = async () => {
         setIsLoading(true);
         try {
@@ -94,7 +93,6 @@ export default function FailedStudentsReportPage() {
 
             let allFailedStudents = [];
 
-            // วนลูปตามห้องเพื่อดึงข้อมูลอย่างรวดเร็ว
             for (const className of targetClasses) {
                 const studs = await getDocs(query(collection(db, "students"), where("classId", "==", className)));
                 const studentList = studs.docs
@@ -203,17 +201,16 @@ export default function FailedStudentsReportPage() {
                     const allowedSubFail = Math.ceil(subTotalCount * 0.10);
                     const subPassedCriteria = subFailedCount <= allowedSubFail;
 
-                    // เช็คผลสรุป (ถ้าได้ มผ ให้ดึงขึ้นมาแสดงทันที)
                     if (semesterActivities.length === 0 || hasIncomplete || mainHasFailed || !subPassedCriteria) {
                         let reasons = [];
-                        if (mainHasFailed) reasons.push("ไม่ผ่านกิจกรรมหลัก");
-                        if (!subPassedCriteria) reasons.push("ไม่ผ่านกิจกรรมย่อยเกินเกณฑ์");
+                        if (mainHasFailed) reasons.push("มผ กิจกรรมหลัก");
+                        if (!subPassedCriteria) reasons.push("มผ กิจกรรมย่อย");
 
                         allFailedStudents.push({
                             id: st.id,
                             name: st.name,
                             className: className,
-                            reason: reasons.join(", ") || "ไม่ผ่านเกณฑ์ประเมิน"
+                            reason: reasons.join(", ") || "มผ ไม่ผ่านเกณฑ์"
                         });
                     }
                 });
@@ -257,8 +254,8 @@ export default function FailedStudentsReportPage() {
                         margin: 0 !important;
                         padding: 1cm !important;
                     }
-                    table { border-collapse: collapse !important; width: 100% !important; font-size: 14px !important; }
-                    th, td { border: 1px solid #000000 !important; padding: 6px 8px !important; color: #000000 !important; }
+                    table { border-collapse: collapse !important; width: 100% !important; font-size: 13px !important; }
+                    th, td { border: 1px solid #000000 !important; padding: 6px 8px !important; color: #000000 !important; white-space: nowrap !important; }
                     th { background-color: #f3f4f6 !important; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
@@ -319,13 +316,13 @@ export default function FailedStudentsReportPage() {
                         <p>วันที่ออกรายงาน: {printDateStr}</p>
                     </div>
 
-                    <table className="w-full border-collapse border border-black text-center text-sm mb-8">
+                    <table className="w-full border-collapse border border-black text-center text-sm mb-8" style={{ tableLayout: 'fixed' }}>
                         <thead>
                             <tr className="bg-gray-200">
-                                <th className="border border-black p-2 w-16">ลำดับ</th>
-                                <th className="border border-black p-2 text-left">ชื่อ - สกุล</th>
-                                <th className="border border-black p-2 w-40">ระดับชั้น / ห้อง</th>
-                                <th className="border border-black p-2 text-left">หมายเหตุ (ไม่ผ่าน)</th>
+                                <th className="border border-black p-2" style={{ width: '10%' }}>ลำดับ</th>
+                                <th className="border border-black p-2" style={{ width: '38%' }}>ชื่อ - สกุล</th>
+                                <th className="border border-black p-2" style={{ width: '22%' }}>ระดับชั้น / ห้อง</th>
+                                <th className="border border-black p-2" style={{ width: '30%' }}>หมายเหตุ (ไม่ผ่าน)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -333,15 +330,15 @@ export default function FailedStudentsReportPage() {
                                 reportData.map((s, idx) => (
                                     <tr key={s.id}>
                                         <td className="border border-black p-2">{idx + 1}</td>
-                                        <td className="border border-black p-2 text-left font-medium">{s.name}</td>
-                                        <td className="border border-black p-2">{s.className}</td>
-                                        <td className="border border-black p-2 text-left text-red-600 font-semibold">{s.reason}</td>
+                                        <td className="border border-black p-2 text-left font-medium truncate px-3">{s.name}</td>
+                                        <td className="border border-black p-2 truncate">{s.className}</td>
+                                        <td className="border border-black p-2 text-left text-red-600 font-semibold truncate px-3">{s.reason}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
                                     <td colSpan="4" className="border border-black p-6 text-gray-500 font-semibold">🎉 ไม่พบรายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์ (ผ่านกิจกรรมทั้งหมด)</td>
-                                </tr>
+                                    </tr>
                             )}
                         </tbody>
                     </table>
