@@ -28,11 +28,24 @@ export default function SemesterSummaryPage() {
                 if (!snap.empty) {
                     const prof = snap.docs[0].data();
                     setUserProfile(prof);
+
                     const classSnap = await getDocs(collection(db, "classrooms"));
-                    const classes = prof.role === 'admin' 
-                        ? classSnap.docs.map(d => { const data = d.data(); return data.department ? `${data.className} ${data.department}` : data.className; })
-                        : (prof.assignedClasses || []);
-                    const uniqueClasses = [...new Set(classes)].sort();
+                    const existingClassesMap = new Set(
+                        classSnap.docs.map(d => {
+                            const data = d.data();
+                            return data.department ? `${data.className} ${data.department}` : data.className;
+                        })
+                    );
+
+                    let classes = [];
+                    if (prof.role === 'admin') {
+                        classes = Array.from(existingClassesMap);
+                    } else {
+                        const assigned = prof.assignedClasses || [];
+                        classes = assigned.filter(c => existingClassesMap.has(c));
+                    }
+
+                    const uniqueClasses = [...new Set(classes)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
                     setClassrooms(uniqueClasses);
                     if (uniqueClasses.length > 0) setSelectedClass(uniqueClasses[0]);
                 }
@@ -210,7 +223,6 @@ export default function SemesterSummaryPage() {
                     }
                 });
 
-                // ใช้ Math.ceil เพื่อให้ปัดเศษขึ้น (เช่น 8 กิจกรรม * 10% = 0.8 ยอมให้ตกได้ 1 กิจกรรม)
                 const allowedSubFail = Math.ceil(subTotalCount * 0.10);
                 const subPassedCriteria = subFailedCount <= allowedSubFail;
 
@@ -266,10 +278,33 @@ export default function SemesterSummaryPage() {
             <Toaster position="top-center" />
             <style jsx global>{`
                 @media print { 
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        background: transparent !important;
+                        color: #000000 !important;
+                        box-shadow: none !important;
+                    }
+                    html, body {
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
                     #non-printable { display: none !important; } 
-                    #printable-area { display: block !important; color: black; background: white; width: 100% !important; margin: 0 !important; }
-                    table { table-layout: fixed !important; width: 100% !important; font-size: 8px !important; }
-                    th, td { padding: 2px !important; border: 1px solid black; overflow: hidden; word-wrap: break-word; }
+                    #printable-area { 
+                        display: block !important; 
+                        color: #000000 !important; 
+                        background: #ffffff !important; 
+                        width: 100% !important; 
+                        margin: 0 !important; 
+                        padding: 10px !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
+                    table { table-layout: fixed !important; width: 100% !important; font-size: 8px !important; border-collapse: collapse !important; }
+                    th, td { padding: 2px !important; border: 1px solid #000000 !important; overflow: hidden; word-wrap: break-word; color: #000000 !important; }
+                    th { background-color: #f3f4f6 !important; }
                     @page { size: landscape; margin: 0.5cm; }
                 }
             `}</style>
