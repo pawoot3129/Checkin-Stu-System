@@ -312,7 +312,7 @@ export default function MonthlySummaryPage() {
                     }
                     table {
                         width: 100% !important;
-                        font-size: 10px !important;
+                        font-size: 12px !important;
                         border-collapse: collapse !important;
                     }
                     th, td {
@@ -321,7 +321,7 @@ export default function MonthlySummaryPage() {
                         vertical-align: middle !important;
                         height: 16px !important;
                         color: #000000 !important;
-                        font-size: 10px !important;
+                        font-size: 12px !important;
                     }
                     th {
                         background-color: #f3f4f6 !important;
