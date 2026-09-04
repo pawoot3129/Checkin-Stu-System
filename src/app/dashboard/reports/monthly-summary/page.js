@@ -322,7 +322,7 @@ export default function MonthlySummaryPage() {
                     }
                     table {
                         width: 100% !important;
-                        font-size: 9.5px !important;
+                        font-size: 12.5 px !important;
                         border-collapse: collapse !important;
                     }
                     th, td {
