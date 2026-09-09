@@ -14,7 +14,6 @@ export default function HomeroomManagementPage() {
     const [savedRecords, setSavedRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // ปรับค่าเริ่มต้นให้เป็นค่าว่าง เพื่อให้ Placeholder คำอธิบายแสดงขึ้นมาได้อย่างสวยงาม
     const [formData, setFormData] = useState({
         academicYear: '2569',
         semester: '1',
@@ -26,7 +25,11 @@ export default function HomeroomManagementPage() {
         imageUrl: ''
     });
 
+    // สำหรับพิมพ์ทีละรายการ
     const [printData, setPrintData] = useState(null);
+    // สำหรับพิมพ์แบบภาพรวมทั้งหมดในเทอม และพิมพ์หน้าปก
+    const [allPrintData, setAllPrintData] = useState(null);
+    const [printCoverData, setPrintCoverData] = useState(null);
 
     const monthsList = [
         'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม',
@@ -68,7 +71,7 @@ export default function HomeroomManagementPage() {
 
     const fetchHomeroomRecords = async () => {
         try {
-            const snap = await getDocs(query(collection(db, "homeroom_records"), orderBy("date", "desc")));
+            const snap = await getDocs(query(collection(db, "homeroom_records"), orderBy("date", "asc")));
             const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             setSavedRecords(list);
         } catch (err) {
@@ -103,7 +106,6 @@ export default function HomeroomManagementPage() {
             });
             toast.success("บันทึกข้อมูล Homeroom สำเร็จ");
             fetchHomeroomRecords();
-            // เคลียร์ข้อความให้กลับมาเป็นค่าว่างพร้อมคำอธิบาย
             setFormData(prev => ({ ...prev, activityTopic: '', description: '', imageUrl: '' }));
         } catch (err) {
             console.error(err);
@@ -125,10 +127,42 @@ export default function HomeroomManagementPage() {
     };
 
     const handlePrintRecord = (record) => {
+        setAllPrintData(null);
+        setPrintCoverData(null);
         setPrintData(record);
-        setTimeout(() => {
-            window.print();
-        }, 300);
+        setTimeout(() => { window.print(); }, 300);
+    };
+
+    // พิมพ์หน้าปกรายงาน
+    const handlePrintCover = (classId) => {
+        setPrintData(null);
+        setAllPrintData(null);
+        setPrintCoverData({
+            classId: classId || classrooms[0],
+            academicYear: formData.academicYear,
+            semester: formData.semester,
+            teacherName: userProfile?.name || 'คุณครูที่ปรึกษา'
+        });
+        setTimeout(() => { window.print(); }, 300);
+    };
+
+    // พิมพ์รายงานทั้งหมดในห้องนั้นๆ รวมทุกเดือน
+    const handlePrintAll = (classId) => {
+        setPrintData(null);
+        setPrintCoverData(null);
+        const filtered = savedRecords.filter(r => r.classId === classId);
+        if (filtered.length === 0) {
+            toast.error("ไม่พบข้อมูลบันทึกโฮมรูมของห้องนี้");
+            return;
+        }
+        setAllPrintData({
+            classId: classId,
+            records: filtered,
+            academicYear: formData.academicYear,
+            semester: formData.semester,
+            teacherName: userProfile?.name || 'คุณครูที่ปรึกษา'
+        });
+        setTimeout(() => { window.print(); }, 300);
     };
 
     const formatDateThai = (dateStr) => {
@@ -156,15 +190,17 @@ export default function HomeroomManagementPage() {
                         padding: 0 !important;
                     }
                     #non-printable { display: none !important; }
-                    #printable-area {
+                    #printable-area, #printable-cover, #printable-all {
                         display: block !important;
                         background: #ffffff !important;
                         width: 100% !important;
                         margin: 0 !important;
                         padding: 1cm !important;
                     }
+                    .page-break { page-break-after: always; }
                     @page { size: A4 portrait; margin: 1cm; }
                 }
+                #printable-area, #printable-cover, #printable-all { display: none; }
             `}</style>
 
             <div id="non-printable" className="max-w-4xl mx-auto">
@@ -176,8 +212,30 @@ export default function HomeroomManagementPage() {
                     <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button>
                 </header>
 
+                {/* แผงปุ่มสำหรับพิมพ์ภาพรวมห้อง (พิมพ์หน้าปก / พิมพ์ทั้งหมด) */}
+                <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl mb-8 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 className="font-bold text-lg text-emerald-400">🖨️ จัดการพิมพ์เอกสารรวมห้อง</h3>
+                        <p className="text-xs text-gray-400 mt-1">เลือกห้องเพื่อพิมพ์หน้าปกหรือพิมพ์รายงานรวมทุกเดือนในภาคเรียนนี้</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        <button 
+                            onClick={() => handlePrintCover(formData.classId)}
+                            className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2"
+                        >
+                            📖 พิมพ์หน้าปกรายงาน
+                        </button>
+                        <button 
+                            onClick={() => handlePrintAll(formData.classId)}
+                            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2"
+                        >
+                            📚 สั่งพิมพ์รายงานทั้งหมด (ทุกเดือน)
+                        </button>
+                    </div>
+                </div>
+
                 <form onSubmit={handleSubmit} className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl mb-10">
-                    <h2 className="text-xl font-bold mb-6 text-indigo-400">📝 ฟอร์มบันทึกกิจกรรมประจำวัน</h2>
+                    <h2 className="text-xl font-bold mb-6 text-indigo-400">📝 ฟอร์มบันทึกกิจกรรมประจำเดือน</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div>
@@ -196,7 +254,7 @@ export default function HomeroomManagementPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">เดือน</label>
+                            <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase">ประจำเดือน</label>
                             <select 
                                 value={formData.month} 
                                 onChange={e => setFormData({...formData, month: e.target.value})} 
@@ -262,7 +320,7 @@ export default function HomeroomManagementPage() {
                         disabled={isLoading}
                         className="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all shadow-lg"
                     >
-                        {isLoading ? 'กำลังบันทึกข้อมูล...' : '💾 บันทึกข้อมูล Homeroom'}
+                        {isLoading ? 'กำลังบันทึกข้อมูล...' : '💾 บันทึกข้อมูล Homeroom ประจำเดือน'}
                     </button>
                 </form>
 
@@ -272,10 +330,10 @@ export default function HomeroomManagementPage() {
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="text-gray-400 border-b border-gray-800">
+                                    <th className="p-3">ประจำเดือน</th>
                                     <th className="p-3">วันที่</th>
                                     <th className="p-3">ห้อง</th>
                                     <th className="p-3">หัวข้อกิจกรรม</th>
-                                    <th className="p-3">ครูผู้บันทึก</th>
                                     <th className="p-3 text-center">จัดการ / พิมพ์</th>
                                 </tr>
                             </thead>
@@ -283,16 +341,16 @@ export default function HomeroomManagementPage() {
                                 {savedRecords.length > 0 ? (
                                     savedRecords.map(rec => (
                                         <tr key={rec.id} className="border-b border-gray-800 hover:bg-gray-950">
+                                            <td className="p-3 font-semibold text-indigo-400">{rec.month}</td>
                                             <td className="p-3">{formatDateThai(rec.date)}</td>
                                             <td className="p-3 font-semibold">{rec.classId}</td>
                                             <td className="p-3">{rec.activityTopic}</td>
-                                            <td className="p-3 text-gray-400">{rec.teacherName}</td>
                                             <td className="p-3 flex justify-center gap-2">
                                                 <button 
                                                     onClick={() => handlePrintRecord(rec)}
                                                     className="bg-white text-black hover:bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
                                                 >
-                                                    🖨️ พิมพ์เอกสาร
+                                                    🖨️ พิมพ์หน้านี้
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDelete(rec.id)}
@@ -314,8 +372,34 @@ export default function HomeroomManagementPage() {
                 </div>
             </div>
 
+            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) */}
+            {printCoverData && (
+                <div id="printable-cover">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center p-12">
+                        <img src="/logo.png" className="w-24 mb-6" alt="Logo" />
+                        <h1 className="text-2xl font-bold mb-2">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
+                        <p className="text-sm font-semibold text-gray-700 mb-12">Sichon Commercial Technological College</p>
+                        
+                        <div className="my-16">
+                            <h2 className="text-3xl font-extrabold mb-4 leading-relaxed">รายงานผลการปฏิบัติงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
+                            <p className="text-lg font-semibold text-gray-800">ประจำห้องเรียน: {printCoverData.classId}</p>
+                            <p className="text-md text-gray-600 mt-2">ภาคเรียนที่ {printCoverData.semester} ปีการศึกษา {printCoverData.academicYear}</p>
+                        </div>
+
+                        <div className="mt-32 w-full flex justify-center">
+                            <div className="text-center text-sm">
+                                <p className="mb-2">จัดทำโดย</p>
+                                <p className="font-bold text-base">({printCoverData.teacherName})</p>
+                                <p className="text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. ส่วนสำหรับพิมพ์ทีละรายการ (Single Record) */}
             {printData && (
-                <div id="printable-area" className="hidden">
+                <div id="printable-area">
                     <div className="flex items-center justify-center gap-6 mb-6 border-b pb-4">
                         <img src="/logo.png" className="w-16" alt="Logo" />
                         <div className="text-center">
@@ -338,7 +422,7 @@ export default function HomeroomManagementPage() {
 
                     {printData.imageUrl && (
                         <div className="mb-8 text-center">
-                            <p className="font-semibold text-sm mb-3">ภาพถ่ายกิจกรรมโฮมรูม</p>
+                            <p className="font-semibold text-sm mb-3">ภาพถ่ายกิจกรรมโฮมรูมประจำเดือน {printData.month}</p>
                             <img src={printData.imageUrl} alt="Homeroom Activity" className="max-w-md mx-auto max-h-72 object-contain rounded-xl border border-gray-400 p-1 shadow" />
                         </div>
                     )}
@@ -355,6 +439,55 @@ export default function HomeroomManagementPage() {
                             <p className="mt-1">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* 3. ส่วนสำหรับพิมพ์รายงานทั้งหมดในเทอม (All Records Combined) */}
+            {allPrintData && (
+                <div id="printable-all">
+                    {allPrintData.records.map((rec, index) => (
+                        <div key={rec.id} className={index < allPrintData.records.length - 1 ? "page-break mb-12" : ""}>
+                            <div className="flex items-center justify-center gap-6 mb-6 border-b pb-4">
+                                <img src="/logo.png" className="w-16" alt="Logo" />
+                                <div className="text-center">
+                                    <h2 className="text-xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
+                                    <p className="text-sm font-semibold">บันทึกผลการปฏิบัติงานกิจกรรมโฮมรูม (Homeroom)</p>
+                                    <p className="text-xs text-gray-600 mt-1">ประจำเดือน {rec.month} ภาคเรียนที่ {allPrintData.semester} ปีการศึกษา {allPrintData.academicYear}</p>
+                                </div>
+                            </div>
+
+                            <div className="mb-6 text-sm space-y-2">
+                                <p><strong>ห้องเรียน:</strong> {rec.classId}</p>
+                                <p><strong>วันที่จัดกิจกรรม:</strong> {formatDateThai(rec.date)}</p>
+                                <p><strong>หัวข้อกิจกรรม:</strong> {rec.activityTopic}</p>
+                            </div>
+
+                            <div className="mb-8 border p-4 rounded-xl text-sm leading-relaxed min-h-[120px]">
+                                <p className="font-semibold mb-2">รายละเอียดกิจกรรม / ผลการปฏิบัติงาน:</p>
+                                <p className="text-gray-800 whitespace-pre-wrap">{rec.description}</p>
+                            </div>
+
+                            {rec.imageUrl && (
+                                <div className="mb-8 text-center">
+                                    <p className="font-semibold text-sm mb-3">ภาพถ่ายกิจกรรมโฮมรูมประจำเดือน {rec.month}</p>
+                                    <img src={rec.imageUrl} alt="Homeroom Activity" className="max-w-md mx-auto max-h-72 object-contain rounded-xl border border-gray-400 p-1 shadow" />
+                                </div>
+                            )}
+
+                            <div className="flex justify-between mt-16 text-center text-xs">
+                                <div className="w-56">
+                                    <p>ลงชื่อ......................................................</p>
+                                    <p className="mt-1 font-semibold">({allPrintData.teacherName})</p>
+                                    <p className="mt-1">ครูที่ปรึกษา</p>
+                                </div>
+                                <div className="w-56">
+                                    <p>ลงชื่อ......................................................</p>
+                                    <p className="mt-1 font-semibold">(นายภวุฒิ มันเหมาะ)</p>
+                                    <p className="mt-1">รองผู้อำนวยการฝ่ายกิจการนักเรียน นักศึกษา</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
