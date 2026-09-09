@@ -14,14 +14,15 @@ export default function HomeroomManagementPage() {
     const [savedRecords, setSavedRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    // ปรับค่าเริ่มต้นให้เป็นค่าว่าง เพื่อให้ Placeholder คำอธิบายแสดงขึ้นมาได้อย่างสวยงาม
     const [formData, setFormData] = useState({
         academicYear: '2569',
         semester: '1',
         month: 'มิถุนายน',
         date: new Date().toISOString().split('T')[0],
         classId: '',
-        activityTopic: 'อบรมคุณธรรม จริยธรรม และเตรียมความพร้อมก่อนเข้าเรียน',
-        description: 'ครูที่ปรึกษาได้พบปะพูดคุยกับนักเรียน ตรวจสอบการแต่งกาย ความสะอาดเรียบร้อย และแจ้งกำหนดการกิจกรรมต่างๆ ภายในวิทยาลัย',
+        activityTopic: '',
+        description: '',
         imageUrl: ''
     });
 
@@ -43,8 +44,6 @@ export default function HomeroomManagementPage() {
                     setUserProfile(prof);
 
                     let availableClasses = [];
-
-                    // ถ้าเป็น admin ให้ดึงทุกห้องเรียน
                     if (prof.role === 'admin') {
                         const classSnap = await getDocs(collection(db, "classrooms"));
                         const classes = classSnap.docs.map(d => {
@@ -53,7 +52,6 @@ export default function HomeroomManagementPage() {
                         });
                         availableClasses = [...new Set(classes)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
                     } else {
-                        // ถ้าเป็นครูที่ปรึกษา ให้ดึงเฉพาะห้องที่รับผิดชอบ (assignedClasses)
                         availableClasses = prof.assignedClasses || [];
                     }
 
@@ -105,6 +103,8 @@ export default function HomeroomManagementPage() {
             });
             toast.success("บันทึกข้อมูล Homeroom สำเร็จ");
             fetchHomeroomRecords();
+            // เคลียร์ข้อความให้กลับมาเป็นค่าว่างพร้อมคำอธิบาย
+            setFormData(prev => ({ ...prev, activityTopic: '', description: '', imageUrl: '' }));
         } catch (err) {
             console.error(err);
             toast.error("บันทึกไม่สำเร็จ: " + err.message);
@@ -126,10 +126,8 @@ export default function HomeroomManagementPage() {
 
     const handlePrintRecord = (record) => {
         setPrintData(record);
-        setIsPrinting(true);
         setTimeout(() => {
             window.print();
-            setIsPrinting(false);
         }, 300);
     };
 
@@ -225,8 +223,8 @@ export default function HomeroomManagementPage() {
                             type="text" 
                             value={formData.activityTopic} 
                             onChange={e => setFormData({...formData, activityTopic: e.target.value})} 
-                            placeholder="เช่น อบรมคุณธรรม จริยธรรม / ตรวจสอบการเข้าเรียน"
-                            className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white"
+                            placeholder="เช่น อบรมคุณธรรม จริยธรรม และเตรียมความพร้อมก่อนเข้าเรียน"
+                            className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white placeholder-gray-600"
                             required
                         />
                     </div>
@@ -237,7 +235,8 @@ export default function HomeroomManagementPage() {
                             rows="4"
                             value={formData.description} 
                             onChange={e => setFormData({...formData, description: e.target.value})} 
-                            className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white"
+                            placeholder="เช่น ครูที่ปรึกษาได้พบปะพูดคุยกับนักเรียน ตรวจสอบการแต่งกาย ความสะอาดเรียบร้อย และแจ้งกำหนดการกิจกรรมต่างๆ ภายในวิทยาลัย"
+                            className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white placeholder-gray-600"
                             required
                         />
                     </div>
