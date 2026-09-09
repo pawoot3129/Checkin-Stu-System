@@ -13,9 +13,7 @@ export default function HomeroomManagementPage() {
     const [classrooms, setClassrooms] = useState([]);
     const [savedRecords, setSavedRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [isPrinting, setIsPrinting] = useState(false);
 
-    // ฟอร์มสำหรับกรอกข้อมูล
     const [formData, setFormData] = useState({
         academicYear: '2569',
         semester: '1',
@@ -27,7 +25,6 @@ export default function HomeroomManagementPage() {
         imageUrl: ''
     });
 
-    // สำหรับแสดงผลตอนกดพิมพ์รายงาน
     const [printData, setPrintData] = useState(null);
 
     const monthsList = [
@@ -45,16 +42,24 @@ export default function HomeroomManagementPage() {
                     const prof = snap.docs[0].data();
                     setUserProfile(prof);
 
-                    // ดึงห้องเรียน (ถ้าเป็นครู อาจจะกรองเฉพาะห้องที่รับผิดชอบ assignedClasses ถ้าเป็นแอดมินเห็นทั้งหมด)
-                    const classSnap = await getDocs(collection(db, "classrooms"));
-                    const classes = classSnap.docs.map(d => {
-                        const data = d.data();
-                        return data.department ? `${data.className} ${data.department}` : data.className;
-                    });
-                    const uniqueClasses = [...new Set(classes)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-                    setClassrooms(uniqueClasses);
-                    if (uniqueClasses.length > 0) {
-                        setFormData(prev => ({ ...prev, classId: uniqueClasses[0] }));
+                    let availableClasses = [];
+
+                    // ถ้าเป็น admin ให้ดึงทุกห้องเรียน
+                    if (prof.role === 'admin') {
+                        const classSnap = await getDocs(collection(db, "classrooms"));
+                        const classes = classSnap.docs.map(d => {
+                            const data = d.data();
+                            return data.department ? `${data.className} ${data.department}` : data.className;
+                        });
+                        availableClasses = [...new Set(classes)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                    } else {
+                        // ถ้าเป็นครูที่ปรึกษา ให้ดึงเฉพาะห้องที่รับผิดชอบ (assignedClasses)
+                        availableClasses = prof.assignedClasses || [];
+                    }
+
+                    setClassrooms(availableClasses);
+                    if (availableClasses.length > 0) {
+                        setFormData(prev => ({ ...prev, classId: availableClasses[0] }));
                     }
                 }
                 fetchHomeroomRecords();
@@ -73,7 +78,6 @@ export default function HomeroomManagementPage() {
         }
     };
 
-    // จำลองการอัปโหลดรูปภาพเป็น Base64 หรือลิงก์ URL ง่ายๆ เพื่อให้แนบรูปได้ทันที
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -129,7 +133,6 @@ export default function HomeroomManagementPage() {
         }, 300);
     };
 
-    // แปลงวันที่เป็นรูปแบบไทย
     const formatDateThai = (dateStr) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -175,7 +178,6 @@ export default function HomeroomManagementPage() {
                     <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button>
                 </header>
 
-                {/* ฟอร์มบันทึกข้อมูล */}
                 <form onSubmit={handleSubmit} className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl mb-10">
                     <h2 className="text-xl font-bold mb-6 text-indigo-400">📝 ฟอร์มบันทึกกิจกรรมประจำวัน</h2>
                     
@@ -188,7 +190,11 @@ export default function HomeroomManagementPage() {
                                 className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white"
                                 required
                             >
-                                {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
+                                {classrooms.length > 0 ? (
+                                    classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)
+                                ) : (
+                                    <option value="">ไม่พบห้องที่รับผิดชอบ</option>
+                                )}
                             </select>
                         </div>
                         <div>
@@ -261,7 +267,6 @@ export default function HomeroomManagementPage() {
                     </button>
                 </form>
 
-                {/* ประวัติบันทึกย้อนหลัง */}
                 <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
                     <h2 className="text-xl font-bold mb-4 text-gray-200">📂 ประวัติบันทึกกิจกรรมโฮมรูมทั้งหมด</h2>
                     <div className="overflow-x-auto">
@@ -310,7 +315,6 @@ export default function HomeroomManagementPage() {
                 </div>
             </div>
 
-            {/* ส่วนสำหรับพิมพ์รายงานรูปแบบเอกสารราชการ (ซ่อนไว้จนกว่าจะกดพิมพ์) */}
             {printData && (
                 <div id="printable-area" className="hidden">
                     <div className="flex items-center justify-center gap-6 mb-6 border-b pb-4">
