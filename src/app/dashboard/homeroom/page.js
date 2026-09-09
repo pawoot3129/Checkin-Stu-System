@@ -25,9 +25,7 @@ export default function HomeroomManagementPage() {
         imageUrl: ''
     });
 
-    // สำหรับพิมพ์ทีละรายการ
     const [printData, setPrintData] = useState(null);
-    // สำหรับพิมพ์แบบภาพรวมทั้งหมดในเทอม และพิมพ์หน้าปก
     const [allPrintData, setAllPrintData] = useState(null);
     const [printCoverData, setPrintCoverData] = useState(null);
 
@@ -133,7 +131,6 @@ export default function HomeroomManagementPage() {
         setTimeout(() => { window.print(); }, 300);
     };
 
-    // พิมพ์หน้าปกรายงาน
     const handlePrintCover = (classId) => {
         setPrintData(null);
         setAllPrintData(null);
@@ -146,7 +143,6 @@ export default function HomeroomManagementPage() {
         setTimeout(() => { window.print(); }, 300);
     };
 
-    // พิมพ์รายงานทั้งหมดในห้องนั้นๆ รวมทุกเดือน
     const handlePrintAll = (classId) => {
         setPrintData(null);
         setPrintCoverData(null);
@@ -212,7 +208,6 @@ export default function HomeroomManagementPage() {
                     <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl">← กลับ</button>
                 </header>
 
-                {/* แผงปุ่มสำหรับพิมพ์ภาพรวมห้อง (พิมพ์หน้าปก / พิมพ์ทั้งหมด) */}
                 <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-xl mb-8 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h3 className="font-bold text-lg text-emerald-400">🖨️ จัดการพิมพ์เอกสารรวมห้อง</h3>
@@ -372,26 +367,29 @@ export default function HomeroomManagementPage() {
                 </div>
             </div>
 
-            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) */}
+            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) - ปรับปรุงจัดระยะให้อยู่ใน 1 หน้าพอดี และย้ายชื่อวิทยาลัยไว้ล่างสุด */}
             {printCoverData && (
                 <div id="printable-cover">
-                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center p-12">
-                        <img src="/logo.png" className="w-24 mb-6" alt="Logo" />
-                        <h1 className="text-2xl font-bold mb-2">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
-                        <p className="text-sm font-semibold text-gray-700 mb-12">Sichon Commercial Technological College</p>
+                    <div className="flex flex-col justify-between items-center text-center p-8" style={{ height: '26cm' }}>
+                        <div></div> {/* ตัวดันบน */}
                         
-                        <div className="my-16">
-                            <h2 className="text-3xl font-extrabold mb-4 leading-relaxed">รายงานผลการปฏิบัติงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
-                            <p className="text-lg font-semibold text-gray-800">ประจำห้องเรียน: {printCoverData.classId}</p>
-                            <p className="text-md text-gray-600 mt-2">ภาคเรียนที่ {printCoverData.semester} ปีการศึกษา {printCoverData.academicYear}</p>
+                        <div className="flex flex-col items-center">
+                            <img src="/logo.png" className="w-20 mb-4" alt="Logo" />
+                            <h2 className="text-2xl font-extrabold mb-2 leading-snug">รายงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
+                            <p className="text-base font-semibold text-gray-800 mt-4">ประจำห้องเรียน: {printCoverData.classId}</p>
+                            <p className="text-sm text-gray-600 mt-1">ภาคเรียนที่ {printCoverData.semester} ปีการศึกษา {printCoverData.academicYear}</p>
+                            
+                            <div className="mt-20">
+                                <p className="mb-2 text-xs">จัดทำโดย</p>
+                                <p className="font-bold text-sm">({printCoverData.teacherName})</p>
+                                <p className="text-xs text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
+                            </div>
                         </div>
 
-                        <div className="mt-32 w-full flex justify-center">
-                            <div className="text-center text-sm">
-                                <p className="mb-2">จัดทำโดย</p>
-                                <p className="font-bold text-base">({printCoverData.teacherName})</p>
-                                <p className="text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
-                            </div>
+                        {/* ชื่อวิทยาลัยย้ายมาไว้ด้านล่างสุด */}
+                        <div className="border-t border-gray-400 pt-4 w-full">
+                            <h1 className="text-base font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
+                            <p className="text-xs text-gray-600">Sichon Commercial Technological College</p>
                         </div>
                     </div>
                 </div>
@@ -445,6 +443,28 @@ export default function HomeroomManagementPage() {
             {/* 3. ส่วนสำหรับพิมพ์รายงานทั้งหมดในเทอม (All Records Combined) */}
             {allPrintData && (
                 <div id="printable-all">
+                    {/* หน้าปกสำหรับเล่มรวมทั้งหมด */}
+                    <div className="page-break flex flex-col justify-between items-center text-center p-8" style={{ height: '26cm' }}>
+                        <div></div>
+                        <div className="flex flex-col items-center">
+                            <img src="/logo.png" className="w-20 mb-4" alt="Logo" />
+                            <h2 className="text-2xl font-extrabold mb-2 leading-snug">รายงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
+                            <p className="text-base font-semibold text-gray-800 mt-4">ประจำห้องเรียน: {allPrintData.classId}</p>
+                            <p className="text-sm text-gray-600 mt-1">ภาคเรียนที่ {allPrintData.semester} ปีการศึกษา {allPrintData.academicYear}</p>
+                            
+                            <div className="mt-20">
+                                <p className="mb-2 text-xs">จัดทำโดย</p>
+                                <p className="font-bold text-sm">({allPrintData.teacherName})</p>
+                                <p className="text-xs text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
+                            </div>
+                        </div>
+                        <div className="border-t border-gray-400 pt-4 w-full">
+                            <h1 className="text-base font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
+                            <p className="text-xs text-gray-600">Sichon Commercial Technological College</p>
+                        </div>
+                    </div>
+
+                    {/* รายละเอียดแต่ละเดือน */}
                     {allPrintData.records.map((rec, index) => (
                         <div key={rec.id} className={index < allPrintData.records.length - 1 ? "page-break mb-12" : ""}>
                             <div className="flex items-center justify-center gap-6 mb-6 border-b pb-4">
