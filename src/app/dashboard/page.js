@@ -24,7 +24,7 @@ export default function DashboardPage() {
     const handleResetDatabase = async () => {
         if (!confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดในระบบจะถูกลบถาวร! ยืนยันหรือไม่?")) return;
         try {
-            const collectionsToClear = ['students', 'attendance', 'activities', 'home_visits'];
+            const collectionsToClear = ['students', 'attendance', 'activities', 'home_visits', 'homeroom_records'];
             for (const col of collectionsToClear) {
                 const snap = await getDocs(collection(db, col));
                 for (const d of snap.docs) { await deleteDoc(doc(db, col, d.id)); }
@@ -37,7 +37,7 @@ export default function DashboardPage() {
     const handleBackupDatabase = async () => {
         if (!confirm("ต้องการสำรองข้อมูลทั้งหมดในระบบใช่หรือไม่?")) return;
         try {
-            const collectionsToBackup = ['students', 'attendance', 'activities', 'home_visits', 'users', 'classrooms'];
+            const collectionsToBackup = ['students', 'attendance', 'activities', 'home_visits', 'homeroom_records', 'users', 'classrooms'];
             const backupPayload = {};
 
             for (const col of collectionsToBackup) {
@@ -68,6 +68,7 @@ export default function DashboardPage() {
         { label: 'จัดการผู้ใช้งาน', path: '/dashboard/teachers', icon: '👥', adminOnly: true },
         { label: 'จัดการห้องเรียน', path: '/dashboard/classrooms', icon: '🏫', adminOnly: true },
         { label: 'บันทึกเยี่ยมบ้าน', path: '/dashboard/home-visit', icon: '🏠', adminOnly: false },
+        { label: 'บันทึกกิจกรรม Homeroom', path: '/dashboard/homeroom', icon: '🏡', adminOnly: false },
         { label: 'เช็คกิจกรรม', path: '/dashboard/advisor', icon: '✅', adminOnly: false },
         { label: 'จัดการข้อมูลนักเรียน', path: '/dashboard/students', icon: '🎓', adminOnly: false },
         { label: 'รายงานและสถิติ', path: '/dashboard/reports', icon: '📊', adminOnly: false },
