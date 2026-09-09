@@ -191,10 +191,10 @@ export default function HomeroomManagementPage() {
                         background: #ffffff !important;
                         width: 100% !important;
                         margin: 0 !important;
-                        padding: 0.8cm !important;
+                        padding: 1cm !important;
                     }
                     .cover-page {
-                        height: 25.5cm !important;
+                        height: 24.5cm !important;
                         display: flex !important;
                         flex-direction: column !important;
                         justify-content: space-between !important;
@@ -376,18 +376,17 @@ export default function HomeroomManagementPage() {
                 </div>
             </div>
 
-            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) - จัดสัดส่วนให้อยู่ในหน้าเดียวพอดีเป๊ะ */}
+            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) - จัดชิดบนและสัดส่วนปกรายงานทางการ */}
             {printCoverData && (
                 <div id="printable-cover">
-                    <div className="cover-page">
-                        <div></div> {/* ส่วนดันบน */}
+                    <div className="cover-page pt-6">
                         <div className="flex flex-col items-center">
                             <img src="/logo.png" className="w-20 mb-4" alt="Logo" />
                             <h2 className="text-2xl font-extrabold mb-2 leading-snug">รายงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
                             <p className="text-base font-semibold text-gray-800 mt-3">ประจำห้องเรียน: {printCoverData.classId}</p>
                             <p className="text-sm text-gray-600 mt-1">ภาคเรียนที่ {printCoverData.semester} ปีการศึกษา {printCoverData.academicYear}</p>
                             
-                            <div className="mt-14">
+                            <div className="mt-16">
                                 <p className="mb-2 text-xs">จัดทำโดย</p>
                                 <p className="font-bold text-sm">({printCoverData.teacherName})</p>
                                 <p className="text-xs text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
@@ -395,7 +394,7 @@ export default function HomeroomManagementPage() {
                         </div>
 
                         {/* ชื่อวิทยาลัยด้านล่างสุด */}
-                        <div className="border-t border-gray-400 pt-3 w-full">
+                        <div className="border-t border-gray-400 pt-3 w-full pb-2">
                             <h1 className="text-base font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
                             <p className="text-xs text-gray-600">Sichon Commercial Technological College</p>
                         </div>
@@ -452,21 +451,20 @@ export default function HomeroomManagementPage() {
             {allPrintData && (
                 <div id="printable-all">
                     {/* หน้าปกเล่มรวม */}
-                    <div className="cover-page">
-                        <div></div>
+                    <div className="cover-page pt-6">
                         <div className="flex flex-col items-center">
                             <img src="/logo.png" className="w-20 mb-4" alt="Logo" />
                             <h2 className="text-2xl font-extrabold mb-2 leading-snug">รายงานกิจกรรมโฮมรูม<br/>(Homeroom Report)</h2>
                             <p className="text-base font-semibold text-gray-800 mt-3">ประจำห้องเรียน: {allPrintData.classId}</p>
                             <p className="text-sm text-gray-600 mt-1">ภาคเรียนที่ {allPrintData.semester} ปีการศึกษา {allPrintData.academicYear}</p>
                             
-                            <div className="mt-14">
+                            <div className="mt-16">
                                 <p className="mb-2 text-xs">จัดทำโดย</p>
                                 <p className="font-bold text-sm">({allPrintData.teacherName})</p>
                                 <p className="text-xs text-gray-700">ครูที่ปรึกษาประจำห้องเรียน</p>
                             </div>
                         </div>
-                        <div className="border-t border-gray-400 pt-3 w-full">
+                        <div className="border-t border-gray-400 pt-3 w-full pb-2">
                             <h1 className="text-base font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
                             <p className="text-xs text-gray-600">Sichon Commercial Technological College</p>
                         </div>
