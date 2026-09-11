@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
-import { collection, getDocs, query, where, addDoc, serverTimestamp, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, updateDoc, serverTimestamp, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function HomeroomManagementPage() {
@@ -13,6 +13,9 @@ export default function HomeroomManagementPage() {
     const [classrooms, setClassrooms] = useState([]);
     const [savedRecords, setSavedRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // State สำหรับเก็บ ID กรณีที่กำลังแก้ไขข้อมูลเดิม
+    const [editingId, setEditingId] = useState(null);
 
     const [formData, setFormData] = useState({
         academicYear: '2569',
@@ -65,7 +68,6 @@ export default function HomeroomManagementPage() {
                     setClassrooms(availableClasses);
                     if (availableClasses.length > 0) {
                         setFormData(prev => ({ ...prev, classId: availableClasses[0] }));
-                        // ตั้งค่าเริ่มต้นตัวกรองห้องให้ตรงกับห้องแรกของครู เพื่อความสะดวก
                         setFilterClass(prof.role === 'admin' ? 'all' : availableClasses[0]);
                     }
                 }
@@ -96,6 +98,33 @@ export default function HomeroomManagementPage() {
         }
     };
 
+    // ฟังก์ชันกดปุ่มแก้ไข ดึงข้อมูลขึ้นมาแสดงบนฟอร์ม
+    const handleEditClick = (record) => {
+        setEditingId(record.id);
+        setFormData({
+            academicYear: record.academicYear || '2569',
+            semester: record.semester || '1',
+            month: record.month || 'มิถุนายน',
+            date: record.date || new Date().toISOString().split('T')[0],
+            classId: record.classId || classrooms[0],
+            activityTopic: record.activityTopic || '',
+            description: record.description || '',
+            imageUrl: record.imageUrl || ''
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ฟังก์ชันยกเลิกการแก้ไข
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setFormData(prev => ({
+            ...prev,
+            activityTopic: '',
+            description: '',
+            imageUrl: ''
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.classId) {
@@ -105,14 +134,32 @@ export default function HomeroomManagementPage() {
 
         setIsLoading(true);
         try {
-            await addDoc(collection(db, "homeroom_records"), {
-                ...formData,
-                teacherName: userProfile?.name || 'คุณครูที่ปรึกษา',
-                createdAt: serverTimestamp()
-            });
-            toast.success("บันทึกข้อมูล Homeroom สำเร็จ");
+            if (editingId) {
+                // อัปเดตข้อมูลเดิมใน Firebase
+                await updateDoc(doc(db, "homeroom_records", editingId), {
+                    ...formData,
+                    updatedAt: serverTimestamp()
+                });
+                toast.success("อัปเดตข้อมูล Homeroom สำเร็จ");
+                setEditingId(null);
+            } else {
+                // เพิ่มข้อมูลใหม่ลง Firebase
+                await addDoc(collection(db, "homeroom_records"), {
+                    ...formData,
+                    teacherName: userProfile?.name || 'คุณครูที่ปรึกษา',
+                    createdAt: serverTimestamp()
+                });
+                toast.success("บันทึกข้อมูล Homeroom สำเร็จ");
+            }
+            
             fetchHomeroomRecords();
-            setFormData(prev => ({ ...prev, activityTopic: '', description: '', imageUrl: '' }));
+            // เคลียร์หน้าจอช่องข้อความและรูปภาพหลังบันทึกสำเร็จ
+            setFormData(prev => ({
+                ...prev,
+                activityTopic: '',
+                description: '',
+                imageUrl: ''
+            }));
         } catch (err) {
             console.error(err);
             toast.error("บันทึกไม่สำเร็จ: " + err.message);
@@ -127,6 +174,7 @@ export default function HomeroomManagementPage() {
             await deleteDoc(doc(db, "homeroom_records", id));
             toast.success("ลบสำเร็จ");
             fetchHomeroomRecords();
+            if (editingId === id) handleCancelEdit();
         } catch (err) {
             toast.error("ลบไม่สำเร็จ");
         }
@@ -253,8 +301,21 @@ export default function HomeroomManagementPage() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl mb-10">
-                    <h2 className="text-xl font-bold mb-6 text-indigo-400">📝 ฟอร์มบันทึกกิจกรรมประจำเดือน</h2>
+                <form onSubmit={handleSubmit} className={`bg-gray-900 p-8 rounded-3xl border shadow-xl mb-10 transition-all ${editingId ? 'border-amber-500/80 bg-amber-950/10' : 'border-gray-800'}`}>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-indigo-400">
+                            {editingId ? '✏️ กำลังแก้ไขข้อมูลกิจกรรมโฮมรูม' : '📝 ฟอร์มบันทึกกิจกรรมประจำเดือน'}
+                        </h2>
+                        {editingId && (
+                            <button 
+                                type="button" 
+                                onClick={handleCancelEdit}
+                                className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-1.5 rounded-xl text-xs font-semibold transition"
+                            >
+                                ❌ ยกเลิกการแก้ไข
+                            </button>
+                        )}
+                    </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div>
@@ -328,7 +389,7 @@ export default function HomeroomManagementPage() {
                         />
                         {formData.imageUrl && (
                             <div className="mt-4">
-                                <p className="text-xs text-green-400 mb-2">✅ แนบรูปภาพเรียบร้อยแล้ว:</p>
+                                <p className="text-xs text-green-400 mb-2">✅ รูปภาพพร้อมใช้งาน:</p>
                                 <img src={formData.imageUrl} alt="Preview" className="w-48 h-32 object-cover rounded-xl border border-gray-700" />
                             </div>
                         )}
@@ -337,9 +398,9 @@ export default function HomeroomManagementPage() {
                     <button 
                         type="submit" 
                         disabled={isLoading}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all shadow-lg"
+                        className={`w-full py-4 rounded-xl font-bold transition-all shadow-lg ${editingId ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
                     >
-                        {isLoading ? 'กำลังบันทึกข้อมูล...' : '💾 บันทึกข้อมูล Homeroom ประจำเดือน'}
+                        {isLoading ? 'กำลังบันทึกข้อมูล...' : editingId ? '💾 บันทึกการแก้ไขข้อมูล' : '💾 บันทึกข้อมูล Homeroom ประจำเดือน'}
                     </button>
                 </form>
 
@@ -386,12 +447,18 @@ export default function HomeroomManagementPage() {
                             <tbody>
                                 {filteredRecords.length > 0 ? (
                                     filteredRecords.map(rec => (
-                                        <tr key={rec.id} className="border-b border-gray-800 hover:bg-gray-950">
+                                        <tr key={rec.id} className={`border-b border-gray-800 hover:bg-gray-950 ${editingId === rec.id ? 'bg-amber-950/20' : ''}`}>
                                             <td className="p-3 font-semibold text-indigo-400">{rec.month}</td>
                                             <td className="p-3">{formatDateThai(rec.date)}</td>
                                             <td className="p-3 font-semibold">{rec.classId}</td>
                                             <td className="p-3">{rec.activityTopic}</td>
                                             <td className="p-3 flex justify-center gap-2">
+                                                <button 
+                                                    onClick={() => handleEditClick(rec)}
+                                                    className="bg-amber-600/30 hover:bg-amber-600 text-amber-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                                >
+                                                    ✏️ แก้ไข
+                                                </button>
                                                 <button 
                                                     onClick={() => handlePrintRecord(rec)}
                                                     className="bg-white text-black hover:bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
