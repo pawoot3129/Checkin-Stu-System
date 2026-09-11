@@ -25,6 +25,10 @@ export default function HomeroomManagementPage() {
         imageUrl: ''
     });
 
+    // เพิ่ม State สำหรับตัวกรองในตารางประวัติ
+    const [filterClass, setFilterClass] = useState('all');
+    const [filterMonth, setFilterMonth] = useState('all');
+
     const [printData, setPrintData] = useState(null);
     const [allPrintData, setAllPrintData] = useState(null);
     const [printCoverData, setPrintCoverData] = useState(null);
@@ -45,13 +49,15 @@ export default function HomeroomManagementPage() {
                     setUserProfile(prof);
 
                     let availableClasses = [];
+                    const classSnap = await getDocs(collection(db, "classrooms"));
+                    const allClasses = classSnap.docs.map(d => {
+                        const data = d.data();
+                        return data.department ? `${data.className} ${data.department}` : data.className;
+                    });
+                    const uniqueAllClasses = [...new Set(allClasses)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
                     if (prof.role === 'admin') {
-                        const classSnap = await getDocs(collection(db, "classrooms"));
-                        const classes = classSnap.docs.map(d => {
-                            const data = d.data();
-                            return data.department ? `${data.className} ${data.department}` : data.className;
-                        });
-                        availableClasses = [...new Set(classes)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                        availableClasses = uniqueAllClasses;
                     } else {
                         availableClasses = prof.assignedClasses || [];
                     }
@@ -59,6 +65,8 @@ export default function HomeroomManagementPage() {
                     setClassrooms(availableClasses);
                     if (availableClasses.length > 0) {
                         setFormData(prev => ({ ...prev, classId: availableClasses[0] }));
+                        // ตั้งค่าเริ่มต้นตัวกรองห้องให้ตรงกับห้องแรกของครู เพื่อความสะดวก
+                        setFilterClass(prof.role === 'admin' ? 'all' : availableClasses[0]);
                     }
                 }
                 fetchHomeroomRecords();
@@ -135,7 +143,7 @@ export default function HomeroomManagementPage() {
         setPrintData(null);
         setAllPrintData(null);
         setPrintCoverData({
-            classId: classId || classrooms[0],
+            classId: classId || formData.classId,
             academicYear: formData.academicYear,
             semester: formData.semester,
             teacherName: userProfile?.name || 'คุณครูที่ปรึกษา'
@@ -166,6 +174,13 @@ export default function HomeroomManagementPage() {
         const date = new Date(dateStr);
         return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
     };
+
+    // ฟังก์ชันกรองประวัติข้อมูลตามห้องและเดือนที่เลือก
+    const filteredRecords = savedRecords.filter(rec => {
+        const matchClass = filterClass === 'all' || rec.classId === filterClass;
+        const matchMonth = filterMonth === 'all' || rec.month === filterMonth;
+        return matchClass && matchMonth;
+    });
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
@@ -328,8 +343,35 @@ export default function HomeroomManagementPage() {
                     </button>
                 </form>
 
+                {/* ส่วนตารางประวัติ พร้อมตัวเลือกกรองห้องและเดือน */}
                 <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-xl">
-                    <h2 className="text-xl font-bold mb-4 text-gray-200">📂 ประวัติบันทึกกิจกรรมโฮมรูมทั้งหมด</h2>
+                    <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <h2 className="text-xl font-bold text-gray-200">📂 ประวัติบันทึกกิจกรรมโฮมรูม</h2>
+                        
+                        <div className="flex flex-wrap gap-3">
+                            <div>
+                                <select 
+                                    value={filterClass} 
+                                    onChange={e => setFilterClass(e.target.value)}
+                                    className="p-2.5 bg-gray-950 rounded-xl border border-gray-800 text-sm text-white"
+                                >
+                                    <option value="all">🌟 ทุกห้องเรียน</option>
+                                    {classrooms.map(c => <option key={c} value={c}>ห้อง {c}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <select 
+                                    value={filterMonth} 
+                                    onChange={e => setFilterMonth(e.target.value)}
+                                    className="p-2.5 bg-gray-950 rounded-xl border border-gray-800 text-sm text-white"
+                                >
+                                    <option value="all">📅 ทุกเดือน</option>
+                                    {monthsList.map(m => <option key={m} value={m}>เดือน {m}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead>
@@ -342,8 +384,8 @@ export default function HomeroomManagementPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {savedRecords.length > 0 ? (
-                                    savedRecords.map(rec => (
+                                {filteredRecords.length > 0 ? (
+                                    filteredRecords.map(rec => (
                                         <tr key={rec.id} className="border-b border-gray-800 hover:bg-gray-950">
                                             <td className="p-3 font-semibold text-indigo-400">{rec.month}</td>
                                             <td className="p-3">{formatDateThai(rec.date)}</td>
@@ -367,7 +409,7 @@ export default function HomeroomManagementPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="p-6 text-center text-gray-500">ยังไม่มีประวัติการบันทึกข้อมูลโฮมรูม</td>
+                                        <td colSpan="5" className="p-6 text-center text-gray-500">ไม่พบประวัติการบันทึกตามเงื่อนไขที่เลือก</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -376,7 +418,7 @@ export default function HomeroomManagementPage() {
                 </div>
             </div>
 
-            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) - เพิ่มขนาดโลโก้และจัดขนาดให้อยู่ใน 1 หน้าเป๊ะ */}
+            {/* 1. ส่วนสำหรับพิมพ์หน้าปก (Cover Page) */}
             {printCoverData && (
                 <div id="printable-cover">
                     <div className="cover-page pt-2">
@@ -393,7 +435,6 @@ export default function HomeroomManagementPage() {
                             </div>
                         </div>
 
-                        {/* ชื่อวิทยาลัยด้านล่างสุด */}
                         <div className="border-t border-gray-400 pt-2 w-full pb-1">
                             <h1 className="text-sm font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
                             <p className="text-xs text-gray-600">Sichon Commercial Technological College</p>
@@ -450,7 +491,6 @@ export default function HomeroomManagementPage() {
             {/* 3. ส่วนสำหรับพิมพ์รายงานทั้งหมดในเทอม (All Records Combined) */}
             {allPrintData && (
                 <div id="printable-all">
-                    {/* หน้าปกเล่มรวม */}
                     <div className="cover-page pt-2">
                         <div className="flex flex-col items-center">
                             <img src="/logo.png" className="w-28 mb-4" alt="Logo" />
@@ -470,7 +510,6 @@ export default function HomeroomManagementPage() {
                         </div>
                     </div>
 
-                    {/* รายละเอียดแต่ละเดือน */}
                     {allPrintData.records.map((rec, index) => (
                         <div key={rec.id} className={index < allPrintData.records.length - 1 ? "page-break mb-12" : ""}>
                             <div className="flex items-center justify-center gap-6 mb-6 border-b pb-4">
