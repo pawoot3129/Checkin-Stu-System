@@ -153,6 +153,19 @@ export default function ActivitySummaryPage() {
 
                 const studentActualTotalDays = stats['มา'] + stats['สาย'] + stats['ลาครึ่งวัน'] + stats['ลาทั้งวัน'] + stats['ขาด'];
 
+                // ถ้ายังไม่มีการเช็คชื่อ ให้แสดงผลเป็น - และผลการประเมินเป็น มผ
+                if (studentActualTotalDays === 0) {
+                    return {
+                        ...st,
+                        isInternshipOrDual: false,
+                        stats,
+                        totalRecs: 0,
+                        totalAbsenceOrLate: 0,
+                        percent: '-',
+                        result: 'มผ'
+                    };
+                }
+
                 if (isStudentInternshipOrDual && studentActualTotalDays > 0) {
                     return {
                         ...st,
@@ -164,7 +177,7 @@ export default function ActivitySummaryPage() {
                 }
 
                 const totalAbsenceOrLate = penaltyScore;
-                const percent = studentActualTotalDays > 0 ? ((studentActualTotalDays - penaltyScore) / studentActualTotalDays) * 100 : 100;
+                const percent = ((studentActualTotalDays - penaltyScore) / studentActualTotalDays) * 100;
                 
                 return { 
                     ...st, 
@@ -173,7 +186,7 @@ export default function ActivitySummaryPage() {
                     totalRecs: studentActualTotalDays, 
                     totalAbsenceOrLate, 
                     percent: Math.max(0, percent).toFixed(0), 
-                    result: percent >= 80 ? 'ผ่าน' : 'ไม่ผ่าน' 
+                    result: percent >= 80 ? 'ผ่าน' : 'มผ' 
                 };
             });
 
@@ -291,11 +304,22 @@ export default function ActivitySummaryPage() {
                                 <tr key={s.id}>
                                     <td className="border p-1 text-center">{index + 1}</td>
                                     <td className="border p-1 text-left">{s.name}</td>
-                                    <td className="border p-1 font-bold">{s.totalRecs}</td>
+                                    <td className="border p-1 font-bold">{s.totalRecs === 0 ? '-' : s.totalRecs}</td>
                                     {s.isInternshipOrDual ? (
                                         <td colSpan="8" className="border p-1 font-semibold text-center bg-gray-50 text-indigo-700">
                                             นักศึกษาระบบทวิภาคี / ออกฝึกประสบการณ์วิชาชีพ
                                         </td>
+                                    ) : s.totalRecs === 0 ? (
+                                        <>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1">-</td>
+                                            <td className="border p-1 font-bold text-red-600">{s.result}</td>
+                                        </>
                                     ) : (
                                         <>
                                             <td className="border p-1">{s.stats.มา}</td>
@@ -305,7 +329,7 @@ export default function ActivitySummaryPage() {
                                             <td className="border p-1">{s.stats.ขาด}</td>
                                             <td className="border p-1 font-semibold text-red-600">{s.totalAbsenceOrLate}</td>
                                             <td className="border p-1">{s.percent}%</td>
-                                            <td className="border p-1 font-bold">{s.result}</td>
+                                            <td className="border p-1 font-bold">{s.result === 'ผ่าน' ? 'ผ่าน' : 'มผ'}</td>
                                         </>
                                     )}
                                 </tr>
