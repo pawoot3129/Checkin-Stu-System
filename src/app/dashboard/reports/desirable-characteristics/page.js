@@ -66,7 +66,6 @@ export default function DesirableCharacteristicsPage() {
                         const data = settingsSnap.data();
                         let semList = [];
                         
-                        // ดึงข้อมูลภาคเรียนจากโครงสร้าง semestersByYear และ academicYears ให้ครบถ้วน
                         if (data && data.semestersByYear && typeof data.semestersByYear === 'object') {
                             Object.keys(data.semestersByYear).forEach(year => {
                                 const semArray = data.semestersByYear[year];
@@ -78,7 +77,6 @@ export default function DesirableCharacteristicsPage() {
                             });
                         }
 
-                        // ถ้าระบบยังไม่มี ให้ดึงจาก academicYears หรือใช้ค่าเริ่มต้น
                         if (semList.length === 0 && data && Array.isArray(data.academicYears) && data.academicYears.length > 0) {
                             data.academicYears.forEach(y => {
                                 const yrStr = typeof y === 'object' && y !== null ? String(y.year || y.name || JSON.stringify(y)) : String(y);
@@ -92,7 +90,7 @@ export default function DesirableCharacteristicsPage() {
                         }
 
                         setSemesters(semList);
-                        setSelectedSemester(String(semList[semList.length - 1])); // ตั้งค่าเป็นภาคล่าสุดโดยอัตโนมัติ
+                        setSelectedSemester(String(semList[semList.length - 1]));
                     }
                 } catch (err) {
                     console.error("Initialization error:", err);
@@ -128,17 +126,21 @@ export default function DesirableCharacteristicsPage() {
                 setSelectedStudentId(studentList[0].id);
             }
 
+            // ดึงข้อมูลแบบครอบคลุมทั้งรูปแบบใหม่ (1/2569) และรูปแบบเดิม (1) เพื่อดึงข้อมูลเก่ากลับมาแสดงผล
             const cleanSemester = String(selectedSemester).trim();
+            const semesterNumberOnly = cleanSemester.split('/')[0]; // ดึงเฉพาะเลขเทอม เช่น '1'
+
             const evalSnap = await getDocs(query(
                 collection(db, "desirable_evaluations"), 
-                where("classId", "==", selectedClass), 
-                where("semester", "==", cleanSemester)
+                where("classId", "==", selectedClass)
             ));
             
             const evalMap = {};
             evalSnap.forEach(d => {
                 const data = d.data();
-                if (data && data.studentId && data.scores) {
+                const docSem = String(data.semester || '').trim();
+                // เช็คว่าตรงกับชื่อเทอมเต็ม หรือตรงกับเลขเทอมเดิมที่เคยบันทึกไว้
+                if (data && data.studentId && data.scores && (docSem === cleanSemester || docSem === semesterNumberOnly)) {
                     evalMap[data.studentId] = data.scores;
                 }
             });
