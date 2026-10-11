@@ -22,12 +22,19 @@ export default function AdvisorPage() {
                     const data = configSnap.data();
                     const yList = data.academicYears || [];
                     setYears(yList);
-                    setSemestersByYear(data.semestersByYear || {});
+                    const sByYear = data.semestersByYear || {};
+                    setSemestersByYear(sByYear);
+
+                    // ตั้งค่าปีการศึกษาล่าสุด (เอาตัวท้ายสุดหรือตัวแรกสุดตามโครงสร้าง array)
                     if (yList.length > 0) {
-                        const defaultY = yList[0];
-                        setSelectedYear(defaultY);
-                        const sList = data.semestersByYear?.[defaultY] || [];
-                        if (sList.length > 0) setSelectedSemester(sList[0]);
+                        const latestYear = yList[yList.length - 1];
+                        setSelectedYear(latestYear);
+                        
+                        // ตั้งค่าภาคเรียนล่าสุดของปีนั้น
+                        const sList = sByYear[latestYear] || [];
+                        if (sList.length > 0) {
+                            setSelectedSemester(sList[sList.length - 1]);
+                        }
                     }
                 }
 
@@ -44,12 +51,11 @@ export default function AdvisorPage() {
     const handleYearChange = (year) => {
         setSelectedYear(year);
         const sList = semestersByYear[year] || [];
-        setSelectedSemester(sList.length > 0 ? sList[0] : '');
+        setSelectedSemester(sList.length > 0 ? sList[sList.length - 1] : '');
     };
 
     const handleStartCheck = (act) => {
         if (act.activityType === 'sub') {
-            // แก้เส้นทางให้วิ่งไปที่ sub-check/[id] ให้ตรงกับโครงสร้างโฟลเดอร์
             router.push(`/dashboard/advisor/sub-check/${act.id}`);
         } else {
             router.push(`/dashboard/advisor/check/${act.id}`);
@@ -90,7 +96,7 @@ export default function AdvisorPage() {
                             <select 
                                 value={selectedYear} 
                                 onChange={(e) => handleYearChange(e.target.value)}
-                                className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white"
+                                className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white outline-none focus:border-indigo-500"
                             >
                                 {years.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
                             </select>
@@ -100,7 +106,7 @@ export default function AdvisorPage() {
                             <select 
                                 value={selectedSemester} 
                                 onChange={(e) => setSelectedSemester(e.target.value)}
-                                className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white"
+                                className="w-full p-3 bg-gray-950 rounded-xl border border-gray-800 text-white outline-none focus:border-indigo-500"
                             >
                                 <option value="">-- ทุกภาคเรียน --</option>
                                 {currentSemesters.map(s => <option key={s} value={s}>ภาคเรียนที่ {s}</option>)}
