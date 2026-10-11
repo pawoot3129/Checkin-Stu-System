@@ -12,7 +12,8 @@ export default function CheckAttendancePage() {
     const params = useParams();
     const activityId = params?.id;
 
-    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState({ name: 'กิจกรรม', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
     const [holidayNote, setHolidayNote] = useState({});
@@ -84,6 +85,8 @@ export default function CheckAttendancePage() {
             } catch (e) { 
                 console.error(e);
                 toast.error("โหลดข้อมูลล้มเหลว"); 
+            } finally {
+                setLoading(false);
             }
         });
         return () => unsubscribe();
@@ -199,6 +202,14 @@ export default function CheckAttendancePage() {
             if (numA !== numB) return numA - numB;
             return (a.name || '').localeCompare(b.name || '', 'th');
         });
+
+    if (loading) {
+        return (
+            <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>กำลังโหลดข้อมูล...</div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', padding: '24px' }}>
