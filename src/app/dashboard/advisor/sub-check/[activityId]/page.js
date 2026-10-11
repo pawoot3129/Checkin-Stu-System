@@ -16,7 +16,9 @@ export default function SubActivityCheckPage() {
     const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    
+    // ล็อกวันที่เป็นปัจจุบันอัตโนมัติ ไม่ต้องให้ผู้ใช้เลือก
+    const [date] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
         if (!activityId) return;
@@ -188,9 +190,10 @@ export default function SubActivityCheckPage() {
                     </button>
                 </div>
 
-                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-xl">
+                {/* ปรับ Grid เหลือ 2 คอลัมน์: เลือกห้องเรียน และแสดงภาคเรียน/ปีการศึกษา */}
+                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-xl">
                     <div>
-                        <label className="block text-xs text-gray-400 mb-2 font-semibold">ห้องเรียน</label>
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold">ห้องเรียนที่รับผิดชอบ</label>
                         <select 
                             value={selectedClass} 
                             onChange={(e) => setSelectedClass(e.target.value)} 
@@ -199,15 +202,6 @@ export default function SubActivityCheckPage() {
                             <option value="">-- เลือกห้องเรียน --</option>
                             {data.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-2 font-semibold">วันที่จัดกิจกรรม</label>
-                        <input 
-                            type="date" 
-                            value={date} 
-                            onChange={(e) => setDate(e.target.value)} 
-                            className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-white outline-none focus:border-amber-500" 
-                        />
                     </div>
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold">ภาคเรียน / ปีการศึกษา</label>
