@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { db } from '../../../../../lib/firebase';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, getDocs, query, where, setDoc, deleteDoc } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaCalendarCheck, FaArrowLeft, FaEdit, FaCheck, FaTrash, FaBriefcase, FaUserGraduate, FaCalendarDay } from 'react-icons/fa';
@@ -15,6 +16,7 @@ export default function CheckAttendancePage() {
     const [data, setData] = useState({ name: 'กิจกรรม', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
+    const [holidayNote, setHolidayNote] = useState({});
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isHolidayMode, setIsHolidayMode] = useState(false);
     const [holidayInputText, setHolidayInputText] = useState('');
@@ -37,19 +39,39 @@ export default function CheckAttendancePage() {
 
     useEffect(() => {
         if (!activityId) return;
-        const fetchData = async () => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) { router.push('/login'); return; }
             try {
+                let userData = {};
+                const userSnapByEmail = await getDocs(query(collection(db, "users"), where("email", "==", user.email)));
+                if (!userSnapByEmail.empty) {
+                    userData = userSnapByEmail.docs[0].data();
+                } else {
+                    const userSnapByUid = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+                    if (!userSnapByUid.empty) userData = userSnapByUid.docs[0].data();
+                }
+
                 const [actSnap, stuSnap, classSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
                     getDocs(collection(db, "students")),
                     getDocs(collection(db, "classrooms"))
                 ]);
                 
+                const assignedClasses = userData.assignedClasses || userData.classes || [];
+                const assignedClassesTrimmed = assignedClasses.map(c => String(c).trim().toLowerCase());
+
                 const classList = classSnap.docs
                     .map(d => ({
                         id: d.id,
                         name: d.data().className || d.id
                     }))
+                    .filter(c => {
+                        if (userData.role === 'admin' || assignedClassesTrimmed.length === 0) return true;
+                        return assignedClassesTrimmed.includes(c.id.trim().toLowerCase()) || 
+                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase()) ||
+                               assignedClassesTrimmed.some(ac => c.name.trim().toLowerCase().includes(ac) || ac.includes(c.name.trim().toLowerCase()));
+                    })
                     .sort((a, b) => a.name.localeCompare(b.name, 'th'));
 
                 const actData = actSnap.exists() ? actSnap.data() : {};
@@ -67,9 +89,9 @@ export default function CheckAttendancePage() {
             } finally {
                 setLoading(false);
             }
-        };
-        fetchData();
-    }, [activityId]);
+        });
+        return () => unsubscribe();
+    }, [activityId, router]);
 
     useEffect(() => {
         const loadAttendance = async () => {
