@@ -12,7 +12,7 @@ export default function SubActivityCheckPage() {
     const params = useParams();
     const activityId = params?.id;
 
-    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '', semester: '' });
+    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -57,7 +57,7 @@ export default function SubActivityCheckPage() {
 
                 setData({
                     name: actData.activityName || actData.name || "กิจกรรมย่อย",
-                    academicYear: actData.academicYear || actData.year || 'ระบุปี',
+                    academicYear: actData.academicYear || actData.year || '2569',
                     semester: actData.semester || actData.term || '1',
                     classes: classList,
                     students: stuSnap.docs.map(d => ({ id: d.id, ...d.data() }))

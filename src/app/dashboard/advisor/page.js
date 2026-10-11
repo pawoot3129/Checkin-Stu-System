@@ -10,15 +10,13 @@ export default function AdvisorPage() {
     const [years, setYears] = useState([]);
     const [semestersByYear, setSemestersByYear] = useState({});
     
-    // State สำหรับตัวกรอง
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedSemester, setSelectedSemester] = useState('');
-    const [activeTab, setActiveTab] = useState('all'); // 'all', 'main', 'sub'
+    const [activeTab, setActiveTab] = useState('all');
 
     useEffect(() => {
         const init = async () => {
             try {
-                // 1. ดึงตั้งค่าปีและภาคเรียนจาก system_settings
                 const configSnap = await getDoc(doc(db, "system_settings", "main_config"));
                 if (configSnap.exists()) {
                     const data = configSnap.data();
@@ -33,7 +31,6 @@ export default function AdvisorPage() {
                     }
                 }
 
-                // 2. ดึงรายการกิจกรรมทั้งหมด
                 const querySnapshot = await getDocs(collection(db, "activities"));
                 const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setActivities(data);
@@ -52,13 +49,13 @@ export default function AdvisorPage() {
 
     const handleStartCheck = (act) => {
         if (act.activityType === 'sub') {
+            // แก้เส้นทางให้วิ่งไปที่ sub-check/[id] ให้ตรงกับโครงสร้างโฟลเดอร์
             router.push(`/dashboard/advisor/sub-check/${act.id}`);
         } else {
             router.push(`/dashboard/advisor/check/${act.id}`);
         }
     };
 
-    // กรองกิจกรรมตาม ปีการศึกษา, ภาคเรียน และประเภทที่เลือก
     const filteredActivities = activities.filter(act => {
         const matchYear = selectedYear ? String(act.academicYear) === String(selectedYear) : true;
         const matchSem = selectedSemester ? String(act.semester) === String(selectedSemester) : true;
@@ -71,8 +68,6 @@ export default function AdvisorPage() {
     return (
         <div className="min-h-screen bg-gray-950 p-6 flex flex-col items-center text-white">
             <div className="max-w-5xl w-full">
-                
-                {/* ปุ่มย้อนกลับ */}
                 <div className="w-full flex justify-end mb-6">
                     <button 
                         onClick={() => router.push('/dashboard')} 
@@ -82,14 +77,12 @@ export default function AdvisorPage() {
                     </button>
                 </div>
 
-                {/* ส่วนหัว */}
                 <div className="text-center mb-8">
                     <div className="text-4xl mb-3">📝</div>
                     <h1 className="text-2xl font-bold mb-2">เลือกกิจกรรมที่ต้องการเช็คชื่อ</h1>
                     <div className="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
                 </div>
 
-                {/* แผงตัวกรอง (ปีการศึกษา, ภาคเรียน, และแท็บประเภท) */}
                 <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800 mb-8 space-y-4 shadow-xl">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -115,13 +108,12 @@ export default function AdvisorPage() {
                         </div>
                     </div>
 
-                    {/* แท็บเลือกประเภทกิจกรรม */}
                     <div className="flex gap-2 pt-2 border-t border-gray-800">
                         <button 
                             onClick={() => setActiveTab('all')}
                             className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                         >
-                            ทั้งหมด ({activities.filter(a => (!selectedYear || String(a.academicYear) === String(selectedYear)) && (!selectedSemester || String(a.semester) === String(selectedSemester))).length})
+                            ทั้งหมด
                         </button>
                         <button 
                             onClick={() => setActiveTab('main')}
@@ -138,7 +130,6 @@ export default function AdvisorPage() {
                     </div>
                 </div>
                 
-                {/* รายการกิจกรรมที่กรองแล้ว */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredActivities.length > 0 ? (
                         filteredActivities.map((act) => (

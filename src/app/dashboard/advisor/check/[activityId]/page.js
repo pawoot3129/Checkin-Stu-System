@@ -12,7 +12,7 @@ export default function CheckAttendancePage() {
     const params = useParams();
     const activityId = params?.id;
 
-    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '', semester: '' });
+    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
     const [holidayNote, setHolidayNote] = useState({});
@@ -76,7 +76,7 @@ export default function CheckAttendancePage() {
 
                 setData({
                     name: actData.activityName || actData.name || "กิจกรรม",
-                    academicYear: actData.academicYear || actData.year || 'ระบุปี',
+                    academicYear: actData.academicYear || actData.year || '2569',
                     semester: actData.semester || actData.term || '1',
                     classes: classList,
                     students: stuSnap.docs.map(d => ({ id: d.id, ...d.data() }))
