@@ -10,9 +10,9 @@ import { FaCalendarCheck, FaArrowLeft, FaCheck, FaTimes, FaTrash, FaEdit } from 
 export default function SubActivityCheckPage() {
     const router = useRouter();
     const params = useParams();
-    const activityId = params?.id; // ใช้ params.id ให้ตรงกับชื่อโฟลเดอร์ [id]
+    const activityId = params?.id;
 
-    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [] });
+    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '', semester: '' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -53,8 +53,12 @@ export default function SubActivityCheckPage() {
                     })
                     .sort((a, b) => a.name.localeCompare(b.name, 'th'));
 
+                const actData = actSnap.exists() ? actSnap.data() : {};
+
                 setData({
-                    name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
+                    name: actData.activityName || "ไม่พบกิจกรรม",
+                    academicYear: actData.academicYear || '-',
+                    semester: actData.semester || '-',
                     classes: classList,
                     students: stuSnap.docs.map(d => ({ id: d.id, ...d.data() }))
                 });
@@ -171,7 +175,7 @@ export default function SubActivityCheckPage() {
                     </button>
                 </div>
 
-                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-xl">
+                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-xl">
                     <div>
                         <label className="block text-xs text-gray-400 mb-2 font-semibold">ห้องเรียน</label>
                         <select 
@@ -191,6 +195,12 @@ export default function SubActivityCheckPage() {
                             onChange={(e) => setDate(e.target.value)} 
                             className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-white outline-none focus:border-amber-500" 
                         />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold">ภาคเรียน / ปีการศึกษา</label>
+                        <div className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-amber-400 font-bold flex items-center">
+                            ภาคเรียนที่ {data.semester} / {data.academicYear}
+                        </div>
                     </div>
                 </div>
 

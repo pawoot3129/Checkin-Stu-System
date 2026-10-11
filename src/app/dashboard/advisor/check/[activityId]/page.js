@@ -10,15 +10,13 @@ import { FaCalendarCheck, FaArrowLeft, FaEdit, FaCheck, FaTrash, FaBriefcase, Fa
 export default function CheckAttendancePage() {
     const router = useRouter();
     const params = useParams();
-    const activityId = params?.activityId;
+    const activityId = params?.id;
 
-    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [] });
-    const [academicSettings, setAcademicSettings] = useState({ years: [], semesters: [] });
+    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '', semester: '' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
-    const [holidayNote, setHolidayNote] = useState({}); // เก็บข้อความระบุวันหยุดของแต่ละวัน
+    const [holidayNote, setHolidayNote] = useState({});
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [selectedTerm, setSelectedTerm] = useState('');
     const [isHolidayMode, setIsHolidayMode] = useState(false);
     const [holidayInputText, setHolidayInputText] = useState('');
 
@@ -53,11 +51,10 @@ export default function CheckAttendancePage() {
                     if (!userSnapByUid.empty) userData = userSnapByUid.docs[0].data();
                 }
 
-                const [actSnap, stuSnap, classSnap, settingsSnap] = await Promise.all([
+                const [actSnap, stuSnap, classSnap] = await Promise.all([
                     getDoc(doc(db, "activities", activityId)),
                     getDocs(collection(db, "students")),
-                    getDocs(collection(db, "classrooms")),
-                    getDoc(doc(db, "system_settings", "main_config"))
+                    getDocs(collection(db, "classrooms"))
                 ]);
                 
                 const assignedClasses = userData.assignedClasses || userData.classes || [];
@@ -71,25 +68,19 @@ export default function CheckAttendancePage() {
                     .filter(c => {
                         if (userData.role === 'admin' || assignedClassesTrimmed.length === 0) return true;
                         return assignedClassesTrimmed.includes(c.id.trim().toLowerCase()) || 
-                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase()) ||
-                               assignedClassesTrimmed.some(ac => c.name.trim().toLowerCase().includes(ac) || ac.includes(c.name.trim().toLowerCase()));
+                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase());
                     })
                     .sort((a, b) => a.name.localeCompare(b.name, 'th'));
 
+                const actData = actSnap.exists() ? actSnap.data() : {};
+
                 setData({
-                    name: actSnap.exists() ? actSnap.data().activityName : "ไม่พบกิจกรรม",
+                    name: actData.activityName || "ไม่พบกิจกรรม",
+                    academicYear: actData.academicYear || '-',
+                    semester: actData.semester || '-',
                     classes: classList,
                     students: stuSnap.docs.map(d => ({ id: d.id, ...d.data() }))
                 });
-
-                if (settingsSnap.exists()) {
-                    const sData = settingsSnap.data();
-                    setAcademicSettings({ years: sData.academicYears || [], semesters: sData.semesters || [] });
-                    if (sData.semesters?.length > 0) {
-                        const latest = sData.semesters[sData.semesters.length - 1];
-                        setSelectedTerm(`${latest.semester}/${latest.year}`);
-                    }
-                }
             } catch (e) { toast.error("โหลดข้อมูลล้มเหลว"); }
         });
         return () => unsubscribe();
@@ -195,7 +186,7 @@ export default function CheckAttendancePage() {
     const filteredStudents = data.students
         .filter(s => {
             if (!selectedClass) return false;
-            if (s.status === "จำหน่าย") return false; // กรองนักเรียนที่ถูกจำหน่ายออก
+            if (s.status === "จำหน่าย") return false;
             const selectedObj = data.classes.find(c => c.id === selectedClass);
             return s.classId?.trim() === selectedClass.trim() || s.classId?.trim() === selectedObj?.name?.trim();
         })
@@ -224,7 +215,7 @@ export default function CheckAttendancePage() {
                     <div>
                         <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ห้องเรียน</label>
                         <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
-                            <option value="">-- เลือก --</option>
+                            <option value="">-- เลือกห้อง --</option>
                             {data.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     </div>
@@ -234,11 +225,9 @@ export default function CheckAttendancePage() {
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ภาคเรียน / ปีการศึกษา</label>
-                        <select value={selectedTerm} onChange={(e) => setSelectedTerm(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
-                            {academicSettings.semesters.map((s, idx) => (
-                                <option key={idx} value={`${s.semester}/${s.year}`}>ภาคเรียนที่ {s.semester} / {s.year}</option>
-                            ))}
-                        </select>
+                        <div style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: '#38bdf8', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                            ภาคเรียนที่ {data.semester} / {data.academicYear}
+                        </div>
                     </div>
                 </div>
 
