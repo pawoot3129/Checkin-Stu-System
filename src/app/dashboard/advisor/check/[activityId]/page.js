@@ -13,7 +13,7 @@ export default function CheckAttendancePage() {
     const activityId = params?.activityId;
 
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState({ name: 'กิจกรรม', classes: [], students: [], academicYear: '2569', semester: '1' });
+    const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
     const [holidayNote, setHolidayNote] = useState({});
@@ -77,7 +77,7 @@ export default function CheckAttendancePage() {
                 const actData = actSnap.exists() ? actSnap.data() : {};
 
                 setData({
-                    name: actData.activityName || actData.name || "กิจกรรม",
+                    name: actData.activityName || actData.name || "กิจกรรมหลัก",
                     academicYear: actData.academicYear || actData.year || '2569',
                     semester: actData.semester || actData.term || '1',
                     classes: classList,
@@ -206,41 +206,56 @@ export default function CheckAttendancePage() {
 
     if (loading) {
         return (
-            <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: 'bold' }}>กำลังโหลดข้อมูล...</div>
+            <div className="min-h-screen bg-gray-950 text-white flex justify-center items-center">
+                <div className="text-lg font-bold">กำลังโหลดข้อมูล...</div>
             </div>
         );
     }
 
     return (
-        <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', padding: '24px' }}>
-            <Toaster />
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <FaCalendarCheck size={24} color="#6366f1" />
-                        <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{data.name}</h1>
+        <div className="min-h-screen bg-gray-950 p-6 text-white">
+            <Toaster position="top-center" />
+            <div className="max-w-3xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center gap-3">
+                        <FaCalendarCheck size={24} className="text-indigo-400" />
+                        <div>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">📌 กิจกรรมหลัก (สะสมตลอดเทอม)</span>
+                            <h1 className="text-xl font-bold mt-1">{data.name}</h1>
+                        </div>
                     </div>
-                    <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#1e293b', padding: '8px 16px', borderRadius: '8px', border: '1px solid #334155', cursor: 'pointer', color: 'white' }}>
+                    <button 
+                        onClick={() => router.back()} 
+                        className="flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-xl border border-gray-700 hover:bg-gray-700 transition"
+                    >
                         <FaArrowLeft size={12} /> ย้อนกลับ
                     </button>
                 </div>
 
-                <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-xl">
                     <div>
-                        <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ห้องเรียน</label>
-                        <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }}>
-                            <option value="">-- เลือกห้อง --</option>
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold">ห้องเรียน</label>
+                        <select 
+                            value={selectedClass} 
+                            onChange={(e) => setSelectedClass(e.target.value)} 
+                            className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-white outline-none focus:border-indigo-500"
+                        >
+                            <option value="">-- เลือกห้องเรียน --</option>
                             {data.classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>วันที่เช็คชื่อ</label>
-                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: 'white' }} />
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold">วันที่เช็คชื่อ</label>
+                        <input 
+                            type="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)} 
+                            className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-white outline-none focus:border-indigo-500" 
+                        />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>ภาคเรียน / ปีการศึกษา</label>
-                        <div style={{ width: '100%', backgroundColor: '#0a0a0a', border: '1px solid #334155', padding: '12px', borderRadius: '8px', color: '#38bdf8', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                        <label className="block text-xs text-gray-400 mb-2 font-semibold">ภาคเรียน / ปีการศึกษา</label>
+                        <div className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl text-indigo-400 font-bold flex items-center">
                             ภาคเรียนที่ {data.semester} / {data.academicYear}
                         </div>
                     </div>
