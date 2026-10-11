@@ -10,8 +10,9 @@ import { FaCalendarCheck, FaArrowLeft, FaCheck, FaTimes, FaTrash, FaEdit } from 
 export default function SubActivityCheckPage() {
     const router = useRouter();
     const params = useParams();
-    const activityId = params?.id;
+    const activityId = params?.activityId;
 
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState({ name: 'กำลังโหลด...', classes: [], students: [], academicYear: '2569', semester: '1' });
     const [selectedClass, setSelectedClass] = useState('');
     const [attendance, setAttendance] = useState({});
@@ -49,7 +50,8 @@ export default function SubActivityCheckPage() {
                     .filter(c => {
                         if (userData.role === 'admin' || assignedClassesTrimmed.length === 0) return true;
                         return assignedClassesTrimmed.includes(c.id.trim().toLowerCase()) || 
-                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase());
+                               assignedClassesTrimmed.includes(c.name.trim().toLowerCase()) ||
+                               assignedClassesTrimmed.some(ac => c.name.trim().toLowerCase().includes(ac) || ac.includes(c.name.trim().toLowerCase()));
                     })
                     .sort((a, b) => a.name.localeCompare(b.name, 'th'));
 
@@ -65,6 +67,8 @@ export default function SubActivityCheckPage() {
             } catch (e) { 
                 console.error(e);
                 toast.error("โหลดข้อมูลล้มเหลว"); 
+            } finally {
+                setLoading(false);
             }
         });
         return () => unsubscribe();
@@ -155,6 +159,14 @@ export default function SubActivityCheckPage() {
             if (numA !== numB) return numA - numB;
             return (a.name || '').localeCompare(b.name || '', 'th');
         });
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-950 text-white flex justify-center items-center">
+                <div className="text-lg font-bold">กำลังโหลดข้อมูล...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
