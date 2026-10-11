@@ -75,13 +75,16 @@ export default function CheckAttendancePage() {
                 const actData = actSnap.exists() ? actSnap.data() : {};
 
                 setData({
-                    name: actData.activityName || "ไม่พบกิจกรรม",
-                    academicYear: actData.academicYear || '-',
-                    semester: actData.semester || '-',
+                    name: actData.activityName || actData.name || "กิจกรรม",
+                    academicYear: actData.academicYear || actData.year || 'ระบุปี',
+                    semester: actData.semester || actData.term || '1',
                     classes: classList,
                     students: stuSnap.docs.map(d => ({ id: d.id, ...d.data() }))
                 });
-            } catch (e) { toast.error("โหลดข้อมูลล้มเหลว"); }
+            } catch (e) { 
+                console.error(e);
+                toast.error("โหลดข้อมูลล้มเหลว"); 
+            }
         });
         return () => unsubscribe();
     }, [activityId, router]);
