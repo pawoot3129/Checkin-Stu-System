@@ -117,7 +117,17 @@ export default function ActivitySummaryPage() {
             }
 
             if (isSubActivity) {
-                // ประมวลผลสำหรับกิจกรรมย่อย (วันเดียวจบ: เข้าร่วม / ไม่เข้าร่วม -> ผ่าน / ไม่ผ่าน)
+                // หาходилวันที่จัดกิจกรรมจากบันทึกการเช็คชื่อ
+                const uniqueDates = [...new Set(allAttendance.map(r => r.date))];
+                let activityDateFormatted = '-';
+                if (uniqueDates.length > 0) {
+                    const rawDate = uniqueDates[0]; // ใช้วันที่บันทึก
+                    const [year, month, day] = rawDate.split('-');
+                    const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                    activityDateFormatted = `${Number(day)} ${thaiMonths[Number(month)]} ${Number(year) + 543}`;
+                }
+
+                // ประมวลผลสำหรับกิจกรรมย่อย
                 const processed = students.map(st => {
                     const rec = allAttendance.find(r => String(r.studentId).trim() === String(st.id).trim());
                     const status = rec ? rec.status : '-';
@@ -137,11 +147,12 @@ export default function ActivitySummaryPage() {
                     activityName: currentActivity?.activityName, 
                     className: selectedClass, 
                     students: processed,
+                    activityDate: activityDateFormatted,
                     printDate: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
                     advisorName: userProfile?.name || "..................................." 
                 });
             } else {
-                // ประมวลผลสำหรับกิจกรรมหลัก (สะสมตลอดเทอม)
+                // ประมวลผลสำหรับกิจกรรมหลัก
                 const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
                 const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
                 
@@ -245,7 +256,6 @@ export default function ActivitySummaryPage() {
 
     const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
     
-    // กรองกิจกรรมตามประเภท (หลัก หรือ ย่อย) และเทอม/ปีการศึกษา
     const filteredActivities = allActivities.filter(a => {
         const matchYear = String(a.academicYear) === String(selectedYear);
         const matchSem = String(a.semester) === String(selectedSemester);
@@ -297,7 +307,6 @@ export default function ActivitySummaryPage() {
                 </header>
                 
                 <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 space-y-6">
-                    {/* แท็บเลือกประเภทกิจกรรม */}
                     <div className="flex gap-3">
                         <button 
                             onClick={() => setActivityCategory('main')}
@@ -354,14 +363,12 @@ export default function ActivitySummaryPage() {
                         <p>
                             <strong>ห้อง:</strong> {reportData.className} | 
                             <strong> ภาคเรียนที่ {selectedSemester} / {selectedYear}</strong> 
-                            {!reportData.isSub && ` | รวมทั้งหมด ${reportData.totalSessions} ครั้ง`}
+                            {reportData.isSub ? ` | วันที่จัดกิจกรรม: ${reportData.activityDate}` : ` | รวมทั้งหมด ${reportData.totalSessions} ครั้ง`}
                         </p>
                         <p><strong>วันที่ออกรายงาน:</strong> {reportData.printDate}</p>
                     </div>
 
-                    {/* แสดงตารางตามประเภทกิจกรรม */}
                     {reportData.isSub ? (
-                        // ตารางกิจกรรมย่อย: แสดงผล เข้าร่วม / ไม่เข้าร่วม และผลประเมิน ผ่าน / ไม่ผ่าน
                         <table className="w-full border-collapse border border-gray-400 text-center mb-6">
                             <thead className="bg-gray-100">
                                 <tr>
@@ -387,7 +394,6 @@ export default function ActivitySummaryPage() {
                             </tbody>
                         </table>
                     ) : (
-                        // ตารางกิจกรรมหลัก: สถิติสะสมเดิม
                         <table className="w-full border-collapse border border-gray-400 text-center mb-6">
                             <thead className="bg-gray-100">
                                 <tr>
