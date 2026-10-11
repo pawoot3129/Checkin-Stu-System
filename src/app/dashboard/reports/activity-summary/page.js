@@ -15,6 +15,7 @@ export default function ActivitySummaryPage() {
     const [academicYears, setAcademicYears] = useState(['2569']);
     const [systemConfig, setSystemConfig] = useState({});
     
+    const [activityCategory, setActivityCategory] = useState('main'); // 'main' หรือ 'sub'
     const [selectedYear, setSelectedYear] = useState('2569');
     const [selectedSemester, setSelectedSemester] = useState('1');
     const [selectedActivityId, setSelectedActivityId] = useState('');
@@ -55,11 +56,11 @@ export default function ActivitySummaryPage() {
                 setSystemConfig(data);
                 const years = data.academicYears || ['2569'];
                 setAcademicYears(years);
-                const currentY = years[0];
+                const currentY = years[years.length - 1];
                 setSelectedYear(currentY);
 
                 const semestersForYear = data.semestersByYear?.[currentY] || ['1'];
-                setSelectedSemester(semestersForYear[0]);
+                setSelectedSemester(semestersForYear[semestersForYear.length - 1]);
             }
             const actSnap = await getDocs(collection(db, "activities"));
             setAllActivities(actSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -70,18 +71,25 @@ export default function ActivitySummaryPage() {
     const handleYearChange = (newYear) => {
         setSelectedYear(newYear);
         const semestersForYear = systemConfig.semestersByYear?.[newYear] || ['1'];
-        setSelectedSemester(semestersForYear[0]);
+        setSelectedSemester(semestersForYear[semestersForYear.length - 1]);
     };
 
-    useEffect(() => { setReportData(null); }, [selectedYear, selectedSemester, selectedActivityId, selectedClass]);
+    useEffect(() => { 
+        setSelectedActivityId('');
+        setReportData(null); 
+    }, [activityCategory, selectedYear, selectedSemester]);
+
+    useEffect(() => { 
+        setReportData(null); 
+    }, [selectedClass]);
 
     const handleGenerateReport = async () => {
         if (!selectedActivityId || !selectedClass) return toast.error("กรุณาเลือกกิจกรรมและห้องเรียน");
         setIsLoading(true);
         try {
-            const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
-            const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
-            
+            const currentActivity = allActivities.find(a => a.id === selectedActivityId);
+            const isSubActivity = currentActivity?.activityType === 'sub';
+
             const sSnap = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass), orderBy("studentNumber")));
             const students = sSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(st => st.status !== "จำหน่าย"); 
             
@@ -92,7 +100,6 @@ export default function ActivitySummaryPage() {
             }
 
             const studentIds = students.map(st => String(st.id).trim());
-
             const chunks = [];
             for (let i = 0; i < studentIds.length; i += 30) {
                 chunks.push(studentIds.slice(i, i + 30));
@@ -109,95 +116,124 @@ export default function ActivitySummaryPage() {
                 aSnap.docs.forEach(d => allAttendance.push(d.data()));
             }
 
-            const attendance = allAttendance.filter(r => String(r.status || '').trim() !== 'วันหยุด');
+            if (isSubActivity) {
+                // ประมวลผลสำหรับกิจกรรมย่อย (วันเดียวจบ: เข้าร่วม / ไม่เข้าร่วม -> ผ่าน / ไม่ผ่าน)
+                const processed = students.map(st => {
+                    const rec = allAttendance.find(r => String(r.studentId).trim() === String(st.id).trim());
+                    const status = rec ? rec.status : '-';
+                    let evalResult = '-';
+                    if (status === 'เข้าร่วม') evalResult = 'ผ่าน';
+                    else if (status === 'ไม่เข้าร่วม') evalResult = 'ไม่ผ่าน';
 
-            const uniqueDates = [...new Set(attendance.map(r => r.date))];
-            const totalSessions = uniqueDates.length;
-            
-            const classStatuses = attendance.map(r => r.status);
-            const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
-                (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
-
-            const processed = students.map(st => {
-                const recs = attendance.filter(r => String(r.studentId).trim() === String(st.id).trim());
-                const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาทั้งวัน': 0, 'ขาด': 0 };
-                let penaltyScore = 0;
-                let isStudentInternshipOrDual = isClassDualOrInternship;
-
-                recs.forEach(r => {
-                    let stName = String(r.status || '').trim();
-                    if (stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
-                        isStudentInternshipOrDual = true;
-                    }
-                    
-                    if (stName === 'มา' || stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
-                        stats['มา']++;
-                        penaltyScore += Number(weights['มา'] ?? 0);
-                    } else if (stName === 'สาย') {
-                        stats['สาย']++;
-                        penaltyScore += Number(weights['สาย'] ?? 1);
-                    } else if (stName.includes('ครึ่ง')) {
-                        stats['ลาครึ่งวัน']++;
-                        penaltyScore += Number(weights['ลาครึ่งวัน'] ?? 0.5);
-                    } else if (stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
-                        stats['ลาทั้งวัน']++;
-                        penaltyScore += Number(weights['ลาทั้งวัน'] ?? 0.5);
-                    } else if (stName === 'ขาด') {
-                        stats['ขาด']++;
-                        penaltyScore += Number(weights['ขาด'] ?? 1);
-                    } else {
-                        stats['ขาด']++;
-                        penaltyScore += Number(weights['ขาด'] ?? 1);
-                    }
+                    return {
+                        ...st,
+                        status,
+                        result: evalResult
+                    };
                 });
 
-                const studentActualTotalDays = stats['มา'] + stats['สาย'] + stats['ลาครึ่งวัน'] + stats['ลาทั้งวัน'] + stats['ขาด'];
-
-                // ถ้ายังไม่มีการเช็คชื่อ ให้แสดงผลเป็น - และผลการประเมินเป็น มผ
-                if (studentActualTotalDays === 0) {
-                    return {
-                        ...st,
-                        isInternshipOrDual: false,
-                        stats,
-                        totalRecs: 0,
-                        totalAbsenceOrLate: 0,
-                        percent: '-',
-                        result: 'มผ'
-                    };
-                }
-
-                if (isStudentInternshipOrDual && studentActualTotalDays > 0) {
-                    return {
-                        ...st,
-                        isInternshipOrDual: true,
-                        totalRecs: studentActualTotalDays,
-                        percent: '100',
-                        result: 'ผ่าน'
-                    };
-                }
-
-                const totalAbsenceOrLate = penaltyScore;
-                const percent = ((studentActualTotalDays - penaltyScore) / studentActualTotalDays) * 100;
+                setReportData({ 
+                    isSub: true,
+                    activityName: currentActivity?.activityName, 
+                    className: selectedClass, 
+                    students: processed,
+                    printDate: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    advisorName: userProfile?.name || "..................................." 
+                });
+            } else {
+                // ประมวลผลสำหรับกิจกรรมหลัก (สะสมตลอดเทอม)
+                const weightSnap = await getDoc(doc(db, "system_settings", "evaluation_weights"));
+                const weights = weightSnap.exists() ? weightSnap.data() : { 'มา': 0, 'สาย': 1, 'ลาครึ่งวัน': 0.5, 'ลาทั้งวัน': 0.5, 'ขาด': 1 };
                 
-                return { 
-                    ...st, 
-                    isInternshipOrDual: false,
-                    stats, 
-                    totalRecs: studentActualTotalDays, 
-                    totalAbsenceOrLate, 
-                    percent: Math.max(0, percent).toFixed(0), 
-                    result: percent >= 80 ? 'ผ่าน' : 'มผ' 
-                };
-            });
+                const attendance = allAttendance.filter(r => String(r.status || '').trim() !== 'วันหยุด');
+                const uniqueDates = [...new Set(attendance.map(r => r.date))];
+                const totalSessions = uniqueDates.length;
+                
+                const classStatuses = attendance.map(r => r.status);
+                const isClassDualOrInternship = selectedClass.includes('ทวิภาคี') || 
+                    (classStatuses.length > 0 && classStatuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
 
-            setReportData({ 
-                activityName: allActivities.find(a => a.id === selectedActivityId)?.activityName, 
-                className: selectedClass, 
-                students: processed,
-                totalSessions,
-                printDate: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
-                advisorName: userProfile?.name || "..................................." 
-            });
+                const processed = students.map(st => {
+                    const recs = attendance.filter(r => String(r.studentId).trim() === String(st.id).trim());
+                    const stats = { 'มา': 0, 'สาย': 0, 'ลาครึ่งวัน': 0, 'ลาทั้งวัน': 0, 'ขาด': 0 };
+                    let penaltyScore = 0;
+                    let isStudentInternshipOrDual = isClassDualOrInternship;
+
+                    recs.forEach(r => {
+                        let stName = String(r.status || '').trim();
+                        if (stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                            isStudentInternshipOrDual = true;
+                        }
+                        
+                        if (stName === 'มา' || stName === 'ฝึกงาน' || stName === 'ทวิภาคี') {
+                            stats['มา']++;
+                            penaltyScore += Number(weights['มา'] ?? 0);
+                        } else if (stName === 'สาย') {
+                            stats['สาย']++;
+                            penaltyScore += Number(weights['สาย'] ?? 1);
+                        } else if (stName.includes('ครึ่ง')) {
+                            stats['ลาครึ่งวัน']++;
+                            penaltyScore += Number(weights['ลาครึ่งวัน'] ?? 0.5);
+                        } else if (stName.includes('ลา') || stName === 'ลาเต็ม' || stName === 'ลาทั้งวัน') {
+                            stats['ลาทั้งวัน']++;
+                            penaltyScore += Number(weights['ลาทั้งวัน'] ?? 0.5);
+                        } else if (stName === 'ขาด') {
+                            stats['ขาด']++;
+                            penaltyScore += Number(weights['ขาด'] ?? 1);
+                        } else {
+                            stats['ขาด']++;
+                            penaltyScore += Number(weights['ขาด'] ?? 1);
+                        }
+                    });
+
+                    const studentActualTotalDays = stats['มา'] + stats['สาย'] + stats['ลาครึ่งวัน'] + stats['ลาทั้งวัน'] + stats['ขาด'];
+
+                    if (studentActualTotalDays === 0) {
+                        return {
+                            ...st,
+                            isInternshipOrDual: false,
+                            stats,
+                            totalRecs: 0,
+                            totalAbsenceOrLate: 0,
+                            percent: '-',
+                            result: 'มผ'
+                        };
+                    }
+
+                    if (isStudentInternshipOrDual && studentActualTotalDays > 0) {
+                        return {
+                            ...st,
+                            isInternshipOrDual: true,
+                            totalRecs: studentActualTotalDays,
+                            percent: '100',
+                            result: 'ผ่าน'
+                        };
+                    }
+
+                    const totalAbsenceOrLate = penaltyScore;
+                    const percent = ((studentActualTotalDays - penaltyScore) / studentActualTotalDays) * 100;
+                    
+                    return { 
+                        ...st, 
+                        isInternshipOrDual: false,
+                        stats, 
+                        totalRecs: studentActualTotalDays, 
+                        totalAbsenceOrLate, 
+                        percent: Math.max(0, percent).toFixed(0), 
+                        result: percent >= 80 ? 'ผ่าน' : 'มผ' 
+                    };
+                });
+
+                setReportData({ 
+                    isSub: false,
+                    activityName: currentActivity?.activityName, 
+                    className: selectedClass, 
+                    students: processed,
+                    totalSessions,
+                    printDate: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    advisorName: userProfile?.name || "..................................." 
+                });
+            }
             toast.success("สร้างรายงานสำเร็จ");
         } catch (e) { 
             console.error(e);
@@ -208,6 +244,15 @@ export default function ActivitySummaryPage() {
     };
 
     const availableSemesters = systemConfig.semestersByYear?.[selectedYear] || ['1'];
+    
+    // กรองกิจกรรมตามประเภท (หลัก หรือ ย่อย) และเทอม/ปีการศึกษา
+    const filteredActivities = allActivities.filter(a => {
+        const matchYear = String(a.academicYear) === String(selectedYear);
+        const matchSem = String(a.semester) === String(selectedSemester);
+        const isSub = activityCategory === 'sub';
+        const matchType = isSub ? (a.activityType === 'sub') : (a.activityType !== 'sub');
+        return matchYear && matchSem && matchType;
+    });
 
     return (
         <div className="min-h-screen bg-gray-950 p-6 text-white">
@@ -251,19 +296,43 @@ export default function ActivitySummaryPage() {
                     <button onClick={() => router.back()} className="bg-gray-800 px-6 py-2 rounded-xl transition hover:bg-gray-700">← กลับ</button>
                 </header>
                 
-                <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
-                        {availableSemesters.map(sem => (
-                            <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>
-                        ))}
-                    </select>
-                    <select value={selectedYear} onChange={e => handleYearChange(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
-                        {academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
-                    </select>
-                    <select value={selectedActivityId} onChange={e => setSelectedActivityId(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="">-- เลือกกิจกรรม --</option>{allActivities.filter(a => String(a.academicYear) === String(selectedYear) && String(a.semester) === String(selectedSemester)).map(a => <option key={a.id} value={a.id}>{a.activityName}</option>)}</select>
-                    <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800"><option value="">-- เลือกห้องเรียน --</option>{classrooms.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 space-y-6">
+                    {/* แท็บเลือกประเภทกิจกรรม */}
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => setActivityCategory('main')}
+                            className={`flex-1 py-3 rounded-xl font-bold text-sm transition ${activityCategory === 'main' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                        >
+                            📌 รายงานกิจกรรมหลัก (สะสม)
+                        </button>
+                        <button 
+                            onClick={() => setActivityCategory('sub')}
+                            className={`flex-1 py-3 rounded-xl font-bold text-sm transition ${activityCategory === 'sub' ? 'bg-amber-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                        >
+                            ⚡ รายงานกิจกรรมย่อย (วันเดียวจบ)
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
+                            {availableSemesters.map(sem => (
+                                <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>
+                            ))}
+                        </select>
+                        <select value={selectedYear} onChange={e => handleYearChange(e.target.value)} className="p-3 bg-gray-950 rounded-xl border border-gray-800">
+                            {academicYears.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
+                        </select>
+                        <select value={selectedActivityId} onChange={e => setSelectedActivityId(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800">
+                            <option value="">-- เลือกกิจกรรม{activityCategory === 'sub' ? 'ย่อย' : 'หลัก'} --</option>
+                            {filteredActivities.map(a => <option key={a.id} value={a.id}>{a.activityName}</option>)}
+                        </select>
+                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="md:col-span-2 p-3 bg-gray-950 rounded-xl border border-gray-800">
+                            <option value="">-- เลือกห้องเรียน --</option>
+                            {classrooms.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
                     
-                    <div className="md:col-span-2 flex gap-4 pt-4 border-t border-gray-800">
+                    <div className="flex gap-4 pt-4 border-t border-gray-800">
                         <button onClick={handleGenerateReport} disabled={isLoading} className="flex-1 py-4 bg-indigo-600 rounded-xl font-bold transition-all duration-200 hover:scale-[1.02] hover:bg-indigo-500">{isLoading ? 'กำลังโหลด...' : 'สร้างรายงาน'}</button>
                         <button onClick={() => window.print()} disabled={!reportData} className={`flex-1 py-4 rounded-xl font-bold transition-all duration-200 ${!reportData ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:scale-[1.02] hover:bg-gray-200'}`}>พิมพ์รายงาน</button>
                     </div>
@@ -276,67 +345,107 @@ export default function ActivitySummaryPage() {
                         <img src="/logo.png" className="w-16" alt="Logo" />
                         <div className="text-center">
                             <h2 className="text-xl font-bold">วิทยาลัยเทคโนโลยีพณิชยการสิชล</h2>
-                            <p className="text-sm font-semibold">รายงานสรุปผลการเข้าร่วมกิจกรรม: {reportData.activityName}</p>
+                            <p className="text-sm font-semibold">
+                                {reportData.isSub ? 'รายงานผลการเข้าร่วมกิจกรรมย่อย' : 'รายงานสรุปผลการเข้าร่วมกิจกรรม'}: {reportData.activityName}
+                            </p>
                         </div>
                     </div>
                     <div className="flex justify-between text-sm mb-4">
-                        <p><strong>ห้อง:</strong> {reportData.className} | <strong>ภาคเรียนที่ {selectedSemester} / {selectedYear}</strong> | <strong>รวมทั้งหมด {reportData.totalSessions} ครั้ง</strong></p>
+                        <p>
+                            <strong>ห้อง:</strong> {reportData.className} | 
+                            <strong> ภาคเรียนที่ {selectedSemester} / {selectedYear}</strong> 
+                            {!reportData.isSub && ` | รวมทั้งหมด ${reportData.totalSessions} ครั้ง`}
+                        </p>
                         <p><strong>วันที่ออกรายงาน:</strong> {reportData.printDate}</p>
                     </div>
-                    <table className="w-full border-collapse border border-gray-400 text-center mb-6">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="border p-1 text-center">เลขที่</th>
-                                <th className="border p-1 text-center">ชื่อ - สกุล</th>
-                                <th className="border p-1">รวมวัน</th>
-                                <th className="border p-1">มา</th>
-                                <th className="border p-1">สาย</th>
-                                <th className="border p-1">ลาครึ่ง</th>
-                                <th className="border p-1">ลาเต็ม</th>
-                                <th className="border p-1">ขาด</th>
-                                <th className="border p-1" style={{ whiteSpace: 'pre-line', lineHeight: '1.2' }}>รวม<br/>ขาด/ลา/สาย</th>
-                                <th className="border p-1">ร้อยละ</th>
-                                <th className="border p-1">ผลการประเมิน</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reportData.students.map((s, index) => (
-                                <tr key={s.id}>
-                                    <td className="border p-1 text-center">{index + 1}</td>
-                                    <td className="border p-1 text-left">{s.name}</td>
-                                    <td className="border p-1 font-bold">{s.totalRecs === 0 ? '-' : s.totalRecs}</td>
-                                    {s.isInternshipOrDual ? (
-                                        <td colSpan="8" className="border p-1 font-semibold text-center bg-gray-50 text-indigo-700">
-                                            นักศึกษาระบบทวิภาคี / ออกฝึกประสบการณ์วิชาชีพ
-                                        </td>
-                                    ) : s.totalRecs === 0 ? (
-                                        <>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1">-</td>
-                                            <td className="border p-1 font-bold text-red-600">{s.result}</td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td className="border p-1">{s.stats.มา}</td>
-                                            <td className="border p-1">{s.stats.สาย}</td>
-                                            <td className="border p-1">{s.stats.ลาครึ่งวัน}</td>
-                                            <td className="border p-1">{s.stats.ลาทั้งวัน}</td>
-                                            <td className="border p-1">{s.stats.ขาด}</td>
-                                            <td className="border p-1 font-semibold text-red-600">{s.totalAbsenceOrLate}</td>
-                                            <td className="border p-1">{s.percent}%</td>
-                                            <td className="border p-1 font-bold">{s.result === 'ผ่าน' ? 'ผ่าน' : 'มผ'}</td>
-                                        </>
-                                    )}
+
+                    {/* แสดงตารางตามประเภทกิจกรรม */}
+                    {reportData.isSub ? (
+                        // ตารางกิจกรรมย่อย: แสดงผล เข้าร่วม / ไม่เข้าร่วม และผลประเมิน ผ่าน / ไม่ผ่าน
+                        <table className="w-full border-collapse border border-gray-400 text-center mb-6">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="border p-2 text-center w-16">เลขที่</th>
+                                    <th className="border p-2 text-left">ชื่อ - สกุล</th>
+                                    <th className="border p-2 w-32">ผลการเข้าร่วม</th>
+                                    <th className="border p-2 w-32">ผลการประเมิน</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="text-sm mb-10 p-3 bg-gray-50 rounded-lg"><strong>หมายเหตุ:</strong> เกณฑ์ประเมินกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"</div>
+                            </thead>
+                            <tbody>
+                                {reportData.students.map((s, index) => (
+                                    <tr key={s.id}>
+                                        <td className="border p-2 text-center">{index + 1}</td>
+                                        <td className="border p-2 text-left">{s.name}</td>
+                                        <td className="border p-2 font-semibold">
+                                            {s.status === 'เข้าร่วม' ? <span className="text-green-600">✔ เข้าร่วม</span> : s.status === 'ไม่เข้าร่วม' ? <span className="text-red-600">✘ ไม่เข้าร่วม</span> : '-'}
+                                        </td>
+                                        <td className={`border p-2 font-bold ${s.result === 'ผ่าน' ? 'text-green-700' : s.result === 'ไม่ผ่าน' ? 'text-red-600' : 'text-gray-500'}`}>
+                                            {s.result}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        // ตารางกิจกรรมหลัก: สถิติสะสมเดิม
+                        <table className="w-full border-collapse border border-gray-400 text-center mb-6">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="border p-1 text-center">เลขที่</th>
+                                    <th className="border p-1 text-center">ชื่อ - สกุล</th>
+                                    <th className="border p-1">รวมวัน</th>
+                                    <th className="border p-1">มา</th>
+                                    <th className="border p-1">สาย</th>
+                                    <th className="border p-1">ลาครึ่ง</th>
+                                    <th className="border p-1">ลาเต็ม</th>
+                                    <th className="border p-1">ขาด</th>
+                                    <th className="border p-1" style={{ whiteSpace: 'pre-line', lineHeight: '1.2' }}>รวม<br/>ขาด/ลา/สาย</th>
+                                    <th className="border p-1">ร้อยละ</th>
+                                    <th className="border p-1">ผลการประเมิน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {reportData.students.map((s, index) => (
+                                    <tr key={s.id}>
+                                        <td className="border p-1 text-center">{index + 1}</td>
+                                        <td className="border p-1 text-left">{s.name}</td>
+                                        <td className="border p-1 font-bold">{s.totalRecs === 0 ? '-' : s.totalRecs}</td>
+                                        {s.isInternshipOrDual ? (
+                                            <td colSpan="8" className="border p-1 font-semibold text-center bg-gray-50 text-indigo-700">
+                                                นักศึกษาระบบทวิภาคี / ออกฝึกประสบการณ์วิชาชีพ
+                                            </td>
+                                        ) : s.totalRecs === 0 ? (
+                                            <>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1">-</td>
+                                                <td className="border p-1 font-bold text-red-600">{s.result}</td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="border p-1">{s.stats.มา}</td>
+                                                <td className="border p-1">{s.stats.สาย}</td>
+                                                <td className="border p-1">{s.stats.ลาครึ่งวัน}</td>
+                                                <td className="border p-1">{s.stats.ลาทั้งวัน}</td>
+                                                <td className="border p-1">{s.stats.ขาด}</td>
+                                                <td className="border p-1 font-semibold text-red-600">{s.totalAbsenceOrLate}</td>
+                                                <td className="border p-1">{s.percent}%</td>
+                                                <td className="border p-1 font-bold">{s.result === 'ผ่าน' ? 'ผ่าน' : 'มผ'}</td>
+                                            </>
+                                        )}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+
+                    <div className="text-sm mb-10 p-3 bg-gray-50 rounded-lg">
+                        <strong>หมายเหตุ:</strong> {reportData.isSub ? 'เกณฑ์การประเมินกิจกรรมย่อย นักเรียนต้องมีสถานะ "เข้าร่วม" จึงจะถือว่าผ่านเกณฑ์' : 'เกณฑ์ประเมินกิจกรรมต้องไม่ต่ำกว่า 80% จึงจะถือว่า "ผ่าน"'}
+                    </div>
                     <div className="text-center w-56 ml-auto">
                         <p>ลงชื่อ...........................................</p>
                         <p className="mt-1">({reportData.advisorName})</p>
