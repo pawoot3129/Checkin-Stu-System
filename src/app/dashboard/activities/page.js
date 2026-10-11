@@ -17,6 +17,9 @@ export default function ActivitiesPage() {
     const [semester, setSemester] = useState('');
     const [minPercent, setMinPercent] = useState(80);
     const [lateAsAbsent, setLateAsAbsent] = useState(true);
+    
+    // เพิ่ม State สำหรับเลือกประเภทกิจกรรม ('main' = กิจกรรมหลัก, 'sub' = กิจกรรมย่อยวันเดียวจบ)
+    const [activityType, setActivityType] = useState('main');
 
     useEffect(() => {
         fetchSettingsAndActivities();
@@ -54,16 +57,19 @@ export default function ActivitiesPage() {
             const activityRef = await addDoc(collection(db, "activities"), { 
                 activityName: name.trim(), 
                 academicYear, 
-                semester 
+                semester,
+                activityType // บันทึกประเภทกิจกรรมลงไปด้วย
             });
             
             await setDoc(doc(db, "evaluation_rules", activityRef.id), {
                 minPercent: Number(minPercent),
                 lateAsAbsent,
-                leaveRatio: 0.5
+                leaveRatio: 0.5,
+                activityType
             });
 
             setName('');
+            setActivityType('main');
             fetchSettingsAndActivities();
             toast.success("บันทึกกิจกรรมเรียบร้อย");
         } catch (error) {
@@ -103,10 +109,28 @@ export default function ActivitiesPage() {
                         className="w-full p-4 bg-gray-800 rounded-xl border border-gray-700 outline-none focus:border-indigo-500" 
                     />
                     
+                    {/* เพิ่มตัวเลือกประเภทกิจกรรม */}
                     <div className="grid grid-cols-2 gap-4">
-                        <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
-                            {years.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
-                        </select>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs text-gray-400 font-semibold">ประเภทกิจกรรม</label>
+                            <select 
+                                value={activityType} 
+                                onChange={(e) => setActivityType(e.target.value)} 
+                                className="p-4 bg-gray-800 rounded-xl border border-gray-700"
+                            >
+                                <option value="main">📌 กิจกรรมหลัก (สะสมตลอดเทอม)</option>
+                                <option value="sub">⚡ กิจกรรมย่อย (วันเดียวจบ/เข้าร่วม)</option>
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs text-gray-400 font-semibold">ปีการศึกษา</label>
+                            <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
+                                {years.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
                         <select value={semester} onChange={(e) => setSemester(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
                             <option value="">-- เลือกภาคเรียน --</option>
                             {semesters.filter(s => s.year === academicYear).map(s => (
@@ -134,8 +158,13 @@ export default function ActivitiesPage() {
                     {activities.length > 0 ? activities.map(a => (
                         <div key={a.id} className="p-4 border-b border-gray-700 flex justify-between items-center hover:bg-gray-800 transition">
                             <div>
-                                <span className="font-bold block">{a.activityName}</span>
-                                <span className="text-xs text-gray-400">ปี {a.academicYear} | ภาค {a.semester}</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="font-bold">{a.activityName}</span>
+                                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${a.activityType === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'}`}>
+                                        {a.activityType === 'sub' ? '⚡ กิจกรรมย่อย' : '📌 กิจกรรมหลัก'}
+                                    </span>
+                                </div>
+                                <span className="text-xs text-gray-400 mt-1 block">ปี {a.academicYear} | ภาค {a.semester}</span>
                             </div>
                             <button onClick={() => handleDelete(a.id)} className="text-red-400 hover:text-red-300 font-bold px-4 py-2 border border-red-900 rounded-lg">ลบ</button>
                         </div>
