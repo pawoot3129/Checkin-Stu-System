@@ -66,14 +66,20 @@ export default function DesirableCharacteristicsPage() {
                         const data = settingsSnap.data();
                         let semList = [];
                         
-                        if (data && Array.isArray(data.semesters) && data.semesters.length > 0) {
-                            semList = data.semesters.map(s => {
-                                if (typeof s === 'object' && s !== null) {
-                                    return String(s.name || s.semester || s.id || JSON.stringify(s));
+                        // ดึงข้อมูลภาคเรียนจากโครงสร้าง semestersByYear และ academicYears ให้ครบถ้วน
+                        if (data && data.semestersByYear && typeof data.semestersByYear === 'object') {
+                            Object.keys(data.semestersByYear).forEach(year => {
+                                const semArray = data.semestersByYear[year];
+                                if (Array.isArray(semArray)) {
+                                    semArray.forEach(sem => {
+                                        semList.push(`${sem}/${year}`);
+                                    });
                                 }
-                                return String(s);
                             });
-                        } else if (data && Array.isArray(data.academicYears) && data.academicYears.length > 0) {
+                        }
+
+                        // ถ้าระบบยังไม่มี ให้ดึงจาก academicYears หรือใช้ค่าเริ่มต้น
+                        if (semList.length === 0 && data && Array.isArray(data.academicYears) && data.academicYears.length > 0) {
                             data.academicYears.forEach(y => {
                                 const yrStr = typeof y === 'object' && y !== null ? String(y.year || y.name || JSON.stringify(y)) : String(y);
                                 semList.push(`1/${yrStr}`);
@@ -81,10 +87,12 @@ export default function DesirableCharacteristicsPage() {
                             });
                         }
 
-                        if (semList.length > 0) {
-                            setSemesters(semList);
-                            setSelectedSemester(String(semList[0]));
+                        if (semList.length === 0) {
+                            semList = ['1/2569', '2/2569'];
                         }
+
+                        setSemesters(semList);
+                        setSelectedSemester(String(semList[semList.length - 1])); // ตั้งค่าเป็นภาคล่าสุดโดยอัตโนมัติ
                     }
                 } catch (err) {
                     console.error("Initialization error:", err);
