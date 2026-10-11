@@ -21,6 +21,17 @@ export default function AdvisorPage() {
         fetchActivities();
     }, []);
 
+    // ฟังก์ชันจัดการเส้นทางเมื่อกดเริ่มเช็คชื่อ แยกตามประเภทกิจกรรม
+    const handleStartCheck = (act) => {
+        if (act.activityType === 'sub') {
+            // ถ้าเป็นกิจกรรมย่อย (วันเดียวจบ) วิ่งไปหน้าเช็คชื่อแบบพิเศษสำหรับกิจกรรมย่อย
+            router.push(`/dashboard/advisor/sub-check/${act.id}`);
+        } else {
+            // ถ้าเป็นกิจกรรมหลัก วิ่งไปหน้าเช็คชื่อปกติ
+            router.push(`/dashboard/advisor/check/${act.id}`);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-950 p-6 flex flex-col items-center text-white">
             <div className="max-w-5xl w-full">
@@ -42,17 +53,22 @@ export default function AdvisorPage() {
                     <div className="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
                 </div>
                 
-                {/* รายการกิจกรรม (โครงสร้างเดิม) */}
+                {/* รายการกิจกรรม */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {activities.map((act) => (
                         <div key={act.id} className="bg-gray-900 p-4 rounded-2xl border border-gray-800 hover:border-indigo-500 transition-all flex flex-col justify-between mx-auto w-full max-w-[240px]">
                             <div>
+                                <div className="mb-2">
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${act.activityType === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'}`}>
+                                        {act.activityType === 'sub' ? '⚡ กิจกรรมย่อย' : '📌 กิจกรรมหลัก'}
+                                    </span>
+                                </div>
                                 <h2 className="text-sm font-bold mb-1 line-clamp-2">{act.activityName}</h2>
                                 <p className="text-gray-500 text-[10px] mb-3">ปีการศึกษา {act.academicYear} | ภาคเรียนที่ {act.semester}</p>
                             </div>
                             <button 
-                                onClick={() => router.push(`/dashboard/advisor/check/${act.id}`)}
-                                className="w-full bg-indigo-600 py-2 rounded-xl text-xs font-bold hover:bg-indigo-500 transition-all shadow-lg"
+                                onClick={() => handleStartCheck(act)}
+                                className={`w-full py-2 rounded-xl text-xs font-bold transition-all shadow-lg ${act.activityType === 'sub' ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
                             >
                                 เริ่มเช็คชื่อ
                             </button>
