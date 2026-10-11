@@ -128,7 +128,7 @@ function HomeVisitForm({ userProfile }) {
 
     const jobOptions = ["รับจ้าง", "ทำสวน", "ประมง", "เกษตรกรรม", "รับราชการ", "ลูกจ้างเอกชน", "ครู"];
     const relationOptions = ["บิดา", "มารดา", "ปู่", "ย่า", "ตา", "ยาย", "ลุง", "ป้า", "น้า", "อา", "ญาติ"];
-    const houseTypeOptions = ["บ้านไม้ชั้นเดียว", "บ้านไม้สองชั้น", "บ้านปูนชั้นเดียว", "บ้านปูนสองชั้น", "บ้านกึ่งปึ่งกึ่งไม้"];
+    const houseTypeOptions = ["บ้านไม้ชั้นเดียว", "บ้านไม้สองชั้น", "บ้านปูนชั้นเดียว", "บ้านปูนสองชั้น", "บ้านกึ่งปูนกึ่งไม้"];
     const houseConditionOptions = ["บ้านมั่นคงแข็งแรงและสะอาด", "บ้านมั่นคงแข็งแรงแต่ไม่เป็นระเบียบ", "บ้านทรุดโทรมควรได้รับการซ่อมแซม", "บ้านอยู่ในพื้นที่เสี่ยง/ไม่ปลอดภัย"];
 
     return (
@@ -136,18 +136,19 @@ function HomeVisitForm({ userProfile }) {
             <Toaster />
             <style jsx global>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 8mm 10mm; }
-                    body { -webkit-print-color-adjust: exact; background: white !important; color: black !important; }
+                    @page { size: A4 portrait; margin: 6mm 10mm; }
+                    body { -webkit-print-color-adjust: exact; background: white !important; color: black !important; font-size: 9pt !important; }
                     .no-print { display: none !important; }
                     .print-container { background-color: white !important; color: black !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-                    .print-content-box { font-size: 10pt !important; line-height: 1.25 !important; }
-                    .print-row { margin-bottom: 3px !important; }
-                    input, select { border: none !important; border-bottom: 1px dotted #000 !important; border-radius: 0 !important; background: transparent !important; padding: 1px 4px !important; height: auto !important; }
+                    input, select { border: none !important; border-bottom: 1px dotted #555 !important; border-radius: 0 !important; background: transparent !important; padding: 0px 3px !important; height: auto !important; font-size: 9pt !important; }
+                    .print-row { display: flex !important; justify-content: space-between !important; align-items: baseline !important; margin-bottom: 4px !important; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+                    .print-row span.label { font-weight: bold; width: 35%; color: #000; }
+                    .print-row div.value { width: 65%; color: #000; }
                     .page-break { page-break-before: always; }
                 }
             `}</style>
 
-            <div className="max-w-[210mm] mx-auto bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl print-container print-content-box">
+            <div className="max-w-[210mm] mx-auto bg-gray-900 border border-gray-800 p-6 rounded-3xl shadow-2xl print-container">
                 
                 <div className="no-print flex justify-end mb-4">
                     <button onClick={() => router.back()} className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-5 py-2.5 rounded-2xl transition border border-gray-700/60 shadow-lg text-sm font-bold flex items-center gap-2 group cursor-pointer">
@@ -156,17 +157,17 @@ function HomeVisitForm({ userProfile }) {
                 </div>
                 
                 <div>
-                    <div className="text-center mb-4 pt-1">
-                        <img src="/logo.png" style={{ height: '38px', width: 'auto' }} className="mx-auto mb-1.5 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                        <h1 className="font-bold text-base text-white print:text-black tracking-wide">แบบบันทึกการเยี่ยมบ้านนักเรียน</h1>
-                        <div className="mt-1.5 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
-                            <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-10 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
-                            <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-14 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
+                    <div className="text-center mb-3">
+                        <img src="/logo.png" style={{ height: '32px', width: 'auto' }} className="mx-auto mb-1 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h1 className="font-bold text-sm text-white print:text-black tracking-wide">แบบบันทึกการเยี่ยมบ้านนักเรียน วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
+                        <div className="mt-1 flex justify-center gap-4 text-xs text-gray-300 print:text-black">
+                            <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-8 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
+                            <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-12 text-center bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                             <span>วันที่: <input type="date" name="visitDate" onChange={handleHeaderChange} value={headerInfo.visitDate} className="bg-gray-800 print:bg-transparent border-b border-dotted border-gray-600 print:border-black mx-1 rounded px-1" /></span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print bg-gray-950 p-4 rounded-2xl border border-gray-800">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 no-print bg-gray-950 p-4 rounded-2xl border border-gray-800">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">เลือกห้องเรียนในความดูแล</label>
                             <select className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none cursor-pointer" onChange={(e) => { setSelectedClass(e.target.value); handleStudentSelect(''); }}>
@@ -184,123 +185,130 @@ function HomeVisitForm({ userProfile }) {
                     </div>
 
                     {selectedStudent ? (
-                        <div className="border-t border-gray-800 print:border-transparent pt-3 space-y-2.5 text-sm">
-                            <div className="p-2.5 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black">
-                                1. ชื่อนักศึกษา: {selectedStudent.name} &nbsp; 
-                                <span className="font-normal text-gray-400 print:text-gray-600">(ห้อง: {selectedClass})</span>
+                        <div className="border-t border-gray-800 print:border-transparent pt-2 space-y-2 text-xs">
+                            <div className="p-2 bg-gray-950 print:bg-gray-100 rounded-xl border border-gray-800 print:border-gray-300 font-bold text-indigo-400 print:text-black flex justify-between">
+                                <span>1. ชื่อนักศึกษา: {selectedStudent.name}</span>
+                                <span className="text-gray-400 print:text-gray-600">ห้อง: {selectedClass}</span>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">2. ชื่อบิดา:</span>
-                                <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">3. ชื่อมารดา:</span>
-                                <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">4. ชื่อผู้ปกครอง:</span>
-                                <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black pl-4">เกี่ยวเป็น:</span>
-                                <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
-                                        <option value="">-- เลือก --</option>
-                                        {relationOptions.map(r => <option key={r} value={r}>{r}</option>)}
-                                    </select>
-                                    <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">2. ชื่อบิดา:</span>
+                                <div className="value md:col-span-2 w-full">
+                                    <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">5. ที่อยู่บ้านนักศึกษา:</span>
-                                <input name="address" value={formData.address} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">3. ชื่อมารดา:</span>
+                                <div className="value md:col-span-2 w-full">
+                                    <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                </div>
+                            </div>
+
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">4. ชื่อผู้ปกครอง / เกี่ยวเป็น:</span>
+                                <div className="value md:col-span-2 flex gap-2">
+                                    <input name="parentName" value={formData.parentName} onChange={handleInputChange} placeholder="ชื่อ-นามสกุล" className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, parentRelation: e.target.value }))} className="p-1 bg-gray-800 border border-gray-700 rounded-lg text-xs outline-none no-print w-28">
+                                        <option value="">-- ความเกี่ยวข้อง --</option>
+                                        {relationOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                                    </select>
+                                    <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} placeholder="เกี่ยวข้องเป็น" className="w-24 p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                </div>
+                            </div>
+
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">5. ที่อยู่บ้านนักศึกษา:</span>
+                                <div className="value md:col-span-2 w-full">
+                                    <input name="address" value={formData.address} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                </div>
                             </div>
 
                             {['father', 'mother', 'parent'].map((type, idx) => (
-                                <div key={type} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                    <span className="font-bold text-gray-300 print:text-black">{6+idx}. อาชีพ{type === 'father' ? 'บิดา' : type === 'mother' ? 'มารดา' : 'ผู้ปกครอง'}:</span>
-                                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div className="flex gap-2">
-                                            <select onChange={(e) => setFormData(prev => ({ ...prev, [`${type}Job`]: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
-                                                <option value="">-- เลือกอาชีพ --</option>
+                                <div key={type} className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                    <span className="label font-bold text-gray-300 print:text-black">{6+idx}. อาชีพ{type === 'father' ? 'บิดา' : type === 'mother' ? 'มารดา' : 'ผู้ปกครอง'}:</span>
+                                    <div className="value md:col-span-2 grid grid-cols-2 gap-2">
+                                        <div className="flex gap-1">
+                                            <select onChange={(e) => setFormData(prev => ({ ...prev, [`${type}Job`]: e.target.value }))} className="p-1 bg-gray-800 border border-gray-700 rounded-lg text-[10px] outline-none no-print w-20">
+                                                <option value="">เลือก</option>
                                                 {jobOptions.map(j => <option key={j} value={j}>{j}</option>)}
                                             </select>
-                                            <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                                            <input name={`${type}Job`} value={formData[`${type}Job`]} onChange={handleInputChange} placeholder="ระบุอาชีพ" className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">รายได้</span>
-                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="จำนวน" className="w-full p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                                            <span className="text-xs text-gray-400 print:text-black whitespace-nowrap">บาท/เดือน</span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[10px] text-gray-400 print:text-black">รายได้</span>
+                                            <input name={`${type}Income`} value={formData[`${type}Income`]} onChange={handleIncomeChange} placeholder="0" className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs text-right" />
+                                            <span className="text-[10px] text-gray-400 print:text-black whitespace-nowrap">บาท/เดือน</span>
                                         </div>
                                     </div>
                                 </div>
                             ))}
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">9. สภาพบ้าน:</span>
-                                <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, houseType: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
-                                        <option value="">-- เลือกสภาพบ้าน --</option>
-                                        {houseConditionOptions.map(h => <option key={h} value={h}>{h}</option>)}
-                                    </select>
-                                    <input name="houseType" value={formData.houseType} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">9. สภาพบ้าน / ลักษณะที่อยู่อาศัย:</span>
+                                <div className="value md:col-span-2 grid grid-cols-2 gap-2">
+                                    <div className="flex gap-1">
+                                        <select onChange={(e) => setFormData(prev => ({ ...prev, houseType: e.target.value }))} className="p-1 bg-gray-800 border border-gray-700 rounded-lg text-[10px] outline-none no-print w-20">
+                                            <option value="">เลือก</option>
+                                            {houseConditionOptions.map(h => <option key={h} value={h}>{h}</option>)}
+                                        </select>
+                                        <input name="houseType" value={formData.houseType} onChange={handleInputChange} placeholder="สภาพบ้าน" className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <select onChange={(e) => setFormData(prev => ({ ...prev, familyInfo: e.target.value }))} className="p-1 bg-gray-800 border border-gray-700 rounded-lg text-[10px] outline-none no-print w-20">
+                                            <option value="">เลือก</option>
+                                            {houseTypeOptions.map(h => <option key={h} value={h}>{h}</option>)}
+                                        </select>
+                                        <input name="familyInfo" value={formData.familyInfo} onChange={handleInputChange} placeholder="ลักษณะบ้าน" className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">10. ลักษณะที่อยู่อาศัย:</span>
-                                <div className="md:col-span-2 flex gap-2">
-                                    <select onChange={(e) => setFormData(prev => ({ ...prev, familyInfo: e.target.value }))} className="p-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs outline-none no-print">
-                                        <option value="">-- เลือกประเภท --</option>
-                                        {houseTypeOptions.map(h => <option key={h} value={h}>{h}</option>)}
-                                    </select>
-                                    <input name="familyInfo" value={formData.familyInfo} onChange={handleInputChange} className="flex-1 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">10. ภาระงานในบ้านที่ช่วย:</span>
+                                <div className="value md:col-span-2 w-full">
+                                    <input name="dailyTasks" value={formData.dailyTasks} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">11. ภาระงานในบ้านที่ช่วย:</span>
-                                <input name="dailyTasks" value={formData.dailyTasks} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center print-row">
-                                <span className="font-bold text-gray-300 print:text-black">12. ปัญหาที่พบ:</span>
-                                <input name="studyProblems" value={formData.studyProblems} onChange={handleInputChange} className="md:col-span-2 p-1.5 bg-gray-800 print:bg-transparent border border-gray-700 print:border-b print:border-t-0 print:border-x-0 rounded-xl outline-none text-sm" />
+                            <div className="print-row grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                <span className="label font-bold text-gray-300 print:text-black">11. ปัญหา/ข้อเสนอแนะที่พบ:</span>
+                                <div className="value md:col-span-2 w-full">
+                                    <input name="studyProblems" value={formData.studyProblems} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 print:border-0 rounded-lg outline-none text-xs" />
+                                </div>
                             </div>
                             
-                            <div className="mt-6 flex justify-end">
-                                <div className="text-center w-56 text-sm">
-                                    <p className="mb-4">ลงชื่อ............................................. ครูที่ปรึกษา</p>
-                                    <p className="mb-1">({userProfile.name || '...................................................'})</p>
+                            <div className="mt-4 flex justify-end">
+                                <div className="text-center w-48 text-xs">
+                                    <p className="mb-2">ลงชื่อ............................................. ครูที่ปรึกษา</p>
+                                    <p>({userProfile.name || '...................................................'})</p>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-center py-16 text-gray-500 border border-dashed border-gray-800 rounded-2xl no-print">
+                        <div className="text-center py-12 text-gray-500 border border-dashed border-gray-800 rounded-2xl no-print text-xs">
                             💡 กรุณาเลือกห้องเรียนและนักศึกษาก่อนเริ่มกรอก
                         </div>
                     )}
                 </div>
 
                 {selectedStudent && (
-                    <div className="page-break pt-8 mt-8 border-t border-dashed border-gray-700 print:border-none">
-                        <h2 className="font-bold text-xl text-center mb-6 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
+                    <div className="page-break pt-6 mt-6 border-t border-dashed border-gray-700 print:border-none">
+                        <h2 className="font-bold text-sm text-center mb-4 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
                         
-                        <div className="no-print mb-6">
-                            <label className="block bg-gray-800 p-6 rounded-2xl border-2 border-dashed border-gray-600 text-center cursor-pointer hover:border-indigo-500 transition">
-                                <span className="text-indigo-400 font-bold block mb-1">📸 คลิกเพื่อเลือกรูปภาพประกอบการเยี่ยมบ้าน</span>
-                                <span className="text-xs text-gray-400">เลือกได้หลายรูปพร้อมกัน (แนะนำ 2-4 รูป)</span>
+                        <div className="no-print mb-4">
+                            <label className="block bg-gray-800 p-4 rounded-xl border-2 border-dashed border-gray-600 text-center cursor-pointer hover:border-indigo-500 transition">
+                                <span className="text-indigo-400 font-bold block mb-1 text-xs">📸 คลิกเพื่อเลือกรูปภาพประกอบการเยี่ยมบ้าน</span>
+                                <span className="text-[10px] text-gray-400">เลือกได้หลายรูปพร้อมกัน (แนะนำ 2 รูปเพื่อให้พอดี 1 หน้ากระดาษ)</span>
                                 <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                             </label>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                             {imagePreviews.map((src, index) => (
-                                <div key={index} className="border border-gray-700 print:border-gray-400 p-2 bg-gray-800 print:bg-white rounded-xl overflow-hidden shadow-sm">
-                                    <img src={src} className="w-full h-56 object-cover rounded-lg" alt={`visit-${index}`} />
-                                    <p className="text-center text-xs mt-2 text-gray-300 print:text-black font-medium">รูปที่ {index + 1}: สภาพบ้านและการเยี่ยมบ้าน</p>
+                                <div key={index} className="border border-gray-700 print:border-gray-400 p-1.5 bg-gray-800 print:bg-white rounded-lg overflow-hidden shadow-sm">
+                                    <img src={src} className="w-full h-44 object-cover rounded-md" alt={`visit-${index}`} />
+                                    <p className="text-center text-[10px] mt-1 text-gray-300 print:text-black font-medium">รูปที่ {index + 1}: สภาพบ้านและการเยี่ยมบ้าน</p>
                                 </div>
                             ))}
                         </div>
@@ -308,15 +316,15 @@ function HomeVisitForm({ userProfile }) {
                 )}
 
                 {selectedStudent && (
-                    <div className="flex flex-col sm:flex-row gap-4 mt-10 no-print pt-4 border-t border-gray-800">
-                        <button onClick={handleSave} className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-indigo-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
-                            <span>💾</span> บันทึกข้อมูล
+                    <div className="flex flex-col sm:flex-row gap-3 mt-6 no-print pt-3 border-t border-gray-800">
+                        <button onClick={handleSave} className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2.5 px-4 rounded-xl font-bold text-white text-xs transition shadow-lg cursor-pointer">
+                            💾 บันทึกข้อมูล
                         </button>
-                        <button onClick={handleClear} className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-3.5 px-6 rounded-2xl font-bold transition flex items-center justify-center gap-2 cursor-pointer">
-                            <span>🗑️</span> ล้างฟอร์ม
+                        <button onClick={handleClear} className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-2.5 px-4 rounded-xl font-bold text-xs transition cursor-pointer">
+                            🗑️ ล้างฟอร์ม
                         </button>
-                        <button onClick={() => window.print()} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 px-6 rounded-2xl font-bold text-white shadow-lg shadow-emerald-900/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
-                            <span>🖨️</span> พิมพ์เอกสารทั้งหมด
+                        <button onClick={() => window.print()} className="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 px-4 rounded-xl font-bold text-white text-xs transition shadow-lg cursor-pointer">
+                            🖨️ พิมพ์เอกสารทั้งหมด
                         </button>
                     </div>
                 )}
