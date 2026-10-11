@@ -93,7 +93,6 @@ function HomeVisitForm({ userProfile }) {
         const student = students.find(s => s.id === studentId);
         setSelectedStudent(student || null);
         if (student) {
-            // ดึงข้อมูลที่อยู่และเบอร์โทรจากทะเบียนนักเรียนมาเติมให้อัตโนมัติ
             setFormData(prev => ({
                 ...prev,
                 address: student.address || '',
@@ -162,6 +161,16 @@ function HomeVisitForm({ userProfile }) {
         }
     };
 
+    const jobOptions = [
+        "ค้าขาย",
+        "รับจ้าง",
+        "ประมง",
+        "ทำสวน/ทำไร่",
+        "ข้าราชการ (ครู, ตำรวจ, พยาบาล, แพทย์, ทหาร ฯลฯ)",
+        "พนักงานทั่วไป",
+        "เอกชน"
+    ];
+
     const filteredStudents = students.filter(s => s.classId === selectedClass && s.status !== "จำหน่าย");
 
     return (
@@ -169,12 +178,12 @@ function HomeVisitForm({ userProfile }) {
             <Toaster />
             <style jsx global>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 10mm; }
-                    body { -webkit-print-color-adjust: exact; background: white !important; color: black !important; font-size: 10pt !important; }
+                    @page { size: A4 portrait; margin: 8mm 10mm; }
+                    body { -webkit-print-color-adjust: exact; background: white !important; color: black !important; font-size: 8.5pt !important; line-height: 1.15 !important; }
                     .no-print { display: none !important; }
                     .print-container { background-color: white !important; color: black !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-                    input, select { border: none !important; border-bottom: 1px dotted #000 !important; border-radius: 0 !important; background: transparent !important; padding: 0px 2px !important; height: auto !important; font-size: 10pt !important; }
-                    .page-break { page-break-before: always; }
+                    input, select, textarea { border: none !important; border-bottom: 1px dotted #000 !important; border-radius: 0 !important; background: transparent !important; padding: 0px 2px !important; height: auto !important; font-size: 8.5pt !important; }
+                    .page-break { page-break-before: always; break-before: page; }
                 }
             `}</style>
 
@@ -214,78 +223,109 @@ function HomeVisitForm({ userProfile }) {
                 </div>
 
                 {/* หน้าที่ 1: ข้อมูลส่วนตัวและครอบครัว */}
-                <div className="space-y-6 text-xs">
-                    <div className="text-center mb-6">
-                        <h1 className="font-bold text-base tracking-wide text-white print:text-black">แบบบันทึกการเยี่ยมบ้านนักเรียนรายบุคคล</h1>
-                        <div className="mt-2 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
-                            <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-10 text-center bg-gray-800 print:bg-transparent" /></span>
-                            <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-14 text-center bg-gray-800 print:bg-transparent" /></span>
+                <div className="space-y-3 text-xs">
+                    <div className="text-center mb-4">
+                        <img src="/logo.png" style={{ height: '40px', width: 'auto' }} className="mx-auto mb-1.5 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <h1 className="font-bold text-sm tracking-wide text-white print:text-black">แบบบันทึกการเยี่ยมบ้านนักเรียนรายบุคคล วิทยาลัยเทคโนโลยีพณิชยการสิชล</h1>
+                        <div className="mt-1 flex justify-center gap-6 text-xs text-gray-300 print:text-black">
+                            <span>ภาคเรียนที่: <input name="semester" onChange={handleHeaderChange} value={headerInfo.semester} className="w-8 text-center bg-gray-800 print:bg-transparent" /></span>
+                            <span>ปีการศึกษา: <input name="year" onChange={handleHeaderChange} value={headerInfo.year} className="w-12 text-center bg-gray-800 print:bg-transparent" /></span>
                             <span>วันที่: <input type="date" name="visitDate" onChange={handleHeaderChange} value={headerInfo.visitDate} className="bg-gray-800 print:bg-transparent" /></span>
                         </div>
                     </div>
 
-                    <div className="bg-gray-950 p-5 rounded-2xl border border-gray-800 print:bg-transparent print:border-none print:p-0 space-y-4">
-                        <div className="font-bold text-sm border-b border-gray-800 pb-2 text-indigo-400 print:text-black">ตอนที่ 1 ข้อมูลส่วนตัวและครอบครัว</div>
+                    <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800 print:bg-transparent print:border-none print:p-0 space-y-3">
+                        <div className="font-bold text-xs border-b border-gray-800 pb-1 text-indigo-400 print:text-black">ตอนที่ 1 ข้อมูลส่วนตัวและครอบครัว</div>
                         
-                        <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300">
-                            <p className="font-bold text-sm text-indigo-300 print:text-black mb-2">นักเรียน: {selectedStudent ? selectedStudent.name : '......................................................'} <span className="text-xs font-normal text-gray-400">(ห้อง: {selectedClass || '......................'})</span></p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300">
+                            <p className="font-bold text-indigo-300 print:text-black mb-1.5">นักเรียน: {selectedStudent ? selectedStudent.name : '......................................................'} <span className="text-[10px] font-normal text-gray-400">(ห้อง: {selectedClass || '......................'})</span></p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div className="md:col-span-2">
-                                    <span className="text-gray-400 print:text-black">1. ที่อยู่ปัจจุบัน (ดึงจากทะเบียน):</span> 
-                                    <input name="houseNumber" value={formData.houseNumber} onChange={handleInputChange} className="w-full p-2 mt-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" placeholder="บ้านเลขที่ / ที่อยู่" />
+                                    <span className="text-gray-400 print:text-black">1. ที่อยู่ปัจจุบัน:</span> 
+                                    <input name="houseNumber" value={formData.houseNumber} onChange={handleInputChange} className="w-full p-1 mt-0.5 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" placeholder="บ้านเลขที่ / ที่อยู่" />
                                 </div>
-                                <div>เบอร์โทรศัพท์นักเรียน: <input name="studentPhone" value={formData.studentPhone} onChange={handleInputChange} className="w-full p-1.5 mt-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
-                                <div>อีเมลนักเรียน: <input name="studentEmail" value={formData.studentEmail} onChange={handleInputChange} className="w-full p-1.5 mt-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                                <div>เบอร์โทรศัพท์: <input name="studentPhone" value={formData.studentPhone} onChange={handleInputChange} className="w-full p-1 mt-0.5 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
+                                <div>อีเมล: <input name="studentEmail" value={formData.studentEmail} onChange={handleInputChange} className="w-full p-1 mt-0.5 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                             </div>
                         </div>
 
                         {/* ข้อมูลบิดา */}
-                        <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-2">
+                        <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-1.5">
                             <div className="flex gap-2 items-center font-semibold">
-                                <span>2. บิดาชื่อ:</span> <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" />
-                                <span className="ml-2">อายุ:</span> <input name="fatherAge" value={formData.fatherAge} onChange={handleInputChange} className="w-16 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center" /> ปี
+                                <span>2. บิดา:</span> <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" placeholder="ชื่อ-นามสกุล" />
+                                <span>อายุ:</span> <input name="fatherAge" value={formData.fatherAge} onChange={handleInputChange} className="w-12 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center text-xs" /> ปี
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                <div>อาชีพ: <input name="fatherJob" value={formData.fatherJob} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
-                                <div>รายได้/เดือน: <input name="fatherIncome" value={formData.fatherIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right" placeholder="0" /></div>
-                                <div>เบอร์โทร: <input name="fatherPhone" value={formData.fatherPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">อาชีพ:</span> 
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, fatherJob: e.target.value }))} className="w-full p-1 bg-gray-800 print:bg-gray-100 border border-gray-700 rounded-lg text-xs">
+                                        <option value="">-- เลือกอาชีพ --</option>
+                                        {jobOptions.map(j => <option key={j} value={j}>{j}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">รายได้:</span> 
+                                    <input name="fatherIncome" value={formData.fatherIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right text-xs" placeholder="0" /> 
+                                    <span className="whitespace-nowrap">บาท</span>
+                                </div>
+                                <div>เบอร์โทร: <input name="fatherPhone" value={formData.fatherPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                             </div>
-                            <div>สถานที่ทำงาน: <input name="fatherWorkplace" value={formData.fatherWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                            <div>ระบุเพิ่มเติม / ที่ทำงาน: <input name="fatherWorkplace" value={formData.fatherWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                         </div>
 
                         {/* ข้อมูลมารดา */}
-                        <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-2">
+                        <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-1.5">
                             <div className="flex gap-2 items-center font-semibold">
-                                <span>3. มารดาชื่อ:</span> <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" />
-                                <span className="ml-2">อายุ:</span> <input name="motherAge" value={formData.motherAge} onChange={handleInputChange} className="w-16 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center" /> ปี
+                                <span>3. มารดา:</span> <input name="motherName" value={formData.motherName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" placeholder="ชื่อ-นามสกุล" />
+                                <span>อายุ:</span> <input name="motherAge" value={formData.motherAge} onChange={handleInputChange} className="w-12 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center text-xs" /> ปี
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                <div>อาชีพ: <input name="motherJob" value={formData.motherJob} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
-                                <div>รายได้/เดือน: <input name="motherIncome" value={formData.motherIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right" placeholder="0" /></div>
-                                <div>เบอร์โทร: <input name="motherPhone" value={formData.motherPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">อาชีพ:</span> 
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, motherJob: e.target.value }))} className="w-full p-1 bg-gray-800 print:bg-gray-100 border border-gray-700 rounded-lg text-xs">
+                                        <option value="">-- เลือกอาชีพ --</option>
+                                        {jobOptions.map(j => <option key={j} value={j}>{j}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">รายได้:</span> 
+                                    <input name="motherIncome" value={formData.motherIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right text-xs" placeholder="0" /> 
+                                    <span className="whitespace-nowrap">บาท</span>
+                                </div>
+                                <div>เบอร์โทร: <input name="motherPhone" value={formData.motherPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                             </div>
-                            <div>สถานที่ทำงาน: <input name="motherWorkplace" value={formData.motherWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                            <div>ระบุเพิ่มเติม / ที่ทำงาน: <input name="motherWorkplace" value={formData.motherWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                         </div>
 
-                        {/* ข้อมูลผู้ปกครอง (กรณีไม่ใช่บิดามารดา) */}
-                        <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-2">
+                        {/* ข้อมูลผู้ปกครอง */}
+                        <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800 print:border-gray-300 space-y-1.5">
                             <div className="flex gap-2 items-center font-semibold flex-wrap">
-                                <span>4. ผู้ปกครอง (ถ้าไม่ใช่พ่อแม่):</span> <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" placeholder="ชื่อ-นามสกุล" />
-                                <span>อายุ:</span> <input name="parentAge" value={formData.parentAge} onChange={handleInputChange} className="w-14 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center" /> ปี
-                                <span>เกี่ยวข้องเป็น:</span> <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} className="w-24 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" />
+                                <span>4. ผู้ปกครอง:</span> <input name="parentName" value={formData.parentName} onChange={handleInputChange} className="flex-1 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" placeholder="ชื่อ-นามสกุล" />
+                                <span>อายุ:</span> <input name="parentAge" value={formData.parentAge} onChange={handleInputChange} className="w-12 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-center text-xs" /> ปี
+                                <span>เกี่ยวข้อง:</span> <input name="parentRelation" value={formData.parentRelation} onChange={handleInputChange} className="w-20 p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                <div>อาชีพ: <input name="parentJob" value={formData.parentJob} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
-                                <div>รายได้/เดือน: <input name="parentIncome" value={formData.parentIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right" placeholder="0" /></div>
-                                <div>เบอร์โทร: <input name="parentPhone" value={formData.parentPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">อาชีพ:</span> 
+                                    <select onChange={(e) => setFormData(prev => ({ ...prev, parentJob: e.target.value }))} className="w-full p-1 bg-gray-800 print:bg-gray-100 border border-gray-700 rounded-lg text-xs">
+                                        <option value="">-- เลือกอาชีพ --</option>
+                                        {jobOptions.map(j => <option key={j} value={j}>{j}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="whitespace-nowrap">รายได้:</span> 
+                                    <input name="parentIncome" value={formData.parentIncome} onChange={handleIncomeChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-right text-xs" placeholder="0" /> 
+                                    <span className="whitespace-nowrap">บาท</span>
+                                </div>
+                                <div>เบอร์โทร: <input name="parentPhone" value={formData.parentPhone} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                             </div>
-                            <div>สถานที่ทำงาน: <input name="parentWorkplace" value={formData.parentWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg" /></div>
+                            <div>ระบุเพิ่มเติม / ที่ทำงาน: <input name="parentWorkplace" value={formData.parentWorkplace} onChange={handleInputChange} className="w-full p-1 bg-gray-800 print:bg-transparent border border-gray-700 rounded-lg text-xs" /></div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
                             <div>
                                 <p className="mb-1 font-semibold">5. นักเรียนอาศัยอยู่กับ:</p>
-                                <div className="flex gap-3 flex-wrap">
+                                <div className="flex gap-3 flex-wrap text-[11px]">
                                     {["บิดามารดา", "บิดา", "มารดา", "ญาติ", "อื่นๆ"].map(item => (
                                         <label key={item} className="flex items-center gap-1 cursor-pointer">
                                             <input type="radio" name="livingWith" checked={formData.livingWith === item} onChange={() => setFormData(prev => ({ ...prev, livingWith: item }))} /> {item}
@@ -295,7 +335,7 @@ function HomeVisitForm({ userProfile }) {
                             </div>
                             <div>
                                 <p className="mb-1 font-semibold">6. สถานะครอบครัว:</p>
-                                <div className="flex gap-3 flex-wrap">
+                                <div className="flex gap-3 flex-wrap text-[11px]">
                                     {["อยู่ด้วยกัน", "หย่าร้าง", "แยกกันอยู่", "เสียชีวิต"].map(item => (
                                         <label key={item} className="flex items-center gap-1 cursor-pointer">
                                             <input type="radio" name="familyStatus" checked={formData.familyStatus === item} onChange={() => setFormData(prev => ({ ...prev, familyStatus: item }))} /> {item}
@@ -308,13 +348,13 @@ function HomeVisitForm({ userProfile }) {
                 </div>
 
                 {/* หน้าที่ 2: สภาพแวดล้อม บ้าน และความคิดเห็น */}
-                <div className="page-break pt-8 mt-8 border-t border-dashed border-gray-700 print:border-none space-y-6 text-xs">
-                    <div className="font-bold text-sm border-b border-gray-800 pb-2 text-indigo-400 print:text-black">ตอนที่ 2 สภาพแวดล้อมและความคิดเห็น</div>
+                <div className="page-break pt-6 mt-6 border-t border-dashed border-gray-700 print:border-none space-y-4 text-xs">
+                    <div className="font-bold text-xs border-b border-gray-800 pb-1 text-indigo-400 print:text-black">ตอนที่ 2 สภาพแวดล้อมและความคิดเห็น</div>
 
-                    <div className="p-4 bg-gray-950 print:bg-transparent rounded-xl border border-gray-800 space-y-4">
+                    <div className="p-3 bg-gray-950 print:bg-transparent rounded-xl border border-gray-800 space-y-3">
                         <div>
-                            <p className="mb-2 font-semibold">7. บ้านที่อยู่อาศัย:</p>
-                            <div className="flex gap-4 flex-wrap">
+                            <p className="mb-1 font-semibold">7. บ้านที่อยู่อาศัย:</p>
+                            <div className="flex gap-3 flex-wrap text-[11px]">
                                 {["บ้านของตนเอง", "บ้านเช่า", "อาศัยอยู่กับผู้อื่น", "หอพัก/แฟลต", "อื่นๆ"].map(item => (
                                     <label key={item} className="flex items-center gap-1 cursor-pointer">
                                         <input type="radio" name="houseType" checked={formData.houseType === item} onChange={() => setFormData(prev => ({ ...prev, houseType: item }))} /> {item}
@@ -324,8 +364,8 @@ function HomeVisitForm({ userProfile }) {
                         </div>
 
                         <div>
-                            <p className="mb-2 font-semibold">8. ระยะทางระหว่างบ้านกับโรงเรียน:</p>
-                            <div className="flex gap-4 flex-wrap">
+                            <p className="mb-1 font-semibold">8. ระยะทางระหว่างบ้านกับโรงเรียน:</p>
+                            <div className="flex gap-3 flex-wrap text-[11px]">
                                 {["1 - 5 กม.", "6 - 10 กม.", "11 - 15 กม.", "16 - 20 กม.", "20 กม.ขึ้นไป"].map(item => (
                                     <label key={item} className="flex items-center gap-1 cursor-pointer">
                                         <input type="radio" name="distance" checked={formData.distance === item} onChange={() => setFormData(prev => ({ ...prev, distance: item }))} /> {item}
@@ -335,8 +375,8 @@ function HomeVisitForm({ userProfile }) {
                         </div>
 
                         <div>
-                            <p className="mb-2 font-semibold">9. การเดินทางมาโรงเรียน:</p>
-                            <div className="flex gap-4 flex-wrap">
+                            <p className="mb-1 font-semibold">9. การเดินทางมาโรงเรียน:</p>
+                            <div className="flex gap-3 flex-wrap text-[11px]">
                                 {["เดิน", "รถจักรยาน", "รถจักรยานยนต์", "รถยนต์ส่วนตัว", "รถรับส่ง", "อื่นๆ"].map(item => (
                                     <label key={item} className="flex items-center gap-1 cursor-pointer">
                                         <input type="radio" name="transportation" checked={formData.transportation === item} onChange={() => setFormData(prev => ({ ...prev, transportation: item }))} /> {item}
@@ -345,47 +385,47 @@ function HomeVisitForm({ userProfile }) {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                            <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
-                                <p className="font-semibold mb-2">10. สภาพแวดล้อม:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1">
+                            <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
+                                <p className="font-semibold mb-1">10. สภาพแวดล้อม:</p>
                                 {["ดี", "พอใช้", "ควรปรับปรุง"].map(item => (
-                                    <label key={item} className="flex items-center gap-1 cursor-pointer mb-1">
+                                    <label key={item} className="flex items-center gap-1 cursor-pointer text-[11px]">
                                         <input type="radio" name="environment" checked={formData.environment === item} onChange={() => setFormData(prev => ({ ...prev, environment: item }))} /> {item}
                                     </label>
                                 ))}
                             </div>
-                            <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
-                                <p className="font-semibold mb-2">11. ความสัมพันธ์:</p>
+                            <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
+                                <p className="font-semibold mb-1">11. ความสัมพันธ์:</p>
                                 {["อบอุ่น", "เฉยๆ", "ห่างเหิน"].map(item => (
-                                    <label key={item} className="flex items-center gap-1 cursor-pointer mb-1">
+                                    <label key={item} className="flex items-center gap-1 cursor-pointer text-[11px]">
                                         <input type="radio" name="relationship" checked={formData.relationship === item} onChange={() => setFormData(prev => ({ ...prev, relationship: item }))} /> {item}
                                     </label>
                                 ))}
                             </div>
-                            <div className="p-3 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
-                                <p className="font-semibold mb-2">12. ฐานะเศรษฐกิจ:</p>
+                            <div className="p-2.5 bg-gray-900 print:bg-gray-50 rounded-xl border border-gray-800">
+                                <p className="font-semibold mb-1">12. ฐานะเศรษฐกิจ:</p>
                                 {["ฐานะดี", "ฐานะปานกลาง", "มีความขัดสน"].map(item => (
-                                    <label key={item} className="flex items-center gap-1 cursor-pointer mb-1">
+                                    <label key={item} className="flex items-center gap-1 cursor-pointer text-[11px]">
                                         <input type="radio" name="economy" checked={formData.economy === item} onChange={() => setFormData(prev => ({ ...prev, economy: item }))} /> {item}
                                     </label>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="pt-2">
-                            <p className="font-bold mb-1">13. สิ่งที่ผู้ปกครอง/นักเรียนอยากให้โรงเรียนช่วยเหลือ:</p>
-                            <input name="helpNeeded" value={formData.helpNeeded} onChange={handleInputChange} className="w-full p-2 bg-gray-900 print:bg-transparent border border-gray-700 rounded-xl text-xs" placeholder="ระบุความต้องการช่วยเหลือ..." />
+                        <div className="pt-1">
+                            <p className="font-bold mb-0.5">13. สิ่งที่ต้องการให้โรงเรียนช่วยเหลือ:</p>
+                            <input name="helpNeeded" value={formData.helpNeeded} onChange={handleInputChange} className="w-full p-1.5 bg-gray-900 print:bg-transparent border border-gray-700 rounded-xl text-xs" placeholder="ระบุ..." />
                         </div>
 
-                        <div className="pt-2">
-                            <p className="font-bold mb-1">14. ความคิดเห็นเพิ่มเติมเมื่อครูที่ปรึกษาเยี่ยมบ้าน:</p>
-                            <textarea name="teacherComment" value={formData.teacherComment} onChange={handleInputChange} className="w-full p-2 bg-gray-900 print:bg-transparent border border-gray-700 rounded-xl text-xs" rows="3" placeholder="บันทึกความคิดเห็นหรือข้อเสนอแนะเพิ่มเติม..."></textarea>
+                        <div className="pt-1">
+                            <p className="font-bold mb-0.5">14. ความคิดเห็นเพิ่มเติมของครูที่ปรึกษา:</p>
+                            <textarea name="teacherComment" value={formData.teacherComment} onChange={handleInputChange} className="w-full p-2 bg-gray-900 print:bg-transparent border border-gray-700 rounded-xl text-xs" rows="2" placeholder="บันทึกความคิดเห็น..."></textarea>
                         </div>
                     </div>
 
-                    <div className="mt-12 flex justify-end">
-                        <div className="text-center w-56 text-xs">
-                            <p className="mb-8">ลงชื่อ...................................................... ครูผู้เยี่ยมบ้าน</p>
+                    <div className="mt-8 flex justify-end">
+                        <div className="text-center w-52 text-xs">
+                            <p className="mb-6">ลงชื่อ...................................................... ครูผู้เยี่ยมบ้าน</p>
                             <p className="font-semibold">({userProfile.name || '......................................................'})</p>
                         </div>
                     </div>
@@ -393,13 +433,13 @@ function HomeVisitForm({ userProfile }) {
 
                 {/* ส่วนจัดการรูปถ่าย */}
                 {selectedStudent && (
-                    <div className="page-break pt-8 mt-8 border-t border-dashed border-gray-700 print:border-none">
+                    <div className="page-break pt-6 mt-6 border-t border-dashed border-gray-700 print:border-none">
                         <h2 className="font-bold text-sm text-center mb-4 text-white print:text-black">รูปภาพเยี่ยมบ้านนักศึกษา: {selectedStudent.name}</h2>
                         
                         <div className="no-print mb-4">
                             <label className="block bg-gray-800 p-6 rounded-2xl border-2 border-dashed border-gray-600 text-center cursor-pointer hover:border-indigo-500 transition">
                                 <span className="text-indigo-400 font-bold block mb-1 text-xs">📸 คลิกเพื่อเลือกรูปภาพประกอบการเยี่ยมบ้าน</span>
-                                <span className="text-[10px] text-gray-400">เลือกได้หลายรูปพร้อมกัน (แนะนำ 2 รูปเพื่อให้พอดีหน้าพิมพ์)</span>
+                                <span className="text-[10px] text-gray-400">เลือกได้หลายรูปพร้อมกัน</span>
                                 <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                             </label>
                         </div>
