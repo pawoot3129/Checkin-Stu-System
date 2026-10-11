@@ -464,9 +464,6 @@ function HomeVisitForm({ userProfile }) {
                         <button onClick={handleClear} className="bg-gray-800 hover:bg-gray-700 text-red-400 border border-red-900/40 py-3 px-6 rounded-xl font-bold text-xs transition cursor-pointer">
                             🗑️ ล้างฟอร์ม
                         </button>
-                        <button onClick={() => window.print()} className="flex-1 bg-emerald-600 hover:bg-emerald-500 py-3 px-6 rounded-xl font-bold text-white text-xs transition shadow-lg cursor-pointer">
-                            🖨️ พิมพ์เอกสารทั้งหมด
-                        </button>
                     </div>
                 )}
             </div>
