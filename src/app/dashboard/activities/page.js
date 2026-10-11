@@ -9,7 +9,7 @@ export default function ActivitiesPage() {
     const router = useRouter();
     const [activities, setActivities] = useState([]);
     const [years, setYears] = useState([]);
-    const [semesters, setSemesters] = useState([]);
+    const [semestersByYear, setSemestersByYear] = useState({});
     
     // Form States
     const [name, setName] = useState('');
@@ -17,8 +17,6 @@ export default function ActivitiesPage() {
     const [semester, setSemester] = useState('');
     const [minPercent, setMinPercent] = useState(80);
     const [lateAsAbsent, setLateAsAbsent] = useState(true);
-    
-    // เพิ่ม State สำหรับเลือกประเภทกิจกรรม ('main' = กิจกรรมหลัก, 'sub' = กิจกรรมย่อยวันเดียวจบ)
     const [activityType, setActivityType] = useState('main');
 
     useEffect(() => {
@@ -26,14 +24,17 @@ export default function ActivitiesPage() {
     }, [academicYear, semester]);
 
     const fetchSettingsAndActivities = async () => {
-        // 1. ดึงปีและเทอมจาก main_config
+        // 1. ดึงข้อมูลการตั้งค่าปีและภาคเรียนจาก main_config
         const configSnap = await getDoc(doc(db, "system_settings", "main_config"));
         if (configSnap.exists()) {
             const data = configSnap.data();
-            setYears(data.academicYears || []);
-            setSemesters(data.semesters || []);
-            // ตั้งค่าเริ่มต้นถ้ายังไม่ได้เลือก
-            if (!academicYear && data.academicYears?.length > 0) setAcademicYear(data.academicYears[0]);
+            const yList = data.academicYears || [];
+            setYears(yList);
+            setSemestersByYear(data.semestersByYear || {});
+            
+            if (!academicYear && yList.length > 0) {
+                setAcademicYear(yList[0]);
+            }
         }
 
         // 2. ดึงกิจกรรมตามปี/เทอมที่เลือก
@@ -50,6 +51,17 @@ export default function ActivitiesPage() {
         }
     };
 
+    // เมื่อเปลี่ยนปีการศึกษา ให้รีเซ็ตหรือเลือกภาคเรียนแรกที่มีอยู่ของปีนั้นอัตโนมัติ
+    const handleYearChange = (selectedYear) => {
+        setAcademicYear(selectedYear);
+        const availableSems = semestersByYear[selectedYear] || [];
+        if (availableSems.length > 0) {
+            setSemester(availableSems[0]);
+        } else {
+            setSemester('');
+        }
+    };
+
     const handleAdd = async () => {
         if (!name.trim() || !academicYear || !semester) return toast.error("กรุณากรอกข้อมูลให้ครบ");
         
@@ -58,7 +70,7 @@ export default function ActivitiesPage() {
                 activityName: name.trim(), 
                 academicYear, 
                 semester,
-                activityType // บันทึกประเภทกิจกรรมลงไปด้วย
+                activityType 
             });
             
             await setDoc(doc(db, "evaluation_rules", activityRef.id), {
@@ -89,6 +101,9 @@ export default function ActivitiesPage() {
         }
     };
 
+    // ดึงรายชื่อภาคเรียนที่เปิดใช้งานของปีที่กำลังเลือกอยู่
+    const currentAvailableSemesters = semestersByYear[academicYear] || [];
+
     return (
         <div className="p-8 bg-gray-950 min-h-screen text-white">
             <Toaster position="top-center" />
@@ -105,11 +120,10 @@ export default function ActivitiesPage() {
                     <input 
                         value={name} 
                         onChange={(e) => setName(e.target.value)} 
-                        placeholder="ระบุชื่อกิจกรรม" 
+                        placeholder="ระบุชื่อกิจกรรม เช่น เข้าแถวหน้าเสาธง, อบรมพิเศษ" 
                         className="w-full p-4 bg-gray-800 rounded-xl border border-gray-700 outline-none focus:border-indigo-500" 
                     />
                     
-                    {/* เพิ่มตัวเลือกประเภทกิจกรรม */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-400 font-semibold">ประเภทกิจกรรม</label>
@@ -124,17 +138,18 @@ export default function ActivitiesPage() {
                         </div>
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-400 font-semibold">ปีการศึกษา</label>
-                            <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
+                            <select value={academicYear} onChange={(e) => handleYearChange(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
                                 {years.map(y => <option key={y} value={y}>ปีการศึกษา {y}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs text-gray-400 font-semibold">ภาคเรียน</label>
                         <select value={semester} onChange={(e) => setSemester(e.target.value)} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
                             <option value="">-- เลือกภาคเรียน --</option>
-                            {semesters.filter(s => s.year === academicYear).map(s => (
-                                <option key={s.semester} value={s.semester}>ภาคเรียนที่ {s.semester}</option>
+                            {currentAvailableSemesters.map(sem => (
+                                <option key={sem} value={sem}>ภาคเรียนที่ {sem}</option>
                             ))}
                         </select>
                     </div>
@@ -169,7 +184,7 @@ export default function ActivitiesPage() {
                             <button onClick={() => handleDelete(a.id)} className="text-red-400 hover:text-red-300 font-bold px-4 py-2 border border-red-900 rounded-lg">ลบ</button>
                         </div>
                     )) : (
-                        <div className="p-8 text-center text-gray-500">ยังไม่มีกิจกรรมในรายการ</div>
+                        <div className="p-8 text-center text-gray-500">ยังไม่มีกิจกรรมในรายการ (หรือยังไม่ได้เลือกภาคเรียน)</div>
                     )}
                 </div>
             </div>
