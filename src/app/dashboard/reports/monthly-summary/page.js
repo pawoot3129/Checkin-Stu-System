@@ -80,10 +80,6 @@ export default function MonthlySummaryPage() {
         if (!selectedClass) return toast.error("กรุณาเลือกห้องเรียน");
         setIsLoading(true);
         try {
-            const actSnap = await getDocs(collection(db, "activities"));
-            const activity = actSnap.docs.find(d => d.data().activityName?.includes("กิจกรรมเข้าแถว"));
-            const activityId = activity ? activity.id : null;
-
             const studs = await getDocs(query(collection(db, "students"), where("classId", "==", selectedClass)));
             const studentList = studs.docs
                 .map(d => ({ id: d.id, ...d.data() }))
@@ -110,6 +106,7 @@ export default function MonthlySummaryPage() {
             const startDateStr = `${christYear}-${selectedMonth}-01`;
             const endDateStr = `${christYear}-${selectedMonth}-${String(daysCount).padStart(2, '0')}`;
 
+            // ดึงข้อมูลการเช็คชื่อในช่วงวันที่เลือกโดยตรง
             const attQuery = query(
                 collection(db, "attendance"),
                 where("date", ">=", startDateStr),
@@ -118,15 +115,11 @@ export default function MonthlySummaryPage() {
 
             const attSnap = await getDocs(attQuery);
             const allAtt = attSnap.docs.map(d => d.data()).filter(r => {
-                const matchStudent = studentIdsSet.has(String(r.studentId).trim());
-                const matchActivity = activityId ? r.activityId === activityId : true;
-                return matchStudent && matchActivity;
+                return studentIdsSet.has(String(r.studentId).trim());
             });
 
-            const monthFilteredAtt = allAtt;
-
             const holidayDaysMap = {};
-            monthFilteredAtt.forEach(r => {
+            allAtt.forEach(r => {
                 let stName = String(r.status || '').trim();
                 if (stName === 'วันหยุด' && r.date) {
                     const dayNum = parseInt(r.date.split('-')[2]);
@@ -137,7 +130,7 @@ export default function MonthlySummaryPage() {
             const isFewStudents = studentList.length <= 10;
 
             const processedStudents = studentList.map((st) => {
-                const stRecs = monthFilteredAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
+                const stRecs = allAtt.filter(r => String(r.studentId).trim() === String(st.id).trim());
                 const dailyStatus = {};
                 let countPresent = 0; 
                 let countEx = 0; 
@@ -254,7 +247,6 @@ export default function MonthlySummaryPage() {
         }
     };
 
-    // ปรับขนาดหน้าละ 16 คน เพื่อให้ตารางรายชื่อ ตารางสรุป และลายเซ็นลงตัวพอดีหน้า
     const chunkStudents = (students) => {
         const total = students.length;
         if (total <= 18) {
@@ -538,9 +530,9 @@ export default function MonthlySummaryPage() {
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '16px' }}>
-                                                    <td className="border border-black p-0 text-left pl-2 font-semibold" style={{ width: '160px' }}>จำนวนนักเรียนที่ลาครึ่งวัน</td>
+                                                    <td className="border border-black p-1 text-left pl-2 font-semibold" style={{ width: '160px' }}>จำนวนนักเรียนที่ลาครึ่งวัน</td>
                                                     {Array.from({ length: reportData.daysCount }, (_, i) => i + 1).map(d => (
-                                                        <td key={d} className="border border-black p-0" style={{ width: '18px' }}>{reportData.summaryDailyHalfLeave[d]}</td>
+                                                        <td key={d} className="border border-black p-0" style={{ width: '18px' }}>{reportData.summaryDaysHalfLeave?.[d] || reportData.summaryDailyHalfLeave[d]}</td>
                                                     ))}
                                                 </tr>
                                                 <tr style={{ height: '16px' }}>
