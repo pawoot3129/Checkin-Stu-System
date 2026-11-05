@@ -110,7 +110,7 @@ export default function DailySummaryPageFinal() {
             Object.keys(summary).forEach(className => {
                 const statuses = classStatuses[className] || [];
                 const isSpecial = className.includes('ทวิภาคี') || 
-                                  (statuses.length > 0 && statuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
+                                (statuses.length > 0 && statuses.every(s => s === 'ฝึกงาน' || s === 'ทวิภาคี'));
                 summary[className].isInternshipOrDual = isSpecial;
             });
 
@@ -128,15 +128,18 @@ export default function DailySummaryPageFinal() {
                     if (isMale) data.presentM++; else data.presentF++;
                     data.presentSum++;
                 } else {
-                    if (['มา', 'สาย', 'ลาครึ่งวัน', 'ฝึกงาน', 'ทวิภาคี'].includes(status)) {
+                    if (!status || status === 'มา' || status === 'สาย' || status === 'ลาครึ่งวัน' || status === 'ฝึกงาน' || status === 'ทวิภาคี') {
                         if (isMale) data.presentM++; else data.presentF++;
                         data.presentSum++;
-                    } else if (status && (status.includes('ลา') || status === 'ลาเต็ม' || status === 'ลาทั้งวัน')) {
+                    } else if (status.includes('ลา') || status === 'ลาเต็ม' || status === 'ลาทั้งวัน') {
                         if (isMale) data.leaveM++; else data.leaveF++;
                         data.leaveSum++;
-                    } else {
+                    } else if (status === 'ขาด') {
                         if (isMale) data.absentM++; else data.absentF++;
                         data.absentSum++;
+                    } else {
+                        if (isMale) data.presentM++; else data.presentF++;
+                        data.presentSum++;
                     }
                 }
             });
